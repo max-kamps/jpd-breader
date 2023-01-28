@@ -48,7 +48,7 @@ async function parseSentence(text) {
             // The sentence couldn't be parsed
             parsedWords.push({
                 text: [{base: text}],
-                status: 'None',
+                status: 'not-a-word',
             });
         } else {
             // Some other jpdb error ocurred
@@ -63,7 +63,7 @@ async function parseSentence(text) {
             if (a == null) {
                 parsedWords.push({
                     text: [{base: div.innerText}],
-                    status: 'None',
+                    status: 'not-a-word',
                 });
             } else {
                 const parts = [];
