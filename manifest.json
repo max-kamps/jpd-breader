@@ -1,10 +1,11 @@
 {
   "manifest_version": 2,
-  "name": "JPDB ttu",
+  "name": "JPDB Browser Reader",
   "version": "1.0",
-  "description": "JPDB reader support for ttu",
+  "description": "JPDB parsing and mining in your browser",
   "icons": {
-    "48": "icons/border-48.png"
+    "48": "icons/logo.svg",
+    "96": "icons/logo.svg"
   },
   "content_scripts": [
     {
