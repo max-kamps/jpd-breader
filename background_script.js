@@ -22,64 +22,83 @@ async function parseSentence(text) {
         console.log('cached result', text, cachedResults);
         return [cachedResults, 0];
     }
-
-    const resp = await fetch(
+    
+    let response;
+    try {
+        response = await fetch(
             `https://jpdb.io/search?q=<…>${text}<…>`,
             {credentials: 'include'}
-          ),
-          doc = new DOMParser().parseFromString(await resp.text(), 'text/html');
-
-    const parseResult = doc.querySelector('.floating-sentence');
+        );
+    } catch (e) {
+        return [{
+            text,
+            error: e.message,
+        }, 0]
+    }
+    
+    const doc = new DOMParser().parseFromString(await response.text(), 'text/html'),
+          parseResult = doc.querySelector('.floating-sentence');
+    
     const parsedWords = [];
 
     if (parseResult === null) {
-        const errorReason = doc.querySelector('.container')?.childNodes[1]?.textContent;
+        const errorReason = doc.querySelector('.container')?.childNodes[1]?.textContent.trim();
         console.error(`Couldn't parse ${text}, reason: ${errorReason}`);
-        return [{
-            text,
-            error: errorReason,
-        }, JPDB_RATELIMIT * 1000]
-    }
-    
-    for (const div of parseResult.children) {
-        const a = div.querySelector('a');
-        if (a == null) {
+        if (errorReason === 'No results found.') {
+            // The sentence couldn't be parsed
             parsedWords.push({
-                text: [{base: div.innerText}],
+                text: [{base: text}],
                 status: 'None',
             });
         } else {
-            const parts = [];
-            for (const childNode of a.childNodes) {
-                if (childNode.nodeType === Node.TEXT_NODE) {
-                    parts.push({base: childNode.textContent});
-                } else if (childNode.nodeType === Node.ELEMENT_NODE) {
-                    parts.push({base: childNode.childNodes[0].textContent, furi: childNode.childNodes[1].textContent});
-                }	
-            }
-            const wordData = doc.querySelector(a.getAttribute('href'));
-            const tags = wordData.querySelector('.tags');
-            const status = tags && (tags.children.length >= 2) ? `${tags.children[0].classList[1]} ${tags.children[0].innerText}` : 'None';
-            parsedWords.push({
-                text: parts,
-                status,
-                dataHTML: wordData.innerHTML,
-            });
+            // Some other jpdb error ocurred
+            return [{
+                text,
+                error: errorReason,
+            }, JPDB_RATELIMIT * 1000];
         }
+    } else {
+        for (const div of parseResult.children) {
+            const a = div.querySelector('a');
+            if (a == null) {
+                parsedWords.push({
+                    text: [{base: div.innerText}],
+                    status: 'None',
+                });
+            } else {
+                const parts = [];
+                for (const childNode of a.childNodes) {
+                    if (childNode.nodeType === Node.TEXT_NODE) {
+                        parts.push({base: childNode.textContent});
+                    } else if (childNode.nodeType === Node.ELEMENT_NODE) {
+                        parts.push({base: childNode.childNodes[0].textContent, furi: childNode.childNodes[1].textContent});
+                    }	
+                }
+                const wordData = doc.querySelector(a.getAttribute('href'));
+                const tags = wordData.querySelector('.tags');
+                // TODO parse tags.children[0].innerText to get the level/redundancy of the card
+                const status = tags && (tags.children.length >= 2) ? tags.children[0].classList[1] : 'none';
+                parsedWords.push({
+                    text: parts,
+                    status,
+                    dataHTML: wordData.innerHTML,
+                });
+            }
+        }
+    
+        const firstWord = parsedWords[0].text[0],
+            lastWord = parsedWords.at(-1).text.at(-1);
+        
+        firstWord.base = firstWord.base.replace('<…>', '')
+        if (firstWord.base.length === 0)
+            parsedWords.shift();
+        
+        lastWord.base = lastWord.base.replace('<…>', '')
+        if (lastWord.base.length === 0)
+            parsedWords.pop();
+        
+        console.log('sucessfully parsed', text, parsedWords);
     }
-
-    const firstWord = parsedWords[0].text[0],
-        lastWord = parsedWords.at(-1).text.at(-1);
-    
-    firstWord.base = firstWord.base.replace('<…>', '')
-    if (firstWord.base.length === 0)
-        parsedWords.shift();
-    
-    lastWord.base = lastWord.base.replace('<…>', '')
-    if (lastWord.base.length === 0)
-        parsedWords.pop();
-    
-    console.log('sucessfully parsed', text, parsedWords);
 
     const result = {text, words: parsedWords};
 
