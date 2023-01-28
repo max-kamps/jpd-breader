@@ -32,8 +32,7 @@ function applyParseResult(paragraph, result) {
         console.error(result);
     } else {
         paragraph.classList.add('jpdb-parse-done');
-        paragraph.style.color = 'green';
-        // TODO escape these
+        // FIXME(Security) this is not properly escaped
         const textHtml = result.words.map(word => `<span data-jpdb-status="${word.status}">${word.text.map(x => x.furi ? `<ruby><rb>${x.base}</rb><rt>${x.furi}</rt></ruby>` : x.base).join('')}</span>`).join('');
         console.log('replacing html', paragraph.innerHTML, textHtml)
         paragraph.innerHTML = textHtml;
@@ -53,7 +52,6 @@ async function jpdbParseSentence() {
         visibleParagraphs.delete(p);
         paragraphOnScreenObserver.unobserve(p);
     
-        p.style.color = 'blue';
         const text = innerTextNoFurigana(p)
         console.log('parsing', text);
     
@@ -79,12 +77,10 @@ const paragraphOnScreenObserver = new IntersectionObserver((entries, observer) =
     for (const entry of entries) {
         if (entry.isIntersecting) {
             // console.log('Entered view:', entry.target, entry.target.innerText);
-            entry.target.style.color = 'orange';
             visibleParagraphs.add(entry.target);
             sentencesPending();
         } else {
             // console.log('Left view:', entry.target, entry.target.innerText);
-            entry.target.style.color = 'pink';
             visibleParagraphs.delete(entry.target);
         }
     }
