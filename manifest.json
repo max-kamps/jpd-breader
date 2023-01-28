@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "JPDB ttu",
+  "version": "1.0",
+  "description": "JPDB reader support for ttu",
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://reader.ttsu.app/*", "*://ttu-ebook.web.app/*"],
+      "js": ["content_script.js"],
+      "css": ["content_script.css"]
+    }
+  ],
+  "background": {
+    "page": "background.html",
+    "persistent": false
+  },
+  "permissions": [
+    "*://jpdb.io/*"
+  ]
+}
