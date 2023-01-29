@@ -23,6 +23,15 @@ function innerTextNoFurigana(elem) {
     return text;
 }
 
+function showPopup({ target: word }) {
+    popup.innerHTML = word.dataHTML;
+    popup.style.display = 'block';
+}
+
+function hidePopup() {
+    popup.style.display = 'none';
+}
+
 function applyParseResult(paragraph, result) {
     if (result.words === undefined) {
         paragraph.classList.add('jpdb-parse-failed');
@@ -32,10 +41,33 @@ function applyParseResult(paragraph, result) {
         console.error(result);
     } else {
         paragraph.classList.add('jpdb-parse-done');
-        // FIXME(Security) this is not properly escaped
-        const textHtml = result.words.map(word => `<span data-jpdb-status="${word.status}">${word.text.map(x => x.furi ? `<ruby><rb>${x.base}</rb><rt>${x.furi}</rt></ruby>` : x.base).join('')}</span>`).join('');
-        console.log('replacing html', paragraph.innerHTML, textHtml)
-        paragraph.innerHTML = textHtml;
+        const newParagraph = document.createElement('p');
+        newParagraph.classList.add('jpdb-parse-done')
+        newParagraph.style.position = 'relative';
+        for (const word of result.words) {
+            const span = document.createElement('span');
+            span.classList.add('jpdb-word');
+            span.dataset.jpdbStatus = word.status;
+            // FIXME(Security) this is not properly escaped
+            span.innerHTML = word.text.map(x => x.furi ? `<ruby><rb>${x.base}</rb><rt>${x.furi}</rt></ruby>` : x.base).join('');
+            span.dataHTML = word.dataHTML;
+            span.addEventListener('mouseenter', showPopup);
+            span.addEventListener('mouseleave', hidePopup);
+            newParagraph.insertAdjacentElement('beforeend', span);
+        }
+
+        // Work around ttu bug - it keeps references to the existing paragraph's text node,
+        // and requests their position to figure out where to scroll when loading a bookmark.
+        // We keep the existing paragraph, place it at the same position as the new paragraph,
+        // and hide it.
+        paragraph.insertAdjacentElement('beforebegin', newParagraph);
+        newParagraph.insertAdjacentElement('beforeend', paragraph);
+        // paragraph.style.opacity = '0.5';
+        paragraph.style.visibility = 'hidden';
+        paragraph.style.position = 'absolute';
+        paragraph.style.top = '0';
+        paragraph.style.right = '0';
+        paragraph.style.zIndex = '-1'
     }
 }
 
@@ -51,18 +83,18 @@ async function jpdbParseSentence() {
         const p = Array.from(visibleParagraphs.values()).reduce((a, b) => a.offsetLeft > b.offsetLeft ? a : b);
         visibleParagraphs.delete(p);
         paragraphOnScreenObserver.unobserve(p);
-    
+
         const text = innerTextNoFurigana(p)
         console.log('parsing', text);
-    
+
         const result = await browser.runtime.sendMessage({
             command: 'parse',
             text,
         });
-    
+
         applyParseResult(p, result);
     }
-    
+
     parsingInProgress = false;
 }
 function sentencesPending() {
@@ -92,15 +124,25 @@ function observeNewParagraph(p) {
     if (p.innerText.trim().length == 0)
         // Paragraph is empty
         return;
-    
+
     if (p.classList.contains('ttu-img-container') || p.classList.contains('ttu-illustration-container'))
         // Paragraph is an image container, not text
         // FIXME sometimes, these contain text though.
         // Figure out some way to parse image countainers without including the spoiler text
         return;
-    
+
+    if (p.classList.contains('jpdb-parse-done'))
+        // Already parsed
+        return;
+
     paragraphOnScreenObserver.observe(p);
 }
+
+document.body.insertAdjacentHTML('beforeend', `
+<div id=jpdb-popup style="display:none;top:0;left:0;">
+</div>
+`);
+const popup = document.querySelector('#jpdb-popup');
 
 document.querySelectorAll('p').forEach(observeNewParagraph);
 

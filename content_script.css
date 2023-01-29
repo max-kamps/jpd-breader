@@ -28,3 +28,14 @@ span[data-jpdb-status="none"] {
 }
 
 span[data-jpdb-status="not-a-word"] {}
+
+span:not([data-jpdb-status="not-a-word"]):hover {
+    text-decoration: underline;
+}
+
+#jpdb-popup {
+    all: initial;
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+}
