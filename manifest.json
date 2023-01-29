@@ -9,9 +9,16 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://reader.ttsu.app/*", "*://ttu-ebook.web.app/*"],
-      "js": ["content_script.js"],
-      "css": ["content_script.css"]
+      "matches": [
+        "*://reader.ttsu.app/*",
+        "*://ttu-ebook.web.app/*"
+      ],
+      "js": [
+        "content_script.js"
+      ],
+      "css": [
+        "content_script.css"
+      ]
     }
   ],
   "background": {

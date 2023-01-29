@@ -1,7 +1,7 @@
 const JPDB_RATELIMIT = 1.1; // seconds between requests
 
 function wrap(obj, func) {
-    return new Promise((resolve, reject) => {func(obj, resolve, reject)});
+    return new Promise((resolve, reject) => { func(obj, resolve, reject) });
 }
 
 async function parseSentence(text) {
@@ -10,7 +10,7 @@ async function parseSentence(text) {
         db.transaction('paragraphs', 'readonly')
             .objectStore('paragraphs')
             .get(text),
-        
+
         (obj, resolve, reject) => {
             obj.onsuccess = (event) => { resolve(obj.result); }
             obj.onerror = (event) => { reject(obj.error); }
@@ -22,12 +22,12 @@ async function parseSentence(text) {
         console.log('cached result', text, cachedResults);
         return [cachedResults, 0];
     }
-    
+
     let response;
     try {
         response = await fetch(
             `https://jpdb.io/search?q=<…>${text}<…>`,
-            {credentials: 'include'}
+            { credentials: 'include' }
         );
     } catch (e) {
         return [{
@@ -35,10 +35,10 @@ async function parseSentence(text) {
             error: e.message,
         }, 0]
     }
-    
+
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html'),
-          parseResult = doc.querySelector('.floating-sentence');
-    
+        parseResult = doc.querySelector('.floating-sentence');
+
     const parsedWords = [];
 
     if (parseResult === null) {
@@ -47,7 +47,7 @@ async function parseSentence(text) {
         if (errorReason === 'No results found.') {
             // The sentence couldn't be parsed
             parsedWords.push({
-                text: [{base: text}],
+                text: [{ base: text }],
                 status: 'not-a-word',
             });
         } else {
@@ -62,17 +62,17 @@ async function parseSentence(text) {
             const a = div.querySelector('a');
             if (a == null) {
                 parsedWords.push({
-                    text: [{base: div.innerText}],
+                    text: [{ base: div.innerText }],
                     status: 'not-a-word',
                 });
             } else {
                 const parts = [];
                 for (const childNode of a.childNodes) {
                     if (childNode.nodeType === Node.TEXT_NODE) {
-                        parts.push({base: childNode.textContent});
+                        parts.push({ base: childNode.textContent });
                     } else if (childNode.nodeType === Node.ELEMENT_NODE) {
-                        parts.push({base: childNode.childNodes[0].textContent, furi: childNode.childNodes[1].textContent});
-                    }	
+                        parts.push({ base: childNode.childNodes[0].textContent, furi: childNode.childNodes[1].textContent });
+                    }
                 }
                 const wordData = doc.querySelector(a.getAttribute('href'));
                 const tags = wordData.querySelector('.tags');
@@ -85,22 +85,22 @@ async function parseSentence(text) {
                 });
             }
         }
-    
+
         const firstWord = parsedWords[0].text[0],
             lastWord = parsedWords.at(-1).text.at(-1);
-        
+
         firstWord.base = firstWord.base.replace('<…>', '')
         if (firstWord.base.length === 0)
             parsedWords.shift();
-        
+
         lastWord.base = lastWord.base.replace('<…>', '')
         if (lastWord.base.length === 0)
             parsedWords.pop();
-        
+
         console.log('sucessfully parsed', text, parsedWords);
     }
 
-    const result = {text, words: parsedWords};
+    const result = { text, words: parsedWords };
 
     const txn = db.transaction('paragraphs', 'readwrite');
     txn.objectStore('paragraphs').put(result);
@@ -150,7 +150,7 @@ const db = await wrap(indexedDB.open('jpdb', 1), (obj, resolve, reject) => {
         const db = event.target.result;
         db.createObjectStore("paragraphs", { keyPath: "text" });
         db.createObjectStore("words", { keyPath: "id" });
-        
+
         // objectStore.createIndex("hours", "hours", { unique: false });
     };
 });

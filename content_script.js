@@ -17,9 +17,9 @@ function innerTextNoFurigana(elem) {
 
     // elem = elem.cloneNode(true);
     const rts = elem.querySelectorAll('rt');
-    rts.forEach(e => {e.style.display = 'none'});
+    rts.forEach(e => { e.style.display = 'none' });
     const text = elem.innerText;
-    rts.forEach(e => {e.style.removeProperty('display')});
+    rts.forEach(e => { e.style.removeProperty('display') });
     return text;
 }
 
@@ -40,7 +40,7 @@ function applyParseResult(paragraph, result) {
 }
 
 function wrap(obj, func) {
-    return new Promise((resolve, reject) => {func(obj, resolve, reject)});
+    return new Promise((resolve, reject) => { func(obj, resolve, reject) });
 }
 
 let parsingInProgress = false;
@@ -97,7 +97,7 @@ function observeNewParagraph(p) {
         // Paragraph is an image container, not text
         // FIXME sometimes, these contain text though.
         // Figure out some way to parse image countainers without including the spoiler text
-        return     
+        return;
     
     paragraphOnScreenObserver.observe(p);
 }
