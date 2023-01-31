@@ -28,6 +28,24 @@
     function showPopup({ target: word }) {
         popup.innerHTML = word.dataHTML;
         popup.style.display = 'block';
+
+        const box = word.getBoundingClientRect();
+
+        // TODO choose position more cleverly
+        // const {writingMode} = getComputedStyle(word);
+        // const rightSpace = window.clientWidth - box.left - box.width,
+        //     bottomSpace = window.clientHeight - box.top - box.height;
+
+        // if (writingMode.startsWith('horizontal')) {
+        //     if (box.top < bottomSpace)
+        //         ...
+        // } else {
+        //     if (box.left < rightSpace)
+        //         ...
+        // }
+
+        popup.style.left = `${box.right}px`;
+        popup.style.top = `${box.bottom}px`;
     }
 
     function hidePopup() {
