@@ -202,8 +202,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             localStorage.setItem('wordCSS', config.wordCSS);
 
             for (const tabId of tabs) {
-                browser.tabs.removeCSS(tabId, { code: oldCSS });
                 browser.tabs.insertCSS(tabId, { code: config.wordCSS });
+                browser.tabs.removeCSS(tabId, { code: oldCSS });
             }
 
             notifyContentScripts({ command: "setConfig", config });
