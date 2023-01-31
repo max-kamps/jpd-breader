@@ -31,6 +31,9 @@
     "persistent": false
   },
   "permissions": [
-    "*://jpdb.io/*"
+    "*://jpdb.io/*",
+    "*://reader.ttsu.app/*",
+    "*://ttu-ebook.web.app/*",
+    "tabs"
   ]
 }

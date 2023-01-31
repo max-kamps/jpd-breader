@@ -3,8 +3,21 @@
 
 <head>
     <meta charset="utf-8" />
-    <script type="module" src="popup.js"></script>
+    <style>
+        #config-form {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
 </head>
+
+<body>
+    <form id=config-form>
+        <label for=word-css>Word CSS</label>
+        <textarea id=word-css name=word-css cols=80 rows=10></textarea>
+        <input type=submit value=Update>
+    </form>
+    <script type="module" src="popup.js"></script>
 </body>
 
 </html>

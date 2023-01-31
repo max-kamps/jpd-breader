@@ -142,6 +142,31 @@ function apiCaller() {
     }
 }
 
+let config = {
+    wordCSS: localStorage.getItem('wordCSS') ?? `\
+.jpdb-word[data-jpdb-status="not-a-word"] {}
+.jpdb-word[data-jpdb-status="none"] { color: rgba(75, 141, 255, 0.8); }
+.jpdb-word[data-jpdb-status="new"] { color: rgb(75, 141, 255); }
+.jpdb-word[data-jpdb-status="learning"] { color: rgb(94, 167, 128); }
+.jpdb-word[data-jpdb-status="known"] { color: rgb(112, 192, 0); }
+.jpdb-word[data-jpdb-status="due"] { color: rgb(255, 69, 0); }
+.jpdb-word[data-jpdb-status="failed"] { color: rgb(255, 0, 0); }
+.jpdb-word[data-jpdb-status="blacklisted"] { color: rgb(119, 119, 119); }
+.jpdb-word[data-jpdb-status="suspended"] { color: rgb(119, 119, 119); }
+.jpdb-word[data-jpdb-status="locked"] { color: rgb(119, 119, 119); }`,
+}
+
+const tabs = new Set();
+
+chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+    tabs.delete(tabId);
+})
+
+function notifyContentScripts(message) {
+    for (const tabId of tabs)
+        browser.tabs.sendMessage(tabId, message, function (response) { });
+}
+
 const db = await wrap(indexedDB.open('jpdb', 1), (obj, resolve, reject) => {
     obj.onsuccess = (event) => resolve(obj.result);
     obj.onerror = (event) => reject(obj.error);
@@ -155,16 +180,47 @@ const db = await wrap(indexedDB.open('jpdb', 1), (obj, resolve, reject) => {
     };
 });
 
-browser.runtime.onMessage.addListener((message, callback) => {
-    console.log('Got message', message)
-    if (message.command === "parse") {
-        return new Promise((resolve, reject) => {
-            apiCall({
-                command: 'parse',
-                text: message.text,
-                resolve, reject,
+
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('Got message', message);
+    switch (message.command) {
+        case 'registerTab': {
+            tabs.add(sender.tab.id)
+            browser.tabs.insertCSS(sender.tab.id, { code: config.wordCSS });
+            sendResponse(config);
+            return false;
+        }
+
+        case 'getConfig': {
+            sendResponse(config);
+            return false;
+        }
+
+        case 'setConfig': {
+            const oldCSS = config.wordCSS;
+            config.wordCSS = message.config.wordCSS;
+            localStorage.setItem('wordCSS', config.wordCSS);
+
+            for (const tabId of tabs) {
+                browser.tabs.removeCSS(tabId, { code: oldCSS });
+                browser.tabs.insertCSS(tabId, { code: config.wordCSS });
+            }
+
+            notifyContentScripts({ command: "setConfig", config });
+            return false;
+        }
+
+        case 'parse': {
+            return new Promise((resolve, reject) => {
+                apiCall({
+                    command: 'parse',
+                    text: message.text,
+                    resolve, reject,
+                });
             });
-        });
-    } else
-        return false;
+        }
+
+        default:
+            return false;
+    }
 });

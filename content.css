@@ -1,34 +1,3 @@
-span[data-jpdb-status="known"] {
-    color: rgb(112, 192, 0);
-}
-
-span[data-jpdb-status="learning"] {
-    color: rgb(94, 167, 128);
-}
-
-span[data-jpdb-status="blacklisted"] {
-    color: rgb(119, 119, 119);
-}
-
-span[data-jpdb-status="due"] {
-    color: rgb(255, 69, 0);
-}
-
-span[data-jpdb-status="failed"] {
-    color: rgb(255, 0, 0);
-}
-
-span[data-jpdb-status="new"] {
-    color: rgb(75, 141, 255);
-}
-
-span[data-jpdb-status="none"] {
-    color: rgb(75, 141, 255);
-    opacity: 0.8;
-}
-
-span[data-jpdb-status="not-a-word"] {}
-
 span:not([data-jpdb-status="not-a-word"]):hover {
     text-decoration: underline;
 }
