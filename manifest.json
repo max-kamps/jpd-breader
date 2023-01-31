@@ -7,6 +7,11 @@
     "48": "icons/logo.svg",
     "96": "icons/logo.svg"
   },
+  "browser_action": {
+    "default_icon": "icons/logo.svg",
+    "default_title": "JPDB Browser Reader",
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -14,10 +19,10 @@
         "*://ttu-ebook.web.app/*"
       ],
       "js": [
-        "content_script.js"
+        "content.js"
       ],
       "css": [
-        "content_script.css"
+        "content.css"
       ]
     }
   ],
