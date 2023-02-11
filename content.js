@@ -24,7 +24,7 @@
                 if (child.tagName === 'RUBY') {
                     const bases = [], rubies = [];
 
-                    for (const rubyChild of rubyChild.childNodes) {
+                    for (const rubyChild of child.childNodes) {
                         if (rubyChild.nodeType === Node.TEXT_NODE) {
                             bases.push(rubyChild.textContent);
                         }
