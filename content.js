@@ -1,28 +1,62 @@
 'use strict';
 (async () => {
-    function innerTextNoFurigana(elem) {
-        // let text = [];
+    function textFragments(elem, offset = 0) {
+        console.log(offset, elem.outerHTML);
 
-        // for (const child of elem.childNodes) {
-        //     if (child.nodeType === Node.TEXT_NODE) {
-        //         text.push(child.textContent);
-        //     } else if (child.nodeType === Node.ELEMENT_NODE) {
-        //         for (const r of child.childNodes) {
-        //             if (r.nodeType === Node.TEXT_NODE) || r.nodeType === Node.ELEMENT_NODE && r.tagName === 'RB') {
-        //                 text.push(r.textContent);
-        //             }
-        //         }
-        //     }
-        // }
+        let fragments = [];
 
-        // return text.join('');
+        for (const child of elem.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE) {
+                const length = [...child.textContent].length;
 
-        // elem = elem.cloneNode(true);
-        const rts = elem.querySelectorAll('rt');
-        rts.forEach(e => { e.style.display = 'none' });
-        const text = elem.innerText;
-        rts.forEach(e => { e.style.removeProperty('display') });
-        return text;
+                fragments.push({
+                    node: child,
+                    text: child.textContent,
+                    length,
+                    offset,
+                    furi: null,
+                });
+
+                offset += length;
+            }
+            else if (child.nodeType === Node.ELEMENT_NODE) {
+                // TODO Skip spoiler text in images
+                if (child.tagName === 'RUBY') {
+                    const bases = [], rubies = [];
+
+                    for (const rubyChild of rubyChild.childNodes) {
+                        if (rubyChild.nodeType === Node.TEXT_NODE) {
+                            bases.push(rubyChild.textContent);
+                        }
+                        else if (rubyChild.nodeType === Node.ELEMENT_NODE) {
+                            if (rubyChild.tagName === 'RB') {
+                                bases.push(rubyChild.textContent);
+                            }
+                            else if (rubyChild.tagName === 'RT') {
+                                rubies.push(rubyChild.textContent);
+                            }
+                        }
+                    }
+                    // Ruby text - Furigana
+                    const length = bases.reduce((s, n) => s + n);
+                    fragments.push({
+                        node: child,
+                        text: bases.join(''),
+                        length,
+                        offset,
+                        furi: bases.map((base, i) => [base, rubies[i]]),
+                    });
+
+                    offset += length;
+                }
+                else {
+                    fragments.push(...textFragments(child, offset));
+                }
+            }
+        }
+
+        console.log(offset, fragments);
+        return fragments;
     }
 
     function showPopup({ target: word }) {
@@ -104,15 +138,23 @@
             visibleParagraphs.delete(p);
             paragraphOnScreenObserver.unobserve(p);
 
-            const text = innerTextNoFurigana(p)
-            console.log('parsing', text);
+            const fragments = textFragments(p);
 
-            const result = await browser.runtime.sendMessage({
-                command: 'parse',
-                text,
-            });
-
-            applyParseResult(p, result);
+            if (fragments.length > 0) {
+                const text = fragments.map(x => x.text).join('');
+                
+                console.log('parsing', text);
+                
+                const result = await browser.runtime.sendMessage({
+                    command: 'parse',
+                    text,
+                });
+    
+                applyParseResult(p, result);
+            }
+            else {
+                // TODO make paragraph completed
+            }
         }
 
         parsingInProgress = false;
