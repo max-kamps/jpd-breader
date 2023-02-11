@@ -4,7 +4,22 @@ function wrap(obj, func) {
     return new Promise((resolve, reject) => { func(obj, resolve, reject) });
 }
 
-async function parseSentence(text) {
+async function parseSentenceAPI(text) {
+    const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.token}` },
+        body: {
+            text,
+            token_fields: ['vocabulary_index', 'position_utf32', 'length_utf32', 'furigana'],
+            vocabulary_fields: ['vid', 'sid', 'rid', 'spelling', 'reading', 'frequency_rank', 'meanings', 'card_level', 'card_state'],
+        }
+    };
+
+    const response = await fetch('https://jpdb.io/api/v1/parse', options),
+        data = response.json();
+}
+
+async function parseSentenceScrape(text) {
     console.log('parsing sentence', text);
     const cachedResults = await wrap(
         db.transaction('paragraphs', 'readonly')
@@ -130,7 +145,7 @@ function apiCaller() {
     const call = pendingAPICalls.shift();
 
     if (call.command === 'parse') {
-        parseSentence(call.text)
+        parseSentenceScrape(call.text)
             .then(([result, timeout]) => {
                 setTimeout(apiCaller, timeout);
                 call.resolve(result);
@@ -173,8 +188,8 @@ const db = await wrap(indexedDB.open('jpdb', 1), (obj, resolve, reject) => {
     obj.onupgradeneeded = (event) => {
         console.log('Database upgrade');
         const db = event.target.result;
-        db.createObjectStore("paragraphs", { keyPath: "text" });
-        db.createObjectStore("words", { keyPath: "id" });
+        db.createObjectStore('paragraphs', { keyPath: 'text' });
+        db.createObjectStore('words', { keyPath: ['vid', 'sid', 'rid'] });
 
         // objectStore.createIndex("hours", "hours", { unique: false });
     };
