@@ -38,10 +38,12 @@
                         }
                     }
                     // Ruby text - Furigana
-                    const length = bases.reduce((s, n) => s + n);
+                    const text = bases.join(''),
+                        length = [...text].length;
+                    
                     fragments.push({
                         node: child,
-                        text: bases.join(''),
+                        text,
                         length,
                         offset,
                         furi: bases.map((base, i) => [base, rubies[i]]),
