@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <meta charset="utf-8" />
+    <meta charset=utf-8 />
     <style>
         #config-form {
             display: flex;
@@ -14,16 +14,18 @@
 <body>
     <form id=config-form>
         <label for=api-token>API Token</label>
-        <input type=text id=api-token name=api-token>
-        <label for=word-css>Word CSS</label>
-        <textarea id=word-css name=word-css cols=80 rows=10></textarea>
+        <input type=text id=api-token name=apiToken>
+        <label for=custom-word-css>Custom Word CSS</label>
+        <textarea id=custom-word-css name=customWordCSS cols=80 rows=10></textarea>
+        <label for=custom-popup-css>Custom Popup CSS</label>
+        <textarea id=custom-popup-css name=customPopupCSS cols=80 rows=10></textarea>
         <div>
             <label for=use-scraping>Use scraping instead of the API (not recommended)</label>
-            <input type="checkbox" name=use-scraping id=use-scraping>
+            <input type=checkbox id=use-scraping name=useScraping>
         </div>
         <input type=submit value=Update>
     </form>
-    <script type="module" src="popup.js"></script>
+    <script type=module src="popup.js"></script>
 </body>
 
 </html>

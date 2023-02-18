@@ -20,8 +20,6 @@ function* iterSelectedNodes(selection, node) {
 
 (async () => {
     try {
-        let config;
-
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log('Got message', message);
 

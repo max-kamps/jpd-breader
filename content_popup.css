@@ -1,83 +1,92 @@
-.jpdb-word:not(.unparsed):hover {
-    text-decoration: underline;
-}
-
-#jpdb-popup {
-    all: initial;
-    position: fixed;
+article {
     display: flex;
     flex-direction: column;
 
     max-width: 24em;
+    margin: 0;
     padding: 1em;
 
+    font-size: 14px;
     color: white;
-    background-color: rgba(0, 0, 0, 0.8);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+    background-color: rgba(36, 36, 36, 0.9);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
 }
 
-#jpdb-popup h1 {
+h1 {
     display: flex;
     flex-direction: row;
     justify-content: left;
     align-items: center;
     gap: 0.5em;
-    
+
+    margin: 0;
+    margin-bottom: 0.5em;
+    padding: 0;
+
     font-size: 150%;
 }
 
-#jpdb-popup .state {
+.state {
     display: flex;
     flex-direction: column;
     margin-left: auto;
-    
+
     font-size: 50%;
     line-height: 100%;
 }
 
-#jpdb-popup small {
+small {
+    margin: 0;
+    padding: 0;
+
     color: #9b9b9b;
     font-size: 50%;
 }
 
-#jpdb-popup .state .unparsed {}
+ol {
+    margin: 0;
+    padding: 0;
+    padding-left: 2em;
+}
 
-#jpdb-popup .state .locked {
+.state .unparsed {}
+
+.state .locked {
     color: rgb(119, 119, 119);
 }
 
-#jpdb-popup .state .suspended {
+.state .suspended {
     color: rgb(119, 119, 119);
 }
 
-#jpdb-popup .state .blacklisted {
+.state .blacklisted {
     color: rgb(119, 119, 119);
 }
 
-#jpdb-popup .state .never-forget {
+.state .never-forget {
     color: rgb(112, 192, 0);
 }
 
-#jpdb-popup .state .not-in-deck {
+.state .not-in-deck {
     color: rgba(75, 141, 255);
 }
 
-#jpdb-popup .state .new {
+.state .new {
     color: rgb(75, 141, 255);
 }
 
-#jpdb-popup .state .learning {
+.state .learning {
     color: rgb(94, 167, 128);
 }
 
-#jpdb-popup .state .known {
+.state .known {
     color: rgb(112, 192, 0);
 }
 
-#jpdb-popup .state .due {
+.state .due {
     color: rgb(255, 69, 0);
 }
 
-#jpdb-popup .state .failed {
+.state .failed {
     color: rgb(255, 0, 0);
 }

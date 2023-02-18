@@ -210,23 +210,22 @@ function apiCaller() {
     }
 }
 
-let config = {
+async function readFile(path) {
+    const resp = await fetch(browser.runtime.getURL(path));
+    return await resp.text();
+}
+
+const DEFAULT_WORD_CSS = await readFile('content_word.css');
+const DEFAULT_POPUP_CSS = await readFile('content_popup.css');
+
+const config = {
     apiToken: localStorage.getItem('apiToken') ?? '',
     useScraping: JSON.parse(localStorage.getItem('useScraping') ?? false),
-    wordCSS: localStorage.getItem('wordCSS') ?? `\
-.jpdb-word.unparsed     {}
-.jpdb-word.locked       { color: rgb(119, 119, 119); }
-.jpdb-word.suspended    { color: rgb(119, 119, 119); }
-.jpdb-word.blacklisted  { color: rgb(119, 119, 119); }
-.jpdb-word.never-forget { color: rgb(112, 192, 0); }
-.jpdb-word.not-in-deck  { color: rgba(75, 141, 255, 0.5); }
-.jpdb-word.new          { color: rgb(75, 141, 255); }
-.jpdb-word.learning     { color: rgb(94, 167, 128); }
-.jpdb-word.known        { color: rgb(112, 192, 0); }
-.jpdb-word.due          { color: rgb(255, 69, 0); }
-.jpdb-word.failed       { color: rgb(255, 0, 0); }
-`,
+    customWordCSS: localStorage.getItem('customWordCSS') ?? '',
+    customPopupCSS: localStorage.getItem('customPopupCSS') ?? '',
 }
+config.wordCSS = DEFAULT_WORD_CSS + config.customWordCSS;
+config.popupCSS = DEFAULT_POPUP_CSS + config.customPopupCSS;
 
 const tabs = new Set();
 
@@ -273,8 +272,11 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.command) {
         case 'registerTab': {
             tabs.add(sender.tab.id)
-            browser.tabs.insertCSS(sender.tab.id, { file: 'content.css' });
-            browser.tabs.insertCSS(sender.tab.id, { code: config.wordCSS });
+
+            browser.tabs.insertCSS(sender.tab.id, { file: 'content_word.css' });
+            if (config.customWordCSS)
+                browser.tabs.insertCSS(sender.tab.id, { code: config.customWordCSS });
+
             sendResponse(config);
             return false;
         }
@@ -285,16 +287,21 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         case 'setConfig': {
-            const oldCSS = config.wordCSS;
+            const oldCSS = config.customWordCSS;
 
-            config = message.config;
+            Object.assign(config, message.config);
+            config.wordCSS = DEFAULT_WORD_CSS + config.customWordCSS;
+            config.popupCSS = DEFAULT_POPUP_CSS + config.customPopupCSS;
+
             for (const [key, value] of Object.entries(config)) {
                 localStorage.setItem(key, value);
             }
 
             for (const tabId of tabs) {
-                browser.tabs.insertCSS(tabId, { code: config.wordCSS });
-                browser.tabs.removeCSS(tabId, { code: oldCSS });
+                if (config.customWordCSS)
+                    browser.tabs.insertCSS(tabId, { code: config.customWordCSS });
+                if (oldCSS)
+                    browser.tabs.removeCSS(tabId, { code: oldCSS });
             }
 
             notifyContentScripts({ command: "setConfig", config });

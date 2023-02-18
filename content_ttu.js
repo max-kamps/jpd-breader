@@ -118,8 +118,6 @@ newParagraphObserver.observe(document.body, {
 });
 
 (async () => {
-    let config;
-
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Got message', message);
 

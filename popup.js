@@ -1,19 +1,24 @@
 let config = await browser.runtime.sendMessage({ command: 'getConfig' });
+console.log(config);
 
-const form = document.querySelector('#config-form'),
-    fe = form.elements;
+const form = document.querySelector('#config-form');
 
-fe['api-token'].value = config.apiToken;
-fe['word-css'].value = config.wordCSS;
-fe['use-scraping'].checked = config.useScraping;
+for (const elem of Object.values(form.elements)) {
+    const name = elem.name;
+    if (!name)
+        continue;
+
+    if (elem.type === 'checkbox')
+        elem.checked = config[name];
+    else
+        elem.value = config[name];
+}
 
 form.addEventListener('submit', (event) => {
     browser.runtime.sendMessage({
-        command: 'setConfig', config: {
-            apiToken: fe['api-token'].value,
-            wordCSS: fe['word-css'].value,
-            useScraping: fe['use-scraping'].checked,
-        }
+        command: 'setConfig',
+        config: Object.fromEntries([...form.elements].flatMap(
+            elem => elem.name ? [[elem.name, elem.type == 'checkbox' ? elem.checked : elem.value]] : [])),
     });
     event.preventDefault();
 });

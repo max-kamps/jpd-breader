@@ -6,6 +6,56 @@ function html(strings, ...substitutions) {
     return template.content.firstElementChild;
 }
 
+let config;
+
+function getPopup() {
+    let popup = document.querySelector('#jpdb-popup');
+
+    if (popup === null) {
+        popup = html`<div id=jpdb-popup style="all:initial;position:fixed;display:none;top:0;left:0;"></div>`;
+        const shadow = popup.attachShadow({ mode: 'open' });
+        shadow.appendChild(html`<style>${config.popupCSS}</style>`)
+        shadow.appendChild(html`<article></article>`)
+        document.body.appendChild(popup);
+    }
+
+    return popup;
+}
+
+function showPopup({ target: word }) {
+    if (word.vocabData === undefined)
+        return;
+
+    let popup = getPopup();
+    popup.style.display = 'block';
+
+    const box = word.getBoundingClientRect();
+
+    // TODO choose position more cleverly
+    // const {writingMode} = getComputedStyle(word);
+    // const rightSpace = window.clientWidth - box.left - box.width,
+    //     bottomSpace = window.clientHeight - box.top - box.height;
+
+    // if (writingMode.startsWith('horizontal')) {
+    //     if (box.top < bottomSpace)
+    //         ...
+    // } else {
+    //     if (box.left < rightSpace)
+    //         ...
+    // }
+
+    popup.style.left = `${box.right}px`;
+    popup.style.top = `${box.bottom}px`;
+
+    // popup.innerHTML = [...Object.entries(word.vocabData)].map(([key, value]) => `<b>${key}</b>: ${value}`).join('<br>');
+    const v = word.vocabData;
+    popup.shadowRoot.lastChild.innerHTML = `<h1><span class=spelling>${v.spelling}</span>${(v.spelling !== v.reading) ? `<span class=reading>(${v.reading})</span>` : ''}<div class=state>${v.cardState.map(s => `<span class=${s}>${s}</span>`).join('')}</div></span></h1><small>id: ${v.vid ?? '???'} / ${v.sid ?? '???'} / ${v.rid ?? '???'}</small><ol>${v.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`
+}
+
+function hidePopup() {
+    getPopup().style.display = 'none';
+}
+
 function textFragments(nodes) {
     // Get a list of fragments (text nodes along with metainfo) contained in the given nodes
     let fragments = [];
@@ -44,52 +94,6 @@ function textFragments(nodes) {
     }
 
     return fragments;
-}
-
-function getPopup() {
-    let popup = document.querySelector('#jpdb-popup');
-
-    if (popup === null) {
-        popup = html`<div id=jpdb-popup style="display:none;top:0;left:0;"></div>`;
-        document.body.appendChild(popup);
-    }
-
-    return popup;
-}
-
-function showPopup({ target: word }) {
-    if (word.vocabData === undefined)
-        return;
-
-    let popup = getPopup();
-
-    popup.style.display = 'block';
-
-    const box = word.getBoundingClientRect();
-
-    // TODO choose position more cleverly
-    // const {writingMode} = getComputedStyle(word);
-    // const rightSpace = window.clientWidth - box.left - box.width,
-    //     bottomSpace = window.clientHeight - box.top - box.height;
-
-    // if (writingMode.startsWith('horizontal')) {
-    //     if (box.top < bottomSpace)
-    //         ...
-    // } else {
-    //     if (box.left < rightSpace)
-    //         ...
-    // }
-
-    popup.style.left = `${box.right}px`;
-    popup.style.top = `${box.bottom}px`;
-
-    // popup.innerHTML = [...Object.entries(word.vocabData)].map(([key, value]) => `<b>${key}</b>: ${value}`).join('<br>');
-    const v = word.vocabData;
-    popup.innerHTML = `<h1><span class=spelling>${v.spelling}</span>${(v.spelling !== v.reading) ? `<span class=reading>(${v.reading})</span>` : ''}<div class=state>${v.cardState.map(s => `<span class=${s}>${s}</span>`).join('')}</div></span></h1><small>id: ${v.vid ?? '???'} / ${v.sid ?? '???'} / ${v.rid ?? '???'}</small><ol>${v.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`
-}
-
-function hidePopup() {
-    getPopup().style.display = 'none';
 }
 
 function furiganaToRuby(parts) {
