@@ -8,26 +8,32 @@ No
 
 ## Current Limitations
 
+* Does not work with the current jpdb API
 * Only supports Firefox
-* Only works on [ッツ Reader](https://reader.ttsu.app)
-* Any network connectivity issues crash the extension and require a reload
-* Updating to a new version requires manually clearing the paragraph parse cache in the extension background page's indexedDB
+* Does not support adding cards to decks or mining sentences yet
+* Probably has many bugs
 
 ## Ongoing Work
 
-* Handle errors in a more resilient fashion
-* Package for installation
-* Settle on a cache database format
-* And a menu to adjust settings and clear caches
 * Port to Chrome
+* Package for installation
+* Add mining
+* Finalize ttu integration
+* Add Wikipedia integration
+* Add customization menus that don't require entering custom CSS directly
+* Automatically update parsed words when their state changes
 
 ## Installation
 
-Good luck
+I have not yet packaged this for installation, so you will have to install it unpacked.
 
 ## Usage
 
-Difficult
+On ttu reader (and Wikipedia, eventually): Parsing begins automatically on page load.
+
+On all other pages: Select some text, right click, click "Parse with jpdb".
+
+Words will be colored according to their state. Hover over words to see their meaning.
 
 ## Contributing
 
