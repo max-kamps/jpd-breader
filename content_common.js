@@ -12,7 +12,9 @@ function getPopup() {
     let popup = document.querySelector('#jpdb-popup');
 
     if (popup === null) {
-        popup = html`<div id=jpdb-popup style="all:initial;position:fixed;display:none;top:0;left:0;"></div>`;
+        popup = html`<div id=jpdb-popup style="all:initial;position:fixed;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
+        popup.addEventListener('mouseenter', ({ target }) => popupFadeIn(target));
+        popup.addEventListener('mouseleave', ({ target }) => popupFadeOut(target));
         const shadow = popup.attachShadow({ mode: 'open' });
         shadow.appendChild(html`<style>${config.popupCSS}</style>`)
         shadow.appendChild(html`<article></article>`)
@@ -22,12 +24,23 @@ function getPopup() {
     return popup;
 }
 
+function popupFadeIn(popup) {
+    popup.style.transition = 'opacity 60ms ease-in, visibility 60ms';
+    popup.style.opacity = 1;
+    popup.style.visibility = 'visible';
+}
+
+function popupFadeOut(popup) {
+    popup.style.transition = 'opacity 200ms ease-in, visibility 200ms';
+    popup.style.opacity = 0;
+    popup.style.visibility = 'hidden';
+}
+
 function showPopup({ target: word }) {
     if (word.vocabData === undefined)
         return;
 
     let popup = getPopup();
-    popup.style.display = 'block';
 
     const box = word.getBoundingClientRect();
 
@@ -50,10 +63,12 @@ function showPopup({ target: word }) {
     // popup.innerHTML = [...Object.entries(word.vocabData)].map(([key, value]) => `<b>${key}</b>: ${value}`).join('<br>');
     const v = word.vocabData;
     popup.shadowRoot.lastChild.innerHTML = `<h1><span class=spelling>${v.spelling}</span>${(v.spelling !== v.reading) ? `<span class=reading>(${v.reading})</span>` : ''}<div class=state>${v.cardState.map(s => `<span class=${s}>${s}</span>`).join('')}</div></span></h1><small>id: ${v.vid ?? '???'} / ${v.sid ?? '???'} / ${v.rid ?? '???'}</small><ol>${v.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`
+
+    popupFadeIn(popup);
 }
 
 function hidePopup() {
-    getPopup().style.display = 'none';
+    popupFadeOut(getPopup());
 }
 
 function textFragments(nodes) {
