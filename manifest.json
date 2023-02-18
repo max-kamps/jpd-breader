@@ -19,7 +19,8 @@
         "*://ttu-ebook.web.app/*"
       ],
       "js": [
-        "content.js"
+        "content_common.js",
+        "content_ttu.js"
       ],
       "css": [
         "content.css"
@@ -31,9 +32,11 @@
     "persistent": false
   },
   "permissions": [
+    "tabs",
+    "activeTab",
+    "contextMenus",
     "*://jpdb.io/*",
     "*://reader.ttsu.app/*",
-    "*://ttu-ebook.web.app/*",
-    "tabs"
+    "*://ttu-ebook.web.app/*"
   ]
 }
