@@ -6,53 +6,40 @@ function html(strings, ...substitutions) {
     return template.content.firstElementChild;
 }
 
-function textFragments(nodes, offset = 0) {
+function textFragments(nodes) {
     // Get a list of fragments (text nodes along with metainfo) contained in the given nodes
     let fragments = [];
+    let offset = 0;
 
     for (const node of nodes) {
         if (node.nodeType === Node.TEXT_NODE) {
-            // Handle text nodes directly
             const text = node.textContent;
             const length = text.length;
             fragments.push({ node, text, length, offset, furi: null });
             offset += length;
         }
-        else if (node.nodeType === Node.ELEMENT_NODE) {
-            if (node.hasAttribute('data-ttu-spoiler-img')) {
-                // Skip this node, we don't want to parse the spoiler label as text
-                continue;
-            }
+        else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'RUBY') {
+            const bases = [], rubies = [];
 
-            // Treat <ruby> elements like text nodes, just with non-null furigana
-            if (node.tagName === 'RUBY') {
-                const bases = [], rubies = [];
-
-                for (const rubyChild of node.childNodes) {
-                    if (rubyChild.nodeType === Node.TEXT_NODE) {
+            for (const rubyChild of node.childNodes) {
+                if (rubyChild.nodeType === Node.TEXT_NODE) {
+                    bases.push(rubyChild.textContent);
+                }
+                else if (rubyChild.nodeType === Node.ELEMENT_NODE) {
+                    if (rubyChild.tagName === 'RB') {
                         bases.push(rubyChild.textContent);
                     }
-                    else if (rubyChild.nodeType === Node.ELEMENT_NODE) {
-                        if (rubyChild.tagName === 'RB') {
-                            bases.push(rubyChild.textContent);
-                        }
-                        else if (rubyChild.tagName === 'RT') {
-                            rubies.push(rubyChild.textContent);
-                        }
+                    else if (rubyChild.tagName === 'RT') {
+                        rubies.push(rubyChild.textContent);
                     }
                 }
-                const text = bases.join('');
-                const length = text.length;
-                const furi = bases.map((base, i) => [base, rubies[i]]);
-
-                fragments.push({ node, text, length, offset, furi });
-                offset += length;
             }
+            const text = bases.join('');
+            const length = text.length;
+            const furi = bases.map((base, i) => [base, rubies[i]]);
 
-            else {
-                // Recurse into the child element
-                fragments.push(...textFragments(node.childNodes, offset));
-            }
+            fragments.push({ node, text, length, offset, furi });
+            offset += length;
         }
     }
 

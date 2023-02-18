@@ -1,5 +1,25 @@
 'use strict';
 
+function* iterTextNodes(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+        yield node;
+    }
+    else if (node.nodeType == Node.ELEMENT_NODE) {
+        if (node.hasAttribute('data-ttu-spoiler-img')) {
+            // Skip this node, we don't want to parse the spoiler label as text
+            return;
+        }
+        if (node.tagName === 'RUBY') {
+            yield node;
+        }
+        else {
+            for (const child of node.childNodes) {
+                yield* iterTextNodes(child);
+            }
+        }
+    }
+}
+
 const visibleParagraphs = new Set(); // queue of paragraphs waiting to be parsed
 
 let parsingInProgress = false;
@@ -15,14 +35,16 @@ async function parseVisibleParagraphs() {
     while (visibleParagraphs.size > 0) {
         // Get earliest (rightmost) paragraph
         // TODO support horizontal writing?
-        // TODO check to not exceed 2MB limit
+        // TODO check to not exceed 2MB(?) limit
+        // TODO iterate in fixed chunks of always 10 paragraphs (by child index), whether they are visible or not,
+        // rather than only picking *up to* 10 of the visible paragraphs.
         const paragraphs = [...visibleParagraphs.values()].sort((a, b) => a.offsetLeft - b.offsetLeft).slice(0, 10);
         for (const p of paragraphs) {
             visibleParagraphs.delete(p);
             paragraphOnScreenObserver.unobserve(p);
         }
 
-        const fragments = textFragments(paragraphs);
+        const fragments = textFragments(paragraphs.flatMap(p => [...iterTextNodes(p)]));
 
         if (fragments.length > 0) {
             const text = fragments.map(x => x.text).join('');
