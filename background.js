@@ -145,7 +145,8 @@ async function parseSentenceScrape(text) {
                     reading += spellingRuby.childNodes[i + 1].textContent || spellingRuby.childNodes[i].textContent;
                 }
 
-                const meanings = [...wordData.querySelectorAll('.subsection-meanings .description')].map(x => x.firstChild.textContent)
+                const meanings = [...wordData.querySelectorAll('.subsection-meanings .description')].map(
+                    x => x.firstChild.textContent.replace(/^\d+\. /, ''))
 
                 const tags = wordData.querySelector('.tags');
                 // TODO parse tags.children[0].innerText to get the level/redundancy of the card
