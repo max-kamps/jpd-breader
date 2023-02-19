@@ -37,11 +37,13 @@ function* iterSelectedNodes(selection, node) {
         config = await browser.runtime.sendMessage({ command: 'registerTab' });
 
         const selection = getSelection();
-        const selectedNodes = [];
+        const selectedNodes = new Set();
         for (let i = 0; i < selection.rangeCount; i++) {
             const range = selection.getRangeAt(i);
             // TODO Support partial node selections?
-            selectedNodes.push(...iterSelectedNodes(selection, range.commonAncestorContainer));
+            for (const node of iterSelectedNodes(selection, range.commonAncestorContainer)) {
+                selectedNodes.add(node);
+            }
         }
 
         const fragments = textFragments(selectedNodes);
