@@ -12,7 +12,7 @@ function getPopup() {
     let popup = document.querySelector('#jpdb-popup');
 
     if (popup === null) {
-        popup = html`<div id=jpdb-popup style="all:initial;position:fixed;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
+        popup = html`<div id=jpdb-popup style="all:initial;position:absolute;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
         popup.addEventListener('mouseenter', ({ target }) => popupFadeIn(target));
         popup.addEventListener('mouseleave', ({ target }) => popupFadeOut(target));
         const shadow = popup.attachShadow({ mode: 'open' });
@@ -57,8 +57,8 @@ function showPopup({ target: word }) {
     //         ...
     // }
 
-    popup.style.left = `${box.right}px`;
-    popup.style.top = `${box.bottom}px`;
+    popup.style.left = `${box.right + scrollX}px`;
+    popup.style.top = `${box.bottom + scrollY}px`;
 
     // popup.innerHTML = [...Object.entries(word.vocabData)].map(([key, value]) => `<b>${key}</b>: ${value}`).join('<br>');
     const v = word.vocabData;
