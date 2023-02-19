@@ -4,6 +4,15 @@ function wrap(obj, func) {
     return new Promise((resolve, reject) => { func(obj, resolve, reject) });
 }
 
+function sleep(timeMillis) {
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, timeMillis);
+    })
+}
+
+
+// API backend
+
 function snakeToCamel(string) {
     return string.replaceAll(/(?<!^_*)_(.)/g, (m, p1) => p1.toUpperCase())
 }
@@ -79,6 +88,8 @@ async function parseSentenceAPI(text) {
     return [{ tokens, vocab }, JPDB_RATELIMIT];
 }
 
+
+// Scraping backend
 
 async function parseSentenceScrape(text) {
     let response = await fetch(
@@ -175,41 +186,53 @@ async function parseSentenceScrape(text) {
 }
 
 
+// API call queue
+
 const pendingAPICalls = [];
 let callerRunning = false;
+async function apiCaller() {
+    // If no API calls are pending, stop running
+    if (callerRunning || pendingAPICalls.length === 0)
+        // Only run one instance of this function at a time
+        return;
+
+    callerRunning = true;
+
+    while (pendingAPICalls.length > 0) {
+        // Get first call from queue
+        const call = pendingAPICalls.shift();
+        console.log('Servicing API call:', call);
+
+        switch (call.command) {
+            case 'parse': {
+                try {
+                    const parseFunc = config.useScraping ? parseSentenceScrape : parseSentenceAPI;
+                    const [result, waitTime] = await parseFunc(call.text);
+                    call.resolve(result);
+                    await sleep(waitTime);
+                }
+                catch (error) {
+                    call.reject(error)
+                }
+            } break;
+
+            default:
+                call.reject('Unknown command');
+        }
+    }
+
+    callerRunning = false;
+}
+
 function apiCall(command, options) {
     return new Promise((resolve, reject) => {
+        console.log('Enqueueing API call:', command, options)
         pendingAPICalls.push({ command, ...options, resolve, reject });
-        if (!callerRunning) {
-            callerRunning = true;
-            setTimeout(apiCaller, 0);
-        }
+        apiCaller();
     });
 }
 
-// TODO figure out how to turn this into an async loop rather than using setTimeout recursion
-function apiCaller() {
-    // If no API calls are pending, stop running
-    if (pendingAPICalls.length === 0) {
-        callerRunning = false;
-        return;
-    }
-
-    // Get first call from queue
-    const call = pendingAPICalls.shift();
-
-    if (call.command === 'parse') {
-        (config.useScraping ? parseSentenceScrape : parseSentenceAPI)(call.text)
-            .then(([result, timeout]) => {
-                setTimeout(apiCaller, 1000 * timeout);
-                call.resolve(result);
-            })
-            .catch((err) => call.reject(err));
-
-    } else {
-        call.reject('Unknown command');
-    }
-}
+// Config management
 
 async function readFile(path) {
     const resp = await fetch(browser.runtime.getURL(path));
@@ -228,67 +251,26 @@ const config = {
 config.wordCSS = DEFAULT_WORD_CSS + config.customWordCSS;
 config.popupCSS = DEFAULT_POPUP_CSS + config.customPopupCSS;
 
-const tabs = new Set();
 
-chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
-    tabs.delete(tabId);
-})
+// Content script communication
 
-function notifyContentScripts(message) {
-    for (const tabId of tabs)
-        browser.tabs.sendMessage(tabId, message, (response) => { });
+const ports = new Set();
+
+function broadcastMessage(message) {
+    for (const port of ports)
+        port.postMessage(message);
 }
 
-browser.contextMenus.create({
-    id: 'parse-selection',
-    title: 'Parse with jpdb',
-    contexts: ['selection'],
-});
+function onPortDisconnect(port) {
+    console.log('disconnect:', port);
+    ports.delete(port);
+}
 
-browser.contextMenus.onClicked.addListener(async (info, tab) => {
-    if (info.menuItemId === 'parse-selection') {
-        await browser.tabs.executeScript(tab.id, {
-            file: "/content_common.js"
-        });
-        browser.tabs.executeScript(tab.id, {
-            file: "/content_contextmenu.js"
-        });
-    }
-});
+function onPortMessage(message, port) {
+    console.log('message:', message, port);
 
-
-const db = await wrap(indexedDB.open('jpdb', 1), (obj, resolve, reject) => {
-    obj.onsuccess = (event) => resolve(obj.result);
-    obj.onerror = (event) => reject(obj.error);
-    obj.onupgradeneeded = (event) => {
-        console.log('Database upgrade');
-        const db = event.target.result;
-        db.createObjectStore('paragraphs', { keyPath: 'text' });
-        db.createObjectStore('words', { keyPath: ['vid', 'sid', 'rid'] });
-    };
-});
-
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('Got message', message);
     switch (message.command) {
-        case 'registerTab': {
-            tabs.add(sender.tab.id)
-
-            browser.tabs.insertCSS(sender.tab.id, { file: 'content_word.css' }).then(() => {
-                if (config.customWordCSS)
-                    browser.tabs.insertCSS(sender.tab.id, { code: config.customWordCSS });
-            });
-
-            sendResponse(config);
-            return false;
-        }
-
-        case 'getConfig': {
-            sendResponse(config);
-            return false;
-        }
-
-        case 'setConfig': {
+        case 'updateConfig': {
             const oldCSS = config.customWordCSS;
 
             Object.assign(config, message.config);
@@ -299,22 +281,83 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 localStorage.setItem(key, value);
             }
 
-            for (const tabId of tabs) {
+            for (const port of ports) {
                 if (config.customWordCSS)
-                    browser.tabs.insertCSS(tabId, { code: config.customWordCSS });
+                    browser.tabs.insertCSS(port.sender.tab.id, { code: config.customWordCSS });
                 if (oldCSS)
-                    browser.tabs.removeCSS(tabId, { code: oldCSS });
+                    browser.tabs.removeCSS(port.sender.tab.id, { code: oldCSS });
             }
 
-            notifyContentScripts({ command: "setConfig", config });
-            return false;
-        }
+            broadcastMessage({ command: 'updateConfig', config });
+        } break;
 
         case 'parse': {
-            return apiCall('parse', { text: message.text });
-        }
+            apiCall('parse', { text: message.text })
+                .then(result => port.postMessage({ command: 'response', seq: message.seq, result }))
+                .catch(error => port.postMessage({ command: 'response', seq: message.seq, error }));
+        } break;
+
+        case 'ping': {
+            port.postMessage({ command: 'response', seq: message.seq, result: 'pong' });
+        } break;
 
         default:
-            return false;
+            console.error('Unknown command');
+    }
+}
+
+browser.runtime.onConnect.addListener((port) => {
+    console.log('connect:', port);
+    ports.add(port);
+
+    port.onDisconnect.addListener(onPortDisconnect);
+    port.onMessage.addListener(onPortMessage);
+
+    // TODO filter to only url-relevant config options
+    port.postMessage({ command: 'updateConfig', config });
+    browser.tabs.insertCSS(port.sender.tab.id, { code: config.customWordCSS });
+})
+
+
+// Context menu (Parse with jpdb)
+
+function portForTab(tabId) {
+    for (const port of ports)
+        if (port.sender.tab.id === tabId)
+            return port;
+}
+
+browser.contextMenus.create({
+    id: 'parse-selection',
+    title: 'Parse with jpdb',
+    contexts: ['selection'],
+});
+
+async function insertCSS(tabId) {
+    // We need to await here, because ordering is significant.
+    // The custom styles should load after the default styles, so they can overwrite them
+    await browser.tabs.insertCSS(tabId, { file: '/content_word.css' })
+    if (config.customWordCSS)
+        await browser.tabs.insertCSS(tabId, { code: config.customWordCSS });
+}
+
+async function insertJS(tabId) {
+    await browser.tabs.executeScript(tabId, { file: '/content_common.js' });
+}
+
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
+    if (info.menuItemId === 'parse-selection') {
+        const port = portForTab(tab.id);
+
+        if (port === undefined) {
+            // New tab, inject dependencies
+            await Promise.all([
+                insertCSS(tab.id),
+                insertJS(tab.id),
+            ]);
+        }
+
+        // TODO split this into a persistent contextmenu.js and a "parse_selection.js" that actually does the parsing?
+        await browser.tabs.executeScript(tab.id, { file: '/content_contextmenu.js' });
     }
 });

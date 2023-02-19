@@ -51,10 +51,7 @@ async function parseVisibleParagraphs() {
 
             console.log('parsing', text);
 
-            const result = await browser.runtime.sendMessage({
-                command: 'parse',
-                text,
-            });
+            const result = await postRequest({ command: 'parse', text });
 
             applyParseResult(fragments, result, true);
         }
@@ -116,21 +113,3 @@ newParagraphObserver.observe(document.body, {
     subtree: true,
     childList: true,
 });
-
-(async () => {
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        console.log('Got message', message);
-
-        switch (message.command) {
-            case 'setConfig': {
-                config = message.config;
-                return false;
-            }
-
-            default:
-                return false;
-        }
-    });
-
-    config = await browser.runtime.sendMessage({ command: 'registerTab' });
-})();

@@ -1,14 +1,22 @@
 'use strict';
 
+
+// Utility functions
+
+function wrap(obj, func) {
+    return new Promise((resolve, reject) => { func(obj, resolve, reject) });
+}
+
 function html(strings, ...substitutions) {
     var template = document.createElement('template');
     template.innerHTML = String.raw(strings, ...substitutions).trim();
     return template.content.firstElementChild;
 }
 
-let config;
-let _popup;
 
+// Popup-related functions
+
+let _popup;
 function getPopup() {
     if (!_popup) {
         _popup = html`<div id=jpdb-popup style="all:initial;position:absolute;z-index:1000;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
@@ -84,6 +92,9 @@ function showPopup({ target: word }) {
 function hidePopup({ target: word }) {
     getPopup().fadeOut();
 }
+
+
+// Parsing-related functions
 
 function textFragments(nodes) {
     // Get a list of fragments (text nodes along with metainfo) contained in the given nodes
@@ -236,6 +247,47 @@ function applyParseResult(fragments, result, keepTextNodes = false) {
 
 }
 
-function wrap(obj, func) {
-    return new Promise((resolve, reject) => { func(obj, resolve, reject) });
+// Background script communication
+
+let config = {};
+
+const waitingPromises = new Map();
+let nextSeq = 0;
+
+function postMessage(message) {
+    port.postMessage(message);
 }
+
+function postRequest(message) {
+    message.seq = nextSeq++;
+    return new Promise((resolve, reject) => {
+        waitingPromises.set(message.seq, { resolve, reject });
+        port.postMessage(message);
+    });
+}
+
+const port = browser.runtime.connect();
+port.onDisconnect.addListener(() => {
+    console.error('disconnect:', port);
+});
+port.onMessage.addListener((message, port) => {
+    console.log('message:', message, port);
+
+    switch (message.command) {
+        case 'response': {
+            const promise = waitingPromises.get(message.seq);
+            waitingPromises.delete(message.seq);
+            if (message.error === undefined)
+                promise.resolve(message.result);
+            else
+                promise.reject(message.error);
+        } break;
+
+        case 'updateConfig': {
+            Object.assign(config, message.config);
+        } break;
+
+        default:
+            console.error('Unknown command');
+    }
+});
