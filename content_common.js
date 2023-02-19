@@ -126,7 +126,7 @@ function textFragments(nodes) {
 }
 
 function furiganaToRuby(parts) {
-    return parts.map(x => (typeof x === 'string') ? x : `<ruby><rb>${x[0]}</rb><rt>${x[1]}</rt></ruby>`).join('');
+    return parts.map(x => (typeof x === 'string') ? x : `<ruby>${x[0]}<rt>${x[1]}</rt></ruby>`).join('');
 }
 
 function replaceNode(original, replacement, keepOriginal = false) {
