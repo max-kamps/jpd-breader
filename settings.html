@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        article {
+            width: 100%;
+            display: grid;
+            grid-template-columns: min-content minmax(min-content, 1fr) 1fr;
+            padding: 1em;
+            gap: 1em;
+        }
+        nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+        }
+        nav a {
+            color: lightseagreen;
+        }
+        nav a.active {
+            color: red;
+        }
+        #settings {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+        }
+        section {
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            margin: 0;
+            margin-bottom: 0.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <article>
+        <nav>
+            <a href=#general class=active>General</a>
+            <a href=#appearance>Appearance</a>
+        </nav>
+        <div id=settings>
+            <section id=general>
+                <h1>General</h1>
+                <div>
+                    <label for=api-token>API Token</label>
+                    <input type=text id=api-token name=apiToken>
+                </div>
+                <div>
+                    <label for=use-scraping>Use scraping instead of the API (not recommended)</label>
+                    <input type=checkbox id=use-scraping name=useScraping>
+                </div>
+            </section>
+            <section id=appearance>
+                <h1>Appearance</h1>
+                <label for=custom-word-css>Custom Word CSS</label>
+                <textarea id=custom-word-css name=customWordCSS></textarea>
+                <label for=custom-popup-css>Custom Popup CSS</label>
+                <textarea id=custom-popup-css name=customPopupCSS></textarea>
+            </section>
+            <input type=submit value="Save settings">
+        </div>
+        <aside id=preview>
+        </aside>
+    </article>
+    <form id=config-form>
+    </form>
+    <script src="content_common.js"></script>
+    <script type=module src="settings.js"></script>
+</body>
+
+</html>
