@@ -2,7 +2,7 @@ article {
     display: flex;
     flex-direction: column;
 
-    max-width: 24em;
+    width: 24em;
     margin: 0;
     padding: 1em;
 

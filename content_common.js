@@ -7,40 +7,56 @@ function html(strings, ...substitutions) {
 }
 
 let config;
+let _popup;
 
 function getPopup() {
-    let popup = document.querySelector('#jpdb-popup');
-
-    if (popup === null) {
-        popup = html`<div id=jpdb-popup style="all:initial;position:absolute;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
-        popup.addEventListener('mouseenter', ({ target }) => popupFadeIn(target));
-        popup.addEventListener('mouseleave', ({ target }) => popupFadeOut(target));
-        const shadow = popup.attachShadow({ mode: 'open' });
+    if (!_popup) {
+        _popup = html`<div id=jpdb-popup style="all:initial;position:absolute;z-index:1000;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
+        const shadow = _popup.attachShadow({ mode: 'closed' });
         shadow.appendChild(html`<style>${config.popupCSS}</style>`)
-        shadow.appendChild(html`<article></article>`)
-        document.body.appendChild(popup);
+        shadow.appendChild(html`<article></article>`);
+
+        _popup.fadeIn = () => {
+            _popup.style.transition = 'opacity 60ms ease-in, visibility 60ms';
+            _popup.style.opacity = 1;
+            _popup.style.visibility = 'visible';
+        }
+
+        _popup.fadeOut = () => {
+            _popup.style.transition = 'opacity 200ms ease-in, visibility 200ms';
+            _popup.style.opacity = 0;
+            _popup.style.visibility = 'hidden';
+        }
+
+        _popup.setContent = (data) => {
+            shadow.lastChild.innerHTML = `
+                <h1>
+                    <span class=spelling>${data.spelling}</span>
+                    ${(data.spelling !== data.reading) ? `<span class=reading>(${data.reading})</span>` : ''}
+                    <div class=state>${data.cardState.map(s => `<span class=${s}>${s}</span>`).join('')}</div>
+                </h1>
+                <small>id: ${data.vid ?? '???'} / ${data.sid ?? '???'} / ${data.rid ?? '???'}</small>
+                <ol>${data.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`;
+        }
     }
 
-    return popup;
-}
-
-function popupFadeIn(popup) {
-    popup.style.transition = 'opacity 60ms ease-in, visibility 60ms';
-    popup.style.opacity = 1;
-    popup.style.visibility = 'visible';
-}
-
-function popupFadeOut(popup) {
-    popup.style.transition = 'opacity 200ms ease-in, visibility 200ms';
-    popup.style.opacity = 0;
-    popup.style.visibility = 'hidden';
+    return _popup;
 }
 
 function showPopup({ target: word }) {
+    let popup = getPopup();
+
+    if (word.lastChild === popup) {
+        // popup already in this word
+        popup.fadeIn();
+        return;
+    }
+
     if (word.vocabData === undefined)
         return;
 
-    let popup = getPopup();
+    word.style.position = 'relative';
+    word.appendChild(popup);
 
     const box = word.getBoundingClientRect();
 
@@ -57,18 +73,16 @@ function showPopup({ target: word }) {
     //         ...
     // }
 
-    popup.style.left = `${box.right + scrollX}px`;
-    popup.style.top = `${box.bottom + scrollY}px`;
+    popup.style.left = `${box.width}px`;
+    popup.style.top = `${box.height}px`;
 
     // popup.innerHTML = [...Object.entries(word.vocabData)].map(([key, value]) => `<b>${key}</b>: ${value}`).join('<br>');
-    const v = word.vocabData;
-    popup.shadowRoot.lastChild.innerHTML = `<h1><span class=spelling>${v.spelling}</span>${(v.spelling !== v.reading) ? `<span class=reading>(${v.reading})</span>` : ''}<div class=state>${v.cardState.map(s => `<span class=${s}>${s}</span>`).join('')}</div></span></h1><small>id: ${v.vid ?? '???'} / ${v.sid ?? '???'} / ${v.rid ?? '???'}</small><ol>${v.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`
-
-    popupFadeIn(popup);
+    popup.setContent(word.vocabData);
+    popup.fadeIn();
 }
 
-function hidePopup() {
-    popupFadeOut(getPopup());
+function hidePopup({ target: word }) {
+    getPopup().fadeOut();
 }
 
 function textFragments(nodes) {
