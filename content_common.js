@@ -216,7 +216,6 @@ function applyParseResult(fragments, result, keep_text_nodes = false) {
             elem.addEventListener('mouseleave', hidePopup);
             replacement.appendChild(elem);
             curOffset += token.lengthUtf16;
-            tokenIndex++;
             // console.log('Emitted token');
             continue;
         }
