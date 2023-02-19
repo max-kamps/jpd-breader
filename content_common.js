@@ -129,10 +129,10 @@ function furiganaToRuby(parts) {
     return parts.map(x => (typeof x === 'string') ? x : `<ruby><rb>${x[0]}</rb><rt>${x[1]}</rt></ruby>`).join('');
 }
 
-function replaceNode(original, replacement, keey_original = false) {
+function replaceNode(original, replacement, keepOriginal = false) {
     console.log('Replacing:', original, 'with', replacement);
 
-    if (!keey_original) {
+    if (!keepOriginal) {
         original.parentNode.replaceChild(replacement, original);
     }
     else {
@@ -146,7 +146,7 @@ function replaceNode(original, replacement, keey_original = false) {
     }
 }
 
-function applyParseResult(fragments, result, keep_text_nodes = false) {
+function applyParseResult(fragments, result, keepTextNodes = false) {
     // keep_text_nodes is a workaround for a ttu issue.
     //   Ttu returns to your bookmarked position at load time. 
     //   To do that, it scrolls to a specific text node.
@@ -179,7 +179,7 @@ function applyParseResult(fragments, result, keep_text_nodes = false) {
         // console.log('Token', `${reading}（${spelling}）`, `at ${token.positionUtf16}:${token.positionUtf16 + token.lengthUtf16}`, token);
 
         if (curOffset >= fragment.offset + fragment.length) {
-            replaceNode(fragment.node, replacement, keep_text_nodes);
+            replaceNode(fragment.node, replacement, keepTextNodes);
             replacement = undefined;
             fragmentIndex++;
             // console.log('Got to end of fragment, next fragment');
@@ -230,7 +230,7 @@ function applyParseResult(fragments, result, keep_text_nodes = false) {
             // FIXME(Security) Not escaped
             replacement.appendChild(html`<span class="jpdb-word unparsed">${tailString}</span>`);
             // console.log('Emitted unparsed tail', tailString);
-            replaceNode(fragment.node, replacement, keep_text_nodes);
+            replaceNode(fragment.node, replacement, keepTextNodes);
         }
     }
 
