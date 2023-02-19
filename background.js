@@ -150,7 +150,7 @@ async function parseSentenceScrape(text) {
 
                 const tags = wordData.querySelector('.tags');
                 // TODO parse tags.children[0].innerText to get the level/redundancy of the card
-                const state = tags && (tags.children.length >= 2) ? [...tags.children[0].classList].slice(1) : 'not-in-deck';
+                const state = tags && (tags.children.length >= 2) ? [...tags.children[0].classList].slice(1) : ['not-in-deck'];
 
                 tokens.push({
                     vocabularyIndex: vocab.length,
@@ -163,7 +163,7 @@ async function parseSentenceScrape(text) {
                     vid, sid, rid: undefined,
                     spelling, reading,
                     meanings,
-                    cardState: [state],
+                    cardState: state,
 
                     // html: wordData.innerHTML,
                 });
