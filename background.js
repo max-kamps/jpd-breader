@@ -274,9 +274,10 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'registerTab': {
             tabs.add(sender.tab.id)
 
-            browser.tabs.insertCSS(sender.tab.id, { file: 'content_word.css' });
-            if (config.customWordCSS)
-                browser.tabs.insertCSS(sender.tab.id, { code: config.customWordCSS });
+            browser.tabs.insertCSS(sender.tab.id, { file: 'content_word.css' }).then(() => {
+                if (config.customWordCSS)
+                    browser.tabs.insertCSS(sender.tab.id, { code: config.customWordCSS });
+            });
 
             sendResponse(config);
             return false;
