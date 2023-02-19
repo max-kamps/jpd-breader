@@ -146,7 +146,7 @@ async function parseSentenceScrape(text) {
                 }
 
                 const meanings = [...wordData.querySelectorAll('.subsection-meanings .description')].map(
-                    x => x.firstChild.textContent.replace(/^\d+\. /, ''))
+                    x => x.firstChild.textContent.replace(/^\d+\. /, '').trim())
 
                 const tags = wordData.querySelector('.tags');
                 // TODO parse tags.children[0].innerText to get the level/redundancy of the card
