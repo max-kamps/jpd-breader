@@ -3,7 +3,7 @@ function checkConnectionEstablished(message, port) {
         port.onMessage.removeListener(checkConnectionEstablished);
         console.log(config);
 
-        const popup = getPopup();
+        const popup = getPopup(false);
         popup.style.position = 'initial';
         document.querySelector('#preview').appendChild(popup);
         popup.setContent({

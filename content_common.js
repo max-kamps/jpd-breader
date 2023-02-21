@@ -17,7 +17,7 @@ function html(strings, ...substitutions) {
 // Popup-related functions
 
 let _popup;
-function getPopup() {
+function getPopup(addListeners = true) {
     if (!_popup) {
         _popup = html`<div id=jpdb-popup style="all:initial;position:absolute;z-index:1000;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
         const shadow = _popup.attachShadow({ mode: 'closed' });
@@ -45,6 +45,11 @@ function getPopup() {
                 </h1>
                 <small>id: ${data.vid ?? '???'} / ${data.sid ?? '???'} / ${data.rid ?? '???'}</small>
                 <ol>${data.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`;
+        }
+
+        if (addListeners) {
+            _popup.addEventListener('mouseenter', ({ target }) => target.fadeIn());
+            _popup.addEventListener('mouseleave', ({ target }) => target.fadeOut());
         }
 
         document.body.appendChild(_popup);
