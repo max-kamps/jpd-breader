@@ -46,6 +46,8 @@ function getPopup() {
                 <small>id: ${data.vid ?? '???'} / ${data.sid ?? '???'} / ${data.rid ?? '???'}</small>
                 <ol>${data.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`;
         }
+
+        document.body.appendChild(_popup);
     }
 
     return _popup;
@@ -63,9 +65,6 @@ function showPopup({ target: word }) {
     if (word.vocabData === undefined)
         return;
 
-    word.style.position = 'relative';
-    word.appendChild(popup);
-
     const box = word.getBoundingClientRect();
 
     // TODO choose position more cleverly
@@ -81,8 +80,8 @@ function showPopup({ target: word }) {
     //         ...
     // }
 
-    popup.style.left = `${box.width}px`;
-    popup.style.top = `${box.height}px`;
+    popup.style.left = `${box.right + scrollX}px`;
+    popup.style.top = `${box.bottom + scrollY}px`;
 
     // popup.innerHTML = [...Object.entries(word.vocabData)].map(([key, value]) => `<b>${key}</b>: ${value}`).join('<br>');
     popup.setContent(word.vocabData);
