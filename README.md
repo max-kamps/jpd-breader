@@ -16,6 +16,7 @@ No
 ## Ongoing Work
 
 * Port to Chrome
+* Make it work with a non-persistent background page
 * Package for installation
 * Add mining
 * Finalize ttu integration
