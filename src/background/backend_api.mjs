@@ -1,5 +1,8 @@
 import { snakeToCamel } from "../util.mjs";
 import { config } from "./background.mjs";
+/** @template [T=null] @typedef {import('backend_types.mjs').Response<T>} Response */
+/** @typedef {import('backend_types.mjs').Token} Token */
+/** @typedef {import('backend_types.mjs').Vocab} Vocab */
 
 
 const RATELIMIT = 0.2; // seconds between requests
@@ -9,6 +12,12 @@ const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'fur
 const VOCABULARY_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'meanings', 'card_state'];
 const TOKEN_FIELD_NAMES = TOKEN_FIELDS.map(x => snakeToCamel(x));
 const VOCABULARY_FIELD_NAMES = VOCABULARY_FIELDS.map(x => snakeToCamel(x));
+
+
+/**
+ * @param {string} text 
+ * @returns {Response<{tokens: Token[], vocab: Vocab[]}>}
+ */
 export async function parse(text) {
     console.log(config);
     const options = {
@@ -76,6 +85,13 @@ export async function parse(text) {
     return [{ tokens, vocab }, RATELIMIT];
 }
 
+
+/**
+ * @param {number} vid 
+ * @param {number} sid 
+ * @param {number|'blacklist'|'never-forget'} deckId 
+ * @returns {Response}
+ */
 export async function addToDeck(vid, sid, deckId) {
     const options = {
         method: 'POST',
@@ -100,6 +116,14 @@ export async function addToDeck(vid, sid, deckId) {
     return [null, RATELIMIT];
 }
 
+
+/**
+ * @param {number} vid 
+ * @param {number} sid 
+ * @param {string|undefined} sentence 
+ * @param {string|undefined} translation 
+ * @returns {Response}
+ */
 export async function setSentence(vid, sid, sentence, translation) {
     const body = {
         vid, sid,
