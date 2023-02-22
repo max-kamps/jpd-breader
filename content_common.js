@@ -21,8 +21,54 @@ function getPopup(addListeners = true) {
     if (!_popup) {
         _popup = html`<div id=jpdb-popup style="all:initial;position:absolute;z-index:1000;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
         const shadow = _popup.attachShadow({ mode: 'closed' });
-        shadow.appendChild(html`<style>${config.popupCSS}</style>`)
-        shadow.appendChild(html`<article></article>`);
+        shadow.innerHTML = `
+            <style>${config.popupCSS}</style>
+            <article lang=ja>
+                <section class=mine-buttons>
+                    Mine:
+                    <button class=add>Add to deck...</button>
+                    <button class=blacklist>Blacklist</button>
+                    <button class=never-forget>Never Forget</button>
+                </section>
+                <section class=mine-buttons>
+                    Review:
+                    <button class=nothing>Nothing</button>
+                    <button class=something>Something</button>
+                    <button class=hard>Hard</button>
+                    <button class=good>Good</button>
+                    <button class=easy>Easy</button>
+                </section>
+                <section id=vocab-content></section>
+            </article>`;
+
+        shadow.vocabSection = shadow.querySelector('#vocab-content');
+
+
+        if (addListeners) {
+            shadow.querySelector('button.add').addEventListener('click', () => {
+                showDialog(shadow.data);
+            });
+
+            function doMine(command) {
+                postMessage({ command, vid: shadow.data.vid, sid: shadow.data.sid });
+            }
+
+            shadow.querySelector('button.blacklist').addEventListener('click', () => { doMine('addToBlacklist'); });
+            shadow.querySelector('button.never-forget').addEventListener('click', () => { doMine('addToNeverForget'); });
+
+            function doReview(rating) {
+                postMessage({ command: 'review', rating, vid: shadow.data.vid, sid: shadow.data.sid });
+            }
+
+            shadow.querySelector('button.nothing').addEventListener('click', () => { doReview('nothing'); });
+            shadow.querySelector('button.something').addEventListener('click', () => { doReview('something'); });
+            shadow.querySelector('button.hard').addEventListener('click', () => { doReview('hard'); });
+            shadow.querySelector('button.good').addEventListener('click', () => { doReview('good'); });
+            shadow.querySelector('button.easy').addEventListener('click', () => { doReview('easy'); });
+
+            _popup.addEventListener('mouseenter', ({ target }) => target.fadeIn());
+            _popup.addEventListener('mouseleave', ({ target }) => target.fadeOut());
+        }
 
         _popup.fadeIn = () => {
             _popup.style.transition = 'opacity 60ms ease-in, visibility 60ms';
@@ -37,25 +83,136 @@ function getPopup(addListeners = true) {
         }
 
         _popup.setContent = (data) => {
-            shadow.lastChild.innerHTML = `
-                <h1>
+            shadow.data = data;
+            shadow.vocabSection.innerHTML = `
+                <div class=header>
                     <span class=spelling>${data.spelling}</span>
                     ${(data.spelling !== data.reading) ? `<span class=reading>(${data.reading})</span>` : ''}
                     <div class=state>${data.cardState.map(s => `<span class=${s}>${s}</span>`).join('')}</div>
-                </h1>
+                </div>
                 <small>id: ${data.vid ?? '???'} / ${data.sid ?? '???'} / ${data.rid ?? '???'}</small>
                 <ol>${data.meanings.map(gloss => `<li>${gloss}</li>`).join('')}</ol>`;
-        }
-
-        if (addListeners) {
-            _popup.addEventListener('mouseenter', ({ target }) => target.fadeIn());
-            _popup.addEventListener('mouseleave', ({ target }) => target.fadeOut());
         }
 
         document.body.appendChild(_popup);
     }
 
     return _popup;
+}
+
+let _dialog;
+function getDialog() {
+    if (!_dialog) {
+        _dialog = html`<dialog id=jpdb-dialog style="all:revert;padding:0;border:none;background-color:transparent;"><div style="all:initial;"></div></dialog>`;
+        const shadow = _dialog.lastChild.attachShadow({ mode: 'closed' });
+        shadow.innerHTML = `
+            <style>${config.dialogCSS}</style>
+            <article lang=ja>
+                <div id=header></div>
+                <div>
+                    <label for=sentence>Sentence:</label>
+                    <div id=sentence role=textbox contenteditable></div>
+                    <button id=add-context>Add surrounding sentences</button>
+                </div>
+                <div>
+                    <label for=sentence>Translation:</label>
+                    <div id=translation role=textbox contenteditable></div>
+                </div>
+                <div>
+                    <label>Also add to FORQ: <input type=checkbox id=add-to-forq></label>
+                </div>
+                <div>
+                    <button class=cancel>Cancel</button>
+                    <button class=add>Add</button>
+                <div>
+                    Add and review
+                    <button class=nothing>Nothing</button>
+                    <button class=something>Something</button>
+                    <button class=hard>Hard</button>
+                    <button class=good>Good</button>
+                    <button class=easy>Easy</button>
+                </div>
+            </article>`;
+
+        const header = shadow.querySelector('#header');
+        const sentence = shadow.querySelector('#sentence');
+
+        shadow.querySelector('button.cancel').addEventListener('click', () => {
+            _dialog.close();
+        });
+
+        // We can't use click because then mousedown inside the content and mouseup outside would count as a click
+        _dialog.addEventListener('mousedown', ({ target }) => {
+            // Click on the dialog, but not on any children
+            // That must mean the user clicked on the background outside of the dialog
+            _dialog.wasClicked = (target === _dialog)
+        });
+        _dialog.addEventListener('mouseup', ({ target }) => {
+            if (_dialog.wasClicked && (target === _dialog))
+                _dialog.close();
+
+            _dialog.wasClicked = false;
+        });
+
+        shadow.querySelector('button.add').addEventListener('click', ({ target }) => {
+            // TODO
+            _dialog.close();
+        });
+
+        function rerender() {
+            const data = shadow.data;
+            const contextWidth = shadow.contextWidth;
+
+            // FIXME(Security) not escaped
+            header.innerHTML = `<span class=spelling>${data.spelling}</span>${(data.spelling !== data.reading) ? `<span class=reading>(${data.reading})</span>` : ''}`
+
+            if (data.sentenceBreaks === undefined) {
+                data.sentenceBreaks = [...data.fullText.matchAll(/[。！？]/g)].map(match => match.index);
+                data.sentenceBreaks.unshift(-1);
+                data.sentenceBreaks.push(data.fullText.length);
+
+                // Bisect_right to find the array index of the enders to the left and right of our token
+                let left = 0, right = data.sentenceBreaks.length;
+                while (left < right) {
+                    const middle = (left + right) >> 1;
+                    if (data.sentenceBreaks[middle] <= data.textPos) {
+                        left = middle + 1;
+                    }
+                    else {
+                        right = middle;
+                    }
+                }
+
+                data.sentenceIndex = left;
+            }
+
+            const start = data.sentenceBreaks[Math.max(data.sentenceIndex - 1 - contextWidth, 0)] + 1;
+            const end = data.sentenceBreaks[Math.min(data.sentenceIndex + contextWidth, data.sentenceBreaks.length - 1)] + 1;
+
+            sentence.innerText = data.fullText.slice(start, end).trim();
+        }
+
+        shadow.querySelector('#add-context').addEventListener('click', () => {
+            shadow.contextWidth++;
+            rerender();
+        });
+
+        _dialog.setContent = (data) => {
+            shadow.data = data;
+            shadow.contextWidth = 0;
+            rerender();
+        }
+
+        document.body.appendChild(_dialog);
+    }
+
+    return _dialog;
+}
+
+function showDialog(data) {
+    const dialog = getDialog();
+    dialog.setContent(data);
+    dialog.showModal();
 }
 
 function showPopup({ target: word }) {
@@ -72,21 +229,36 @@ function showPopup({ target: word }) {
 
     const box = word.getBoundingClientRect();
 
-    // TODO choose position more cleverly
-    // const {writingMode} = getComputedStyle(word);
-    // const rightSpace = window.clientWidth - box.left - box.width,
-    //     bottomSpace = window.clientHeight - box.top - box.height;
+    const { writingMode } = getComputedStyle(word);
 
-    // if (writingMode.startsWith('horizontal')) {
-    //     if (box.top < bottomSpace)
-    //         ...
-    // } else {
-    //     if (box.left < rightSpace)
-    //         ...
-    // }
+    const rightSpace = window.innerWidth - box.left - box.width,
+        bottomSpace = window.innerHeight - box.top - box.height;
 
-    popup.style.left = `${box.right + scrollX}px`;
-    popup.style.top = `${box.bottom + scrollY}px`;
+    if (writingMode.startsWith('horizontal')) {
+        popup.style.left = `${box.left + window.scrollX}px`;
+        popup.style.removeProperty('right');
+
+        if (box.top < bottomSpace) {
+            popup.style.top = `${box.bottom + window.scrollY}px`;
+            popup.style.removeProperty('bottom');
+        }
+        else {
+            popup.style.bottom = `${window.innerHeight - box.top + window.scrollY}px`;
+            popup.style.removeProperty('top');
+        }
+    } else {
+        popup.style.top = `${box.top + window.scrollY}px`;
+        popup.style.removeProperty('bottom');
+
+        if (box.left < rightSpace) {
+            popup.style.left = `${box.right + window.scrollX}px`;
+            popup.style.removeProperty('right');
+        }
+        else {
+            popup.style.right = `${window.innerWidth - box.left + window.scrollX}px`;
+            popup.style.removeProperty('left');
+        }
+    }
 
     // popup.innerHTML = [...Object.entries(word.vocabData)].map(([key, value]) => `<b>${key}</b>: ${value}`).join('<br>');
     popup.setContent(word.vocabData);
@@ -175,6 +347,7 @@ function applyParseResult(fragments, result, keepTextNodes = false) {
     let fragmentIndex = 0;
     let curOffset = 0;
     let replacement;
+    const text = fragments.map(x => x.text).join('')
 
     while (true) {
         if (tokenIndex >= tokens.length || fragmentIndex >= fragments.length) {
@@ -227,6 +400,8 @@ function applyParseResult(fragments, result, keepTextNodes = false) {
             // FIXME(Security) Not escaped
             const elem = html`<span class="jpdb-word ${word.cardState.join(' ')}">${furiganaToRuby(token.furigana)}</span>`;
             elem.vocabData = word;
+            elem.vocabData.fullText = text;
+            elem.vocabData.textPos = curOffset;
             elem.addEventListener('mouseenter', showPopup);
             elem.addEventListener('mouseleave', hidePopup);
             replacement.appendChild(elem);

@@ -1,4 +1,5 @@
-const JPDB_RATELIMIT = 1.1; // seconds between requests
+const SCRAPE_RATELIMIT = 1.1; // seconds between requests
+const API_RATELIMIT = 0.2; // seconds between requests
 
 function wrap(obj, func) {
     return new Promise((resolve, reject) => { func(obj, resolve, reject) });
@@ -21,7 +22,7 @@ const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'fur
 const VOCABULARY_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'meanings', 'card_state'];
 const TOKEN_FIELD_NAMES = TOKEN_FIELDS.map(x => snakeToCamel(x));
 const VOCABULARY_FIELD_NAMES = VOCABULARY_FIELDS.map(x => snakeToCamel(x));
-async function parseSentenceAPI(text) {
+async function parseAPI(text) {
     const options = {
         method: 'POST',
         headers: {
@@ -40,7 +41,6 @@ async function parseSentenceAPI(text) {
         data = await response.json();
 
     if (!(200 <= response.status && response.status <= 299)) {
-        // TODO implement exponential backoff somehow?
         throw Error(data.error_message);
     }
 
@@ -85,13 +85,68 @@ async function parseSentenceAPI(text) {
     // txn.objectStore('words').put({});
     // txn.commit();
 
-    return [{ tokens, vocab }, JPDB_RATELIMIT];
+    return [{ tokens, vocab }, API_RATELIMIT];
+}
+
+async function addToDeckAPI(vid, sid, deckId) {
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiToken}`,
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            id: deckId,
+            vocabulary: [[vid, sid]],
+        })
+    };
+
+    const response = await fetch('https://jpdb.io/api/v1/deck/add-vocabulary', options),
+        data = await response.json();
+
+    if (!(200 <= response.status && response.status <= 299)) {
+        throw Error(data.error_message);
+    }
+
+    return [null, API_RATELIMIT];
+}
+
+async function setSentenceAPI(vid, sid, sentence, translation) {
+    const body = {
+        vid, sid,
+    };
+
+    if (sentence)
+        body.sentence = sentence;
+    
+    if (translation)
+        body.translation = translation;
+
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiToken}`,
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify(body)
+    };
+
+    const response = await fetch('https://jpdb.io/api/v1/set-card-sentence', options),
+        data = await response.json();
+
+    if (!(200 <= response.status && response.status <= 299)) {
+        throw Error(data.error_message);
+    }
+
+    return [null, API_RATELIMIT];
 }
 
 
 // Scraping backend
 
-async function parseSentenceScrape(text) {
+async function parseScrape(text) {
     let response = await fetch(
         `https://jpdb.io/search?q=<…>${text.replaceAll('\n', '<\\>')}<…>`,
         { credentials: 'include' }
@@ -107,8 +162,8 @@ async function parseSentenceScrape(text) {
         const errorReason = doc.querySelector('.container')?.childNodes[1]?.textContent.trim();
         console.error(`Couldn't parse ${text}, reason: ${errorReason}`);
         if (errorReason === 'No results found.') {
-            // The sentence couldn't be parsed
-            return [{ tokens: [], vocab: [] }, JPDB_RATELIMIT];
+            // The sentence didn't contain any words jpdb understood
+            return [{ tokens: [], vocab: [] }, SCRAPE_RATELIMIT];
         }
         else {
             // Some other jpdb error ocurred
@@ -182,7 +237,15 @@ async function parseSentenceScrape(text) {
         }
     }
 
-    return [{ tokens, vocab }, JPDB_RATELIMIT];
+    return [{ tokens, vocab }, SCRAPE_RATELIMIT];
+}
+
+async function reviewScrape(vid, sid, rating) {
+
+}
+
+async function addToForqScrape(vid, sid, rating) {
+
 }
 
 
@@ -203,21 +266,40 @@ async function apiCaller() {
         const call = pendingAPICalls.shift();
         console.log('Servicing API call:', call);
 
-        switch (call.command) {
-            case 'parse': {
-                try {
-                    const parseFunc = config.useScraping ? parseSentenceScrape : parseSentenceAPI;
-                    const [result, waitTime] = await parseFunc(call.text);
-                    call.resolve(result);
-                    await sleep(waitTime);
-                }
-                catch (error) {
-                    call.reject(error)
-                }
-            } break;
+        try {
+            let resultAndWait;
 
-            default:
-                call.reject('Unknown command');
+            switch (call.command) {
+                case 'parse': {
+                    const func = config.useScraping ? parseScrape : parseAPI;
+                    resultAndWait = await func(call.text);
+                } break;
+
+                case 'addToDeck': {
+                    const func = (call.deckId === 'forq') ? addToForqScrape : addToDeckAPI;
+                    resultAndWait = await func(call.vid, call.sid, call.deckId);
+                } break;
+
+                case 'setSentence': {
+                    resultAndWait = await setSentenceAPI(call.vid, call.sid, call.sentence, call.translation);
+                } break;
+
+                case 'review': {
+                    resultAndWait = await reviewScrape(call.vid, call.sid, call.rating);
+                } break;
+
+                default:
+                    call.reject('Unknown command');
+            }
+
+            const [result, wait] = resultAndWait
+            call.resolve(result);
+            await sleep(wait);
+        }
+        catch (error) {
+            call.reject(error)
+            // TODO implement exponential backoff
+            await sleep(SCRAPE_RATELIMIT);
         }
     }
 
@@ -241,15 +323,21 @@ async function readFile(path) {
 
 const DEFAULT_WORD_CSS = await readFile('content_word.css');
 const DEFAULT_POPUP_CSS = await readFile('content_popup.css');
+const DEFAULT_DIALOG_CSS = await readFile('content_dialog.css');
 
 const config = {
     apiToken: localStorage.getItem('apiToken') ?? '',
     useScraping: JSON.parse(localStorage.getItem('useScraping') ?? false),
+    miningDeckId: localStorage.getItem('miningDeckId') ?? '',
+    forqDeckId: localStorage.getItem('forqDeckId') ?? 'forq',
+    blacklistDeckId: localStorage.getItem('blacklistDeckId') ?? 'blacklist',
+    neverForgetDeckId: localStorage.getItem('neverForgetDeckId') ?? 'never-forget',
     customWordCSS: localStorage.getItem('customWordCSS') ?? '',
     customPopupCSS: localStorage.getItem('customPopupCSS') ?? '',
 }
 config.wordCSS = DEFAULT_WORD_CSS + config.customWordCSS;
 config.popupCSS = DEFAULT_POPUP_CSS + config.customPopupCSS;
+config.dialogCSS = DEFAULT_DIALOG_CSS;
 
 
 // Content script communication
@@ -295,6 +383,34 @@ function onPortMessage(message, port) {
             apiCall('parse', { text: message.text })
                 .then(result => port.postMessage({ command: 'response', seq: message.seq, result }))
                 .catch(error => port.postMessage({ command: 'response', seq: message.seq, error }));
+        } break;
+
+        case 'addToBlacklist': {
+            apiCall('addToDeck', { vid: message.vid, sid: message.sid, deckId: config.blacklistDeckId });
+        } break;
+
+        case 'addToNeverForget': {
+            apiCall('addToDeck', { vid: message.vid, sid: message.sid, deckId: config.neverForgetDeckId });
+        } break;
+
+        case 'mine': {
+            apiCall('addToDeck', { vid: message.vid, sid: message.sid, deckId: config.miningDeckId });
+
+            if (message.sentence || message.translation) {
+                apiCall('setSentence', { vid: message.vid, sid: message.sid, sentence: message.sentence, translation: message.translation });
+            }
+
+            if (message.forq) {
+                apiCall('addToDeck', { vid: message.vid, sid: message.sid, deckId: config.forqDeckId });
+            }
+
+            if (message.review) {
+                apiCall('review', { vid: message.vid, sid: message.sid, rating: message.review });
+            }
+        } break;
+
+        case 'review': {
+            apiCall('review', { vid: message.vid, sid: message.sid, rating: message.rating });
         } break;
 
         case 'ping': {

@@ -1,6 +1,7 @@
 article {
     display: flex;
     flex-direction: column;
+    gap: 0.25em;
 
     width: 24em;
     margin: 0;
@@ -12,7 +13,39 @@ article {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
 }
 
-h1 {
+.mine-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 0.25em;
+    font-size: 10px;
+}
+
+button {
+    display: inline-block;
+
+    padding: 0.25em 0.5em;
+    margin: 0;
+    border: none;
+
+    font-size: 8px;
+    border-radius: 5px;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    
+    filter: saturate(50%);
+}
+
+button:hover {
+    filter: brightness(120%);
+}
+
+button:active {
+    filter: brightness(80%);
+}
+
+.header {
     display: flex;
     flex-direction: row;
     justify-content: left;
@@ -20,10 +53,10 @@ h1 {
     gap: 0.5em;
 
     margin: 0;
-    margin-bottom: 0.5em;
     padding: 0;
 
     font-size: 150%;
+    font-weight: bold;
 }
 
 .state {
@@ -48,6 +81,44 @@ ol {
     padding: 0;
     padding-left: 2em;
 }
+
+
+button.add {
+    background-color: rgb(75, 141, 255);
+}
+
+button.forq {
+    background-color: rgb(255, 69, 0);
+}
+
+button.blacklist {
+    background-color: rgb(119, 119, 119);
+}
+
+button.never-forget {
+    background-color: rgb(112, 192, 0);
+}
+
+button.nothing {
+    background-color: rgb(255, 0, 0);
+}
+
+button.something {
+    background-color: rgb(255, 0, 0);
+}
+
+button.hard {
+    background-color: rgb(255, 69, 0);
+}
+
+button.good {
+    background-color: rgb(112, 192, 0);
+}
+
+button.easy {
+    background-color: rgb(75, 141, 255);
+}
+
 
 .state .unparsed {}
 
