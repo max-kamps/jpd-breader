@@ -1,3 +1,5 @@
+import { config, getPopup, port, postCommand } from "../content/content.mjs";
+
 function checkConnectionEstablished(message, port) {
     if (message.command === 'updateConfig') {
         port.onMessage.removeListener(checkConnectionEstablished);
@@ -50,7 +52,7 @@ function checkConnectionEstablished(message, port) {
         }
 
         document.querySelector('input[type=submit]').addEventListener('click', (event) => {
-            postMessage({ command: 'updateConfig', config: updateConfig() });
+            postCommand('updateConfig', { config: updateConfig() });
             event.preventDefault();
         });
 

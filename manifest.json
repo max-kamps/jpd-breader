@@ -10,7 +10,7 @@
   "browser_action": {
     "default_icon": "icons/logo.svg",
     "default_title": "JPDB Browser Reader",
-    "default_popup": "popup.html"
+    "default_popup": "src/popup/popup.html"
   },
   "content_scripts": [
     {
@@ -19,16 +19,15 @@
         "*://ttu-ebook.web.app/*"
       ],
       "js": [
-        "content_common.js",
-        "content_ttu.js"
+        "src/content/inject_ttu.js"
       ],
       "css": [
-        "content_word.css"
+        "src/content/word.css"
       ]
     }
   ],
   "background": {
-    "page": "background.html",
+    "page": "src/background/background.html",
     "persistent": true
   },
   "permissions": [

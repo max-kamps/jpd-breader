@@ -1,23 +1,9 @@
-'use strict';
-
-
-// Utility functions
-
-function wrap(obj, func) {
-    return new Promise((resolve, reject) => { func(obj, resolve, reject) });
-}
-
-function html(strings, ...substitutions) {
-    var template = document.createElement('template');
-    template.innerHTML = String.raw(strings, ...substitutions).trim();
-    return template.content.firstElementChild;
-}
-
-
 // Popup-related functions
 
+import { html } from "../util.mjs";
+
 let _popup;
-function getPopup(addListeners = true) {
+export function getPopup(addListeners = true) {
     if (!_popup) {
         _popup = html`<div id=jpdb-popup style="all:initial;position:absolute;z-index:1000;opacity:0;visibility:hidden;top:0;left:0;"></div>`;
         const shadow = _popup.attachShadow({ mode: 'closed' });
@@ -50,14 +36,14 @@ function getPopup(addListeners = true) {
             });
 
             function doMine(command) {
-                postMessage({ command, vid: shadow.data.vid, sid: shadow.data.sid });
+                postCommand(command, { vid: shadow.data.vid, sid: shadow.data.sid });
             }
 
             shadow.querySelector('button.blacklist').addEventListener('click', () => { doMine('addToBlacklist'); });
             shadow.querySelector('button.never-forget').addEventListener('click', () => { doMine('addToNeverForget'); });
 
             function doReview(rating) {
-                postMessage({ command: 'review', rating, vid: shadow.data.vid, sid: shadow.data.sid });
+                postCommand('review', { rating, vid: shadow.data.vid, sid: shadow.data.sid });
             }
 
             shadow.querySelector('button.nothing').addEventListener('click', () => { doReview('nothing'); });
@@ -272,7 +258,7 @@ function hidePopup({ target: word }) {
 
 // Parsing-related functions
 
-function textFragments(nodes) {
+export function textFragments(nodes) {
     // Get a list of fragments (text nodes along with metainfo) contained in the given nodes
     let fragments = [];
     let offset = 0;
@@ -333,7 +319,7 @@ function replaceNode(original, replacement, keepOriginal = false) {
     }
 }
 
-function applyParseResult(fragments, result, keepTextNodes = false) {
+export function applyParseResult(fragments, result, keepTextNodes = false) {
     // keep_text_nodes is a workaround for a ttu issue.
     //   Ttu returns to your bookmarked position at load time. 
     //   To do that, it scrolls to a specific text node.
@@ -428,24 +414,24 @@ function applyParseResult(fragments, result, keepTextNodes = false) {
 
 // Background script communication
 
-let config = {};
+export let config = {};
 
 const waitingPromises = new Map();
 let nextSeq = 0;
 
-function postMessage(message) {
-    port.postMessage(message);
+export function postCommand(command, args) {
+    port.postMessage({ command, ...args });
 }
 
-function postRequest(message) {
-    message.seq = nextSeq++;
+export function postRequest(command, args) {
+    const seq = nextSeq++;
     return new Promise((resolve, reject) => {
-        waitingPromises.set(message.seq, { resolve, reject });
-        port.postMessage(message);
+        waitingPromises.set(seq, { resolve, reject });
+        port.postMessage({ command, seq, ...args });
     });
 }
 
-const port = browser.runtime.connect();
+export const port = browser.runtime.connect();
 port.onDisconnect.addListener(() => {
     console.error('disconnect:', port);
 });
