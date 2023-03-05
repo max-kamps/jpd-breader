@@ -98,7 +98,7 @@ function replaceNode(original: Node, replacement: HTMLElement, keepOriginal = fa
     }
 }
 
-const reverseIndex = new Map<string, { className: string; elements: HTMLElement[] }>();
+const reverseIndex = new Map<string, { className: string; elements: (HTMLElement & { jpdbData: JpdbWordData })[] }>();
 
 export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTextNodes = false) {
     // keep_text_nodes is a workaround for a ttu issue.
@@ -169,28 +169,16 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
                     onmouseleave={() => Popup.get().fadeOut()}>
                     {furiganaToRuby(token.furigana)}
                 </span>
-            );
+            ) as HTMLElement & { jpdbData: JpdbWordData };
 
-            // Insert card into reverse index
-            // The state of this card might have changed since the last time it has been parsed
-            // Check and potentially update
             const idx = reverseIndex.get(`${token.card.vid}/${token.card.sid}`);
             if (idx === undefined) {
-                // First time this word appears on this page
                 reverseIndex.set(`${token.card.vid}/${token.card.sid}`, { className, elements: [elem] });
-            } else if (idx.className !== className) {
-                // Old state is different from new state
-                for (const word of idx.elements) {
-                    word.className = className;
-                }
-
-                idx.elements.push(elem);
             } else {
-                // Old state is the same as new state
                 idx.elements.push(elem);
             }
 
-            (elem as HTMLElement & { jpdbData: JpdbWordData }).jpdbData = {
+            elem.jpdbData = {
                 token,
                 context: text,
                 contextOffset: curOffset,
@@ -302,8 +290,11 @@ port.onMessage.addListener((message, port) => {
 
                     for (const element of idx.elements) {
                         element.className = className;
+                        element.jpdbData.token.card.state = state;
                     }
                 }
+
+                Popup.get().render();
             }
             break;
 
