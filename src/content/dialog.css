@@ -28,7 +28,17 @@ article {
     font-weight: bold;
 }
 
-div[role=textbox] {
+#header a {
+    color: white;
+}
+
+#header a::after {
+    content: ' 🔗';
+    font-size: 50%;
+    vertical-align: middle;
+}
+
+div[role='textbox'] {
     border: 1px solid white;
     border-radius: 4px;
     padding: 0.25em;

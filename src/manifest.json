@@ -1,0 +1,34 @@
+{
+    "manifest_version": 2,
+    "name": "JPDB Browser Reader",
+    "version": "1.0",
+    "description": "JPDB parsing and mining in your browser",
+    "icons": {
+        "48": "icons/logo.svg",
+        "96": "icons/logo.svg"
+    },
+    "browser_action": {
+        "default_icon": "icons/logo.svg",
+        "default_title": "JPDB Browser Reader",
+        "default_popup": "browser_popup/popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://reader.ttsu.app/*", "*://ttu-ebook.web.app/*"],
+            "js": ["content/inject_ttu.js"],
+            "css": ["content/word.css"]
+        }
+    ],
+    "background": {
+        "page": "background/background.html",
+        "persistent": true
+    },
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "contextMenus",
+        "*://jpdb.io/*",
+        "*://reader.ttsu.app/*",
+        "*://ttu-ebook.web.app/*"
+    ]
+}

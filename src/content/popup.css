@@ -33,7 +33,7 @@ button {
     text-align: center;
     text-decoration: none;
     cursor: pointer;
-    
+
     filter: saturate(50%);
 }
 
@@ -45,7 +45,7 @@ button:active {
     filter: brightness(80%);
 }
 
-.header {
+#header {
     display: flex;
     flex-direction: row;
     justify-content: left;
@@ -57,6 +57,16 @@ button:active {
 
     font-size: 150%;
     font-weight: bold;
+}
+
+#header a {
+    color: white;
+}
+
+#header a::after {
+    content: ' 🔗';
+    font-size: 50%;
+    vertical-align: middle;
 }
 
 .state {
@@ -81,7 +91,6 @@ ol {
     padding: 0;
     padding-left: 2em;
 }
-
 
 button.add {
     background-color: rgb(75, 141, 255);
@@ -119,8 +128,8 @@ button.easy {
     background-color: rgb(75, 141, 255);
 }
 
-
-.state .unparsed {}
+.state .unparsed {
+}
 
 .state .locked {
     color: rgb(119, 119, 119);

@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "strictNullChecks": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "target": "es2022",
+        "module": "es2022",
+        "moduleResolution": "node16",
+        "jsx": "react",
+        "jsxFactory": "jsxCreateElement",
+        "jsxFragmentFactory": "NOT_IMPLEMENTED",
+        "typeRoots": ["dev_types"],
+        "outDir": "dist",
+        "rootDir": "src"
+    }
+}

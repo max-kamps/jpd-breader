@@ -2,7 +2,8 @@
     text-decoration: underline;
 }
 
-.jpdb-word.unparsed {}
+.jpdb-word.unparsed {
+}
 
 .jpdb-word.locked {
     color: rgb(119, 119, 119);

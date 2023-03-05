@@ -1,21 +1,18 @@
 (async () => {
     'use strict';
 
-    const content = await import(browser.runtime.getURL('/src/content/content.mjs'));
-    
-    function* iterSelectedNodes(selection, node) {
-        if (!selection.containsNode(node, true))
-            return;
+    const content: typeof import('./content.js') = await import(browser.runtime.getURL('/content/content.js'));
+
+    function* iterSelectedNodes(selection: Selection, node: Node): Generator<Text | HTMLElement> {
+        if (!selection.containsNode(node, true)) return;
 
         if (node.nodeType === Node.TEXT_NODE) {
             // TODO Support partial node selections?
-            yield node;
-        }
-        else if (node.nodeType == Node.ELEMENT_NODE) {
-            if (node.tagName === 'RUBY') {
-                yield node;
-            }
-            else {
+            yield node as Text;
+        } else if (node.nodeType == Node.ELEMENT_NODE) {
+            if ((node as Element).tagName === 'RUBY') {
+                yield node as HTMLElement;
+            } else {
                 for (const child of node.childNodes) {
                     yield* iterSelectedNodes(selection, child);
                 }
@@ -25,7 +22,10 @@
 
     try {
         const selection = getSelection();
-        const selectedNodes = new Set();
+
+        if (selection === null) return;
+
+        const selectedNodes = new Set<Text | HTMLElement>();
         for (let i = 0; i < selection.rangeCount; i++) {
             const range = selection.getRangeAt(i);
             // TODO Support partial node selections?
@@ -34,12 +34,12 @@
             }
         }
 
-        const fragments = content.textFragments(selectedNodes);
+        const fragments = content.textFragments(Array.from(selectedNodes.values()));
         const text = fragments.map(x => x.text).join('');
-        const result = await content.postRequest('parse', { text });
-        content.applyParseResult(fragments, result, false);
+        const tokens = await content.requestParse(text);
+        content.applyParseResult(fragments, tokens, false);
 
-        getSelection().empty();
+        getSelection()?.empty();
     } catch (error) {
         console.error(error);
         alert(`Error: ${error.message}`); // TODO replace with proper toast?

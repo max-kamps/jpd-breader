@@ -8,25 +8,34 @@ No
 
 ## Current Limitations
 
-* Does not work with the current jpdb API
-* Only supports Firefox
-* Does not support adding cards to decks or mining sentences yet
-* Probably has many bugs
+-   Does not work with the current jpdb API
+-   Only supports Firefox
+-   Does not support adding cards to decks or mining sentences yet
+-   Probably has many bugs
 
 ## Ongoing Work
 
-* Port to Chrome
-* Make it work with a non-persistent background page
-* Package for installation
-* Add mining
-* Finalize ttu integration
-* Add Wikipedia integration
-* Add customization menus that don't require entering custom CSS directly
-* Automatically update parsed words when their state changes
+-   Port to Chrome
+-   Make it work with a non-persistent background page
+-   Package for installation
+-   Add mining
+-   Finalize ttu integration
+-   Add Wikipedia integration
+-   Add customization menus that don't require entering custom CSS directly
+-   Automatically update parsed words when their state changes
 
 ## Installation
 
 I have not yet packaged this for installation, so you will have to install it unpacked.
+
+## Building
+
+```sh
+$ npm install
+$ npm run build
+```
+
+TODO add a better explanation
 
 ## Usage
 
