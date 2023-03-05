@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // NOTE This does not implement the entire webextensions API, only those parts I need.
+// NOTE This should only include features available in both Firefox and Chrome
 
 type _WebExtEvent<F extends (...args: any) => any> = {
     addListener: (callback: F) => void;
@@ -7,23 +8,18 @@ type _WebExtEvent<F extends (...args: any) => any> = {
     hasListener: (callback: F) => boolean;
 };
 
-declare namespace browser.tabs {
-    type Tab = {
-        // TODO
-    };
-}
+type MaybeOptional<T, Present> = (Present extends true ? T : never) | (Present extends false ? undefined : never);
 
 declare namespace browser.runtime {
     let id: string;
     let lastError: { message?: string };
 
-    type HasSender = 'HasSender';
     type Port<
-        Kind extends HasSender | never = never,
-        SenderKind extends IsContentScript | IsExtension | never = never,
+        HasSender extends true | false = true | false,
+        MessageSenderType extends MessageSender = MessageSender,
     > = {
         name: string;
-        sender: Kind extends HasSender ? MessageSender<SenderKind> : undefined;
+        sender: MaybeOptional<MessageSenderType, HasSender>;
         // error: {message: string},  // Firefox-only, use runtime.lastError on Chrome
 
         disconnect: () => void;
@@ -33,12 +29,16 @@ declare namespace browser.runtime {
         onDisconnect: _WebExtEvent<(port: Port) => void>;
     };
 
-    type IsContentScript = 'IsContentScript';
-    type IsExtension = 'IsExtension';
-    type MessageSender<Kind extends IsContentScript | IsExtension | never = never> = {
-        tab: Kind extends IsContentScript ? tabs.Tab : undefined;
-        frameId: Kind extends IsContentScript ? tabs.Tab : undefined;
-        id: Kind extends IsExtension ? string : undefined;
+    type ContentScriptPort = browser.runtime.Port<true, browser.runtime.MessageSender<true, true>>;
+    type ExtensionPort = browser.runtime.Port<true, browser.runtime.MessageSender<true>>;
+
+    type MessageSender<
+        IsExtension extends true | false = true | false,
+        IsContentScript extends IsExtension | false = IsExtension | false,
+    > = {
+        id: MaybeOptional<string, IsExtension>;
+        tab: MaybeOptional<tabs.Tab, IsContentScript>;
+        frameId: MaybeOptional<tabs.Tab, IsContentScript>;
         url?: string; // TODO unclear when this can be undefined
         tlsChannelId?: string; // TODO unclear what this is, or when it can be undefined
 
@@ -68,9 +68,125 @@ declare namespace browser.runtime {
     const onSuspendCanceled: _WebExtEvent<() => void>;
     const onUpdateAvailable: _WebExtEvent<(details: { version: string }) => void>;
     const onRestartRequired: _WebExtEvent<(reason: OnRestartRequiredReason) => void>;
-    const onConnect: _WebExtEvent<(port: Port<HasSender>) => void>;
+    const onConnect: _WebExtEvent<(port: Port<true>) => void>;
     // const onConnectExternal: _WebExtEvent<TODO>;
     // const onConnectNative: _WebExtEvent<TODO>;
     // const onMessage: _WebExtEvent<TODO>;
     // const onMessageExternal: _WebExtEvent<TODO>;
+}
+
+declare namespace browser.tabs {
+    type MutedInfoReason = 'capture' | 'extension' | 'user';
+    type MutedInfo = {
+        muted: boolean;
+        reason?: MutedInfoReason;
+        extensionId?: string;
+    };
+
+    type Tab = {
+        id: number; // can actually be undefined (when using session foreign tabs), but not in our case
+        index: number;
+        windowId: number;
+        sessionId?: string;
+        openerTabId?: number;
+        status: 'loading' | 'complete';
+
+        active: boolean;
+        highlighted: boolean;
+        pinned: boolean;
+        audible?: boolean;
+        mutedInfo: MutedInfo;
+        incognito: boolean;
+        autoDiscardable?: boolean;
+        discarded?: boolean;
+
+        title?: string; // Only available with 'tabs' or host permission
+        url?: string; // Only available with 'tabs' or host permission
+        favIconUrl?: string; // Only available with 'tabs' or host permission
+
+        width?: number;
+        height?: number;
+    };
+
+    const TAB_ID_NONE: number;
+
+    type _InjectDetails = {
+        allFrames?: boolean;
+        frameId?: number;
+        matchAboutBlank?: boolean;
+
+        file?: `/${string}`; // Chrome and Firefox handle relative URLs differently, so must start with / to be cross-browser
+        code?: string;
+    };
+
+    type _ExecuteScriptDetails = _InjectDetails & {
+        runAt?: 'document_start' | 'document_end' | 'document_idle';
+    };
+
+    type _InsertStyleDetails = _InjectDetails & {
+        runAt?: 'document_start' | 'document_end' | 'document_idle';
+        cssOrigin?: 'author' | 'user';
+    };
+
+    type _RemoveStyleDetails = _InjectDetails & {
+        cssOrigin?: 'author' | 'user';
+    };
+
+    function executeScript(tabId: number, details: _ExecuteScriptDetails): Promise<any[]>;
+    function executeScript(details: _ExecuteScriptDetails): Promise<any[]>;
+
+    function insertCSS(tabId: number, details: _InsertStyleDetails): Promise<void>;
+    function insertCSS(details: _InsertStyleDetails): Promise<void>;
+
+    function removeCSS(tabId: number, details: _RemoveStyleDetails): Promise<void>;
+    function removeCSS(details: _RemoveStyleDetails): Promise<void>;
+}
+
+declare namespace browser.contextMenus {
+    type ContextType =
+        | 'all'
+        | 'page'
+        | 'frame'
+        | 'selection'
+        | 'link'
+        | 'editable'
+        | 'image'
+        | 'video'
+        | 'audio'
+        | 'browser_action'
+        | 'page_action';
+
+    type _CreateDetails = {
+        contexts?: ContextType[];
+        documentUrlPatterns?: string[];
+        id: string; // Actually optional for persistent V2 pages
+        parentId?: string | number;
+        enabled?: boolean;
+        visible?: boolean;
+        type?: 'normal' | 'checkbox' | 'radio' | 'separator';
+        title: string;
+        checked?: boolean;
+        // onclick: ... // Only available for persistent pages
+    };
+
+    function create(createProperties: _CreateDetails, callback?: () => void): string | number;
+
+    type OnClickData = {
+        menuItemId: string | number;
+        parentMenuItemId?: string | number;
+
+        pageUrl?: string;
+        frameId?: number;
+        frameUrl?: string;
+
+        editable: boolean;
+        linkUrl?: string;
+        srcUrl?: string;
+        mediaType?: 'image' | 'video' | 'audio';
+        selectionText?: string;
+        checked?: boolean;
+        wasChecked?: boolean;
+    };
+
+    const onClicked: _WebExtEvent<(info: OnClickData, tab: tabs.Tab) => void>;
 }

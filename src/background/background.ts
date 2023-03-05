@@ -51,7 +51,7 @@ export const config: Config = (() => {
 
 // Content script communication
 
-const ports = new Set<browser.runtime.Port>();
+const ports = new Set<browser.runtime.ContentScriptPort>();
 
 function postCommand(port: browser.runtime.Port, command: string, args: { [key: string]: any }) {
     port.postMessage({ command, ...args });
@@ -165,6 +165,13 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
 
 browser.runtime.onConnect.addListener(port => {
     console.log('connect:', port);
+
+    if (port.sender.tab === undefined) {
+        // Connection was not from a content script
+        port.disconnect();
+        return;
+    }
+
     ports.add(port);
 
     port.onDisconnect.addListener(onPortDisconnect);
@@ -183,9 +190,9 @@ function portForTab(tabId: number): browser.runtime.Port | undefined {
     return undefined;
 }
 
-browser.contextMenus.create({
+const parseSelection = browser.contextMenus.create({
     id: 'parse-selection',
-    title: 'Parse with jpdb',
+    title: 'Parse 「%s」with jpdb',
     contexts: ['selection'],
 });
 
@@ -197,7 +204,7 @@ async function insertCSS(tabId: number) {
 }
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
-    if (info.menuItemId === 'parse-selection') {
+    if (info.menuItemId === parseSelection) {
         const port = portForTab(tab.id);
 
         if (port === undefined) {
