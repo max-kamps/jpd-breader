@@ -4,11 +4,24 @@
     "version": "1.0",
     "description": "JPDB parsing and mining in your browser",
     "icons": {
-        "48": "icons/logo.svg",
-        "96": "icons/logo.svg"
+        "16": "icons/logo_16.png",
+        "24": "icons/logo_24.png",
+        "32": "icons/logo_32.png",
+        "48": "icons/logo_48.png",
+        "64": "icons/logo_64.png",
+        "96": "icons/logo_96.png",
+        "128": "icons/logo_128.png"
     },
     "browser_action": {
-        "default_icon": "icons/logo.svg",
+        "default_icon": {
+            "16": "icons/logo_16.png",
+            "24": "icons/logo_24.png",
+            "32": "icons/logo_32.png",
+            "48": "icons/logo_48.png",
+            "64": "icons/logo_64.png",
+            "96": "icons/logo_96.png",
+            "128": "icons/logo_128.png"
+        },
         "default_title": "JPDB Browser Reader",
         "default_popup": "browser_popup/popup.html"
     },
@@ -23,12 +36,7 @@
         "page": "background/background.html",
         "persistent": true
     },
-    "web_accessible_resources": [
-        "content/content.js",
-        "content/dialog.js",
-        "content/popup.js",
-        "util.js"
-    ],
+    "web_accessible_resources": ["content/content.js", "content/dialog.js", "content/popup.js", "util.js"],
     "permissions": [
         "tabs",
         "activeTab",
