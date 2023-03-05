@@ -1,4 +1,4 @@
-import { Card, Config, Token } from '../types.js';
+import { Card, CardState, Config, Token } from '../types.js';
 import { assertNonNull, jsxCreateElement } from '../util.js';
 import { Popup } from './popup.js';
 import { JpdbWordData } from './types.js';
@@ -98,6 +98,8 @@ function replaceNode(original: Node, replacement: HTMLElement, keepOriginal = fa
     }
 }
 
+const reverseIndex = new Map<string, { className: string; elements: HTMLElement[] }>();
+
 export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTextNodes = false) {
     // keep_text_nodes is a workaround for a ttu issue.
     //   Ttu returns to your bookmarked position at load time.
@@ -157,15 +159,36 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
             // TODO take into account fragment furigana
             // TODO Token might overlap end of fragment... Figure out this edge case later
 
+            const className = `jpdb-word ${token.card.state.join(' ')}`;
+
             // FIXME(Security) Not escaped
             const elem = (
                 <span
-                    class={`jpdb-word ${token.card.state.join(' ')}`}
+                    class={className}
                     onmouseenter={({ target }) => Popup.get().showForWord(target! as HTMLElement)}
                     onmouseleave={() => Popup.get().fadeOut()}>
                     {furiganaToRuby(token.furigana)}
                 </span>
             );
+
+            // Insert card into reverse index
+            // The state of this card might have changed since the last time it has been parsed
+            // Check and potentially update
+            const idx = reverseIndex.get(`${token.card.vid}/${token.card.sid}`);
+            if (idx === undefined) {
+                // First time this word appears on this page
+                reverseIndex.set(`${token.card.vid}/${token.card.sid}`, { className, elements: [elem] });
+            } else if (idx.className !== className) {
+                // Old state is different from new state
+                for (const word of idx.elements) {
+                    word.className = className;
+                }
+
+                idx.elements.push(elem);
+            } else {
+                // Old state is the same as new state
+                idx.elements.push(elem);
+            }
 
             (elem as HTMLElement & { jpdbData: JpdbWordData }).jpdbData = {
                 token,
@@ -192,6 +215,8 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
         }
     }
 }
+
+function updateCardState(vid: number, sid: number) {}
 
 // Background script communication
 
@@ -261,6 +286,24 @@ port.onMessage.addListener((message, port) => {
         case 'updateConfig':
             {
                 config = Object.assign(config ?? {}, message.config);
+            }
+            break;
+
+        case 'updateWordState':
+            {
+                config = Object.assign(config ?? {}, message.config);
+
+                for (const [vid, sid, state] of message.words) {
+                    const idx = reverseIndex.get(`${vid}/${sid}`);
+                    if (idx === undefined) continue;
+
+                    const className = `jpdb-word ${state.join(' ')}`;
+                    if (idx.className === className) continue;
+
+                    for (const element of idx.elements) {
+                        element.className = className;
+                    }
+                }
             }
             break;
 

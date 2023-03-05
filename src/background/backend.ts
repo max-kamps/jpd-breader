@@ -106,14 +106,16 @@ type VocabFields = {
     due_at: number;
 };
 
-export function parse(text: string): Promise<Token[]> {
+type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
+
+export function parse(text: string): Promise<[Token[], Card[]]> {
     return enqueue(() => _parse(text));
 }
 
 // NOTE: If you change these, make sure to change the .map calls in _parse too
 const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'furigana'] as const;
 const VOCAB_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'meanings', 'card_state'] as const;
-async function _parse(text: string): Response<Token[]> {
+async function _parse(text: string): Response<[Token[], Card[]]> {
     const options = {
         method: 'POST',
         headers: {
@@ -135,7 +137,6 @@ async function _parse(text: string): Response<Token[]> {
         throw Error(data.error_message);
     }
 
-    type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
     const data: {
         tokens: MapFieldTuple<typeof TOKEN_FIELDS, TokenFields>[];
         vocabulary: MapFieldTuple<typeof VOCAB_FIELDS, VocabFields>[];
@@ -155,7 +156,7 @@ async function _parse(text: string): Response<Token[]> {
         return { card, offset: positionUtf16, length: lengthUtf16, furigana: furigana ?? [card.reading] };
     });
 
-    return [tokens, API_RATELIMIT];
+    return [[tokens, cards], API_RATELIMIT];
 }
 
 export function addToDeck(
@@ -237,11 +238,45 @@ export function review(
     return enqueue(() => _reviewScrape(vid, sid, rating));
 }
 
-export async function _reviewScrape(
+async function _reviewScrape(
     vid: number,
     sid: number,
     rating: 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'pass' | 'fail',
 ): Response {
     throw Error('Reviewing not yet implemented');
     return [null, SCRAPE_RATELIMIT];
+}
+
+export function getCardState(vid: number, sid: number): Promise<CardState> {
+    return enqueue(() => _getCardState(vid, sid));
+}
+
+async function _getCardState(vid: number, sid: number): Response<CardState> {
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.apiToken}`,
+            Accept: 'application/json',
+        },
+        body: JSON.stringify({
+            list: [[vid, sid]],
+            fields: ['card_state'],
+        }),
+    };
+
+    const response = await fetch('https://jpdb.io/api/v1/lookup-vocabulary', options);
+
+    if (!(200 <= response.status && response.status <= 299)) {
+        const data: JpdbError = await response.json();
+        throw Error(data.error_message);
+    }
+
+    type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
+    const data: { vocabulary_info: [MapFieldTuple<['card_state'], VocabFields> | null] } = await response.json();
+
+    const vocabInfo = data.vocabulary_info[0];
+    if (vocabInfo === null) throw new Error(`Can't get state of card ${vid}/${sid} - that card does not exist`);
+
+    return [vocabInfo[0], API_RATELIMIT];
 }

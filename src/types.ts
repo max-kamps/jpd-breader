@@ -23,7 +23,7 @@ export type Token = {
     furigana: (string | [string, string])[];
 };
 
-type CardState =
+export type CardState =
     | ['new' | 'learning' | 'known' | 'never-forget' | 'due' | 'failed' | 'suspended' | 'blacklisted']
     | ['redundant', 'learning' | 'known' | 'never-forget' | 'due' | 'failed' | 'suspended']
     | ['locked', 'new' | 'due' | 'failed']
