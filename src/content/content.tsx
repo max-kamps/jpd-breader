@@ -293,6 +293,8 @@ port.onMessage.addListener((message, port) => {
                         element.className = className;
                         element.jpdbData.token.card.state = state;
                     }
+
+                    idx.className = className;
                 }
 
                 Popup.get().render();
