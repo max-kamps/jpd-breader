@@ -1,6 +1,12 @@
 import { Config } from '../types.js';
-import { readExtFile } from '../util.js';
+import { isChrome, browser, readExtFile } from '../util.js';
 import * as backend from './backend.js';
+
+if (isChrome) {
+    (Error.prototype as any).toJSON = function () {
+        return { message: this.message };
+    };
+}
 
 // Config management
 

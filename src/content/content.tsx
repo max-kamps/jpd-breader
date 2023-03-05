@@ -1,5 +1,5 @@
 import { Card, CardState, Config, Token } from '../types.js';
-import { assertNonNull, jsxCreateElement } from '../util.js';
+import { browser, assertNonNull, jsxCreateElement } from '../util.js';
 import { Popup } from './popup.js';
 import { JpdbWordData } from './types.js';
 
@@ -204,8 +204,6 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
     }
 }
 
-function updateCardState(vid: number, sid: number) {}
-
 // Background script communication
 
 export let config: Config;
@@ -263,8 +261,11 @@ port.onMessage.addListener((message, port) => {
                 waitingPromises.delete(message.seq);
                 if (message.error !== undefined) {
                     console.error(message.error);
-                    alert(message.error);
-                    promise.reject(message.error);
+                    if (promise !== undefined) {
+                        promise.reject(message.error);
+                    } else {
+                        alert(`Error: ${message.error.message}`);
+                    }
                 } else {
                     promise.resolve(message.result);
                 }

@@ -1,3 +1,11 @@
+export const [browser, isChrome] = (() => {
+    if (globalThis.browser !== undefined) {
+        return [globalThis.browser, false];
+    } else {
+        return [chrome, true];
+    }
+})();
+
 export function assert(condition: boolean, message: string): asserts condition {
     if (!condition) {
         debugger;

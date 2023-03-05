@@ -14,12 +14,9 @@ declare namespace browser.runtime {
     let id: string;
     let lastError: { message?: string };
 
-    type Port<
-        HasSender extends true | false = true | false,
-        MessageSenderType extends MessageSender = MessageSender,
-    > = {
+    type Port<MessageSenderType extends MessageSender = MessageSender> = {
         name: string;
-        sender: MaybeOptional<MessageSenderType, HasSender>;
+        sender: MessageSenderType; // Docs say this might be undefined outside of onConnect, but it never is for me
         // error: {message: string},  // Firefox-only, use runtime.lastError on Chrome
 
         disconnect: () => void;
@@ -29,8 +26,8 @@ declare namespace browser.runtime {
         onDisconnect: _WebExtEvent<(port: Port) => void>;
     };
 
-    type ContentScriptPort = browser.runtime.Port<true, browser.runtime.MessageSender<true, true>>;
-    type ExtensionPort = browser.runtime.Port<true, browser.runtime.MessageSender<true>>;
+    type ContentScriptPort = browser.runtime.Port<browser.runtime.MessageSender<true, true>>;
+    type ExtensionPort = browser.runtime.Port<browser.runtime.MessageSender<true>>;
 
     type MessageSender<
         IsExtension extends true | false = true | false,
@@ -68,7 +65,7 @@ declare namespace browser.runtime {
     const onSuspendCanceled: _WebExtEvent<() => void>;
     const onUpdateAvailable: _WebExtEvent<(details: { version: string }) => void>;
     const onRestartRequired: _WebExtEvent<(reason: OnRestartRequiredReason) => void>;
-    const onConnect: _WebExtEvent<(port: Port<true>) => void>;
+    const onConnect: _WebExtEvent<(port: Port) => void>;
     // const onConnectExternal: _WebExtEvent<TODO>;
     // const onConnectNative: _WebExtEvent<TODO>;
     // const onMessage: _WebExtEvent<TODO>;
@@ -190,3 +187,5 @@ declare namespace browser.contextMenus {
 
     const onClicked: _WebExtEvent<(info: OnClickData, tab: tabs.Tab) => void>;
 }
+
+declare let chrome: typeof browser;

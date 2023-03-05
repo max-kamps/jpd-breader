@@ -1,7 +1,9 @@
 (async () => {
     'use strict';
 
-    const content: typeof import('./content.js') = await import(browser.runtime.getURL('/content/content.js'));
+    const content: typeof import('./content.js') = await import(
+        (globalThis.browser ?? chrome).runtime.getURL('/content/content.js')
+    );
 
     function* iterSelectedNodes(selection: Selection, node: Node): Generator<Text | HTMLElement> {
         if (!selection.containsNode(node, true)) return;

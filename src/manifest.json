@@ -23,6 +23,12 @@
         "page": "background/background.html",
         "persistent": true
     },
+    "web_accessible_resources": [
+        "content/content.js",
+        "content/dialog.js",
+        "content/popup.js",
+        "util.js"
+    ],
     "permissions": [
         "tabs",
         "activeTab",

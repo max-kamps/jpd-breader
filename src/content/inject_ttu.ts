@@ -1,7 +1,9 @@
 (async () => {
     'use strict';
 
-    const content = await import(browser.runtime.getURL('/src/content/content.mjs'));
+    const content: typeof import('./content.js') = await import(
+        (globalThis.browser ?? chrome).runtime.getURL('/content/content.js')
+    );
 
     function* iterTextNodes(node) {
         if (node.nodeType === Node.TEXT_NODE) {

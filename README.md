@@ -8,12 +8,11 @@ No
 
 ## Current Limitations
 
--   Only supports Firefox
 -   Probably has many bugs
+-   Does not support reviewing or forqing yet
 
 ## Ongoing Work
 
--   Port to Chrome
 -   Make it work with a non-persistent background page
 -   Package for installation
 -   Finalize ttu integration
