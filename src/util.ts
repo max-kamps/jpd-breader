@@ -64,7 +64,7 @@ export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
 
     if (props) {
         for (const [key, value] of Object.entries(props)) {
-            if (value instanceof Function) {
+            if (key.startsWith('on')) {
                 elem.addEventListener(key.replace(/^on/, ''), value);
             } else {
                 elem.setAttribute(key, value);
