@@ -1,4 +1,4 @@
-import { sleep } from '../util.js';
+import { assertNonNull, sleep } from '../util.js';
 import { config } from './background.js';
 import { Card, Token } from '../types.js';
 
@@ -304,12 +304,64 @@ export function review(
     return enqueue(() => _reviewScrape(vid, sid, rating));
 }
 
-async function _reviewScrape(
-    vid: number,
-    sid: number,
-    rating: 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'pass' | 'fail',
-): Response {
-    throw Error('Reviewing not yet implemented');
+const REVIEW_GRADES = {
+    nothing: '1',
+    something: '2',
+    hard: '3',
+    good: '4',
+    easy: '5',
+
+    pass: 'p',
+    fail: 'f',
+
+    known: 'k',
+    unknown: 'n',
+    never_forget: 'w',
+    blacklist: '-1',
+};
+async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVIEW_GRADES): Response {
+    // Get current review number
+    const response = await fetch(`https://jpdb.io/review?c=vf%2C${vid}%2C${sid}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            Accept: '*/*',
+        },
+    });
+
+    if (response.status >= 400) {
+        throw Error(`Could not get review number, HTTP error ${response.status}`);
+    }
+
+    // Run this concurrently while we do the parsing
+    const ratelimitSleep = sleep(SCRAPE_RATELIMIT * 1000);
+
+    const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+    const reviewNoInput: HTMLInputElement | null = doc.querySelector(
+        'form[action^="/review"] input[type=hidden][name=r]',
+    );
+
+    assertNonNull(reviewNoInput);
+
+    const reviewNo = parseInt(reviewNoInput.value);
+
+    await ratelimitSleep;
+
+    const reviewResponse = await fetch('https://jpdb.io/review', {
+        method: 'POST',
+        credentials: 'include',
+        redirect: 'manual',
+        headers: {
+            Accept: '*/*',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `c=vf%2C${vid}%2C${sid}&r=${reviewNo}&g=${REVIEW_GRADES[rating]}`, // &force=true
+    });
+
+    if (reviewResponse.status >= 400) {
+        throw Error(`Could not add review, HTTP error ${reviewResponse.status}`);
+    }
+
     return [null, SCRAPE_RATELIMIT];
 }
 
