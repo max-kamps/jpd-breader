@@ -120,15 +120,19 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                 }
                 break;
 
-            case 'addToSpecial':
-                postResponse(port, message, {
-                    result: await backend.addToDeck(
-                        message.vid,
-                        message.sid,
-                        message.deck === 'blacklist' ? config.blacklistDeckId : config.neverForgetDeckId,
-                    ),
-                });
-                broadcastNewWordState(message.vid, message.sid);
+            case 'setFlag':
+                {
+                    const deckId = message.flag === 'blacklist' ? config.blacklistDeckId : config.neverForgetDeckId;
+
+                    if (message.state === true) {
+                        await backend.addToDeck(message.vid, message.sid, deckId);
+                    } else {
+                        await backend.removeFromDeck(message.vid, message.sid, deckId);
+                    }
+
+                    postResponse(port, message, { result: null });
+                    broadcastNewWordState(message.vid, message.sid);
+                }
                 break;
 
             case 'review':

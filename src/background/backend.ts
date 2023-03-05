@@ -192,7 +192,64 @@ async function _addToDeck(vid: number, sid: number, deckId: number | 'blacklist'
 }
 
 async function _addToForqScrape(vid: number, sid: number): Response {
-    throw Error('Adding to forq not yet implemented');
+    await fetch('https://jpdb.io/prioritize', {
+        method: 'POST',
+        credentials: 'include',
+        redirect: 'manual',
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0',
+            Accept: '*/*',
+            'content-type': 'application/x-www-form-urlencoded',
+        },
+        body: `v=${vid}&s=${sid}&origin=/`,
+    });
+    return [null, SCRAPE_RATELIMIT];
+}
+
+export function removeFromDeck(
+    vid: number,
+    sid: number,
+    deckId: number | 'blacklist' | 'never-forget' | 'forq',
+): Promise<null> {
+    return enqueue(() => (deckId === 'forq' ? _removeFromForqScrape(vid, sid) : _removeFromDeck(vid, sid, deckId)));
+}
+
+async function _removeFromDeck(vid: number, sid: number, deckId: number | 'blacklist' | 'never-forget'): Response {
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.apiToken}`,
+            Accept: 'application/json',
+        },
+        body: JSON.stringify({
+            id: deckId,
+            vocabulary: [[vid, sid]],
+        }),
+    };
+
+    const response = await fetch('https://jpdb.io/api/v1/deck/remove-vocabulary', options);
+
+    if (!(200 <= response.status && response.status <= 299)) {
+        const data: JpdbError = await response.json();
+        throw Error(data.error_message);
+    }
+
+    return [null, API_RATELIMIT];
+}
+
+async function _removeFromForqScrape(vid: number, sid: number): Response {
+    await fetch('https://jpdb.io/deprioritize', {
+        method: 'POST',
+        credentials: 'include',
+        redirect: 'manual',
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0',
+            Accept: '*/*',
+            'content-type': 'application/x-www-form-urlencoded',
+        },
+        body: `v=${vid}&s=${sid}&origin=`,
+    });
     return [null, SCRAPE_RATELIMIT];
 }
 

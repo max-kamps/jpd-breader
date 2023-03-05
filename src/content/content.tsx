@@ -1,4 +1,4 @@
-import { Card, CardState, Config, Token } from '../types.js';
+import { Card, Config, Token } from '../types.js';
 import { browser, assertNonNull, jsxCreateElement } from '../util.js';
 import { Popup } from './popup.js';
 import { JpdbWordData } from './types.js';
@@ -223,8 +223,12 @@ export async function requestParse(text: string): Promise<Token[]> {
     return (await postRequest('parse', { text })) as Token[];
 }
 
-export async function requestAddToSpecial(card: Card, deck: 'blacklist' | 'never-forget'): Promise<unknown> {
-    return await postRequest('addToSpecial', { deck, vid: card.vid, sid: card.sid });
+export async function requestSetFlag(
+    card: Card,
+    flag: 'blacklist' | 'never-forget' | 'forq',
+    state: boolean,
+): Promise<unknown> {
+    return await postRequest('setFlag', { vid: card.vid, sid: card.sid, flag, state });
 }
 
 export async function requestMine(

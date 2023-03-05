@@ -1,5 +1,5 @@
 import { jsxCreateElement } from '../util.js';
-import { config, requestAddToSpecial, requestMine, requestReview } from './content.js';
+import { config, requestReview, requestSetFlag } from './content.js';
 import { Dialog } from './dialog.js';
 import { JpdbWordData } from './types.js';
 
@@ -74,10 +74,12 @@ function getClosestClientRect(elem: HTMLElement, x: number, y: number): DOMRect 
 }
 
 export class Popup {
+    #demoMode: boolean;
     #element: HTMLElement;
     #style: CSSStyleDeclaration;
     #coverStyle: CSSStyleDeclaration;
     #vocabSection: HTMLElement;
+    #mineButtons: HTMLElement;
     #data: JpdbWordData;
 
     static #popup: Popup;
@@ -98,6 +100,8 @@ export class Popup {
     }
 
     constructor(demoMode = false) {
+        this.#demoMode = demoMode;
+
         this.#element = (
             <div
                 id='jpdb-popup'
@@ -115,24 +119,7 @@ export class Popup {
             <style>{config.popupCSS}</style>,
             (cover = <div id='transition-cover'></div>),
             <article lang='ja'>
-                <section class='mine-buttons'>
-                    Mine:
-                    <button class='add' onclick={demoMode ? undefined : () => Dialog.get().showForWord(this.#data)}>
-                        Add to deck...
-                    </button>
-                    <button
-                        class='blacklist'
-                        onclick={demoMode ? undefined : () => requestAddToSpecial(this.#data.token.card, 'blacklist')}>
-                        Blacklist
-                    </button>
-                    <button
-                        class='never-forget'
-                        onclick={
-                            demoMode ? undefined : () => requestAddToSpecial(this.#data.token.card, 'never-forget')
-                        }>
-                        Never Forget
-                    </button>
-                </section>
+                {(this.#mineButtons = <section class='mine-buttons'></section>)}
                 <section class='mine-buttons'>
                     Review:
                     <button
@@ -210,6 +197,32 @@ export class Popup {
                     <li>{gloss}</li>
                 ))}
             </ol>,
+        );
+
+        const blacklisted = (card.state as string[]).includes('blacklisted');
+        const neverForget = (card.state as string[]).includes('never-forget');
+
+        this.#mineButtons.replaceChildren(
+            'Mine:',
+            <button class='add' onclick={this.#demoMode ? undefined : () => Dialog.get().showForWord(this.#data)}>
+                Add to deck...
+            </button>,
+            <button
+                class='blacklist'
+                onclick={
+                    this.#demoMode ? undefined : () => requestSetFlag(this.#data.token.card, 'blacklist', !blacklisted)
+                }>
+                {!blacklisted ? 'Blacklist' : 'Remove from blacklist'}
+            </button>,
+            <button
+                class='never-forget'
+                onclick={
+                    this.#demoMode
+                        ? undefined
+                        : () => requestSetFlag(this.#data.token.card, 'never-forget', !neverForget)
+                }>
+                {!neverForget ? 'Never forget' : 'Unmark as never forget'}
+            </button>,
         );
     }
 
