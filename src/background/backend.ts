@@ -192,7 +192,7 @@ async function _addToDeck(vid: number, sid: number, deckId: number | 'blacklist'
 }
 
 async function _addToForqScrape(vid: number, sid: number): Response {
-    await fetch('https://jpdb.io/prioritize', {
+    const response = await fetch('https://jpdb.io/prioritize', {
         method: 'POST',
         credentials: 'include',
         redirect: 'manual',
@@ -203,6 +203,11 @@ async function _addToForqScrape(vid: number, sid: number): Response {
         },
         body: `v=${vid}&s=${sid}&origin=/`,
     });
+
+    if (response.status >= 400) {
+        throw Error(`Could not add to FORQ, HTTP error ${response.status}`);
+    }
+
     return [null, SCRAPE_RATELIMIT];
 }
 
@@ -239,17 +244,21 @@ async function _removeFromDeck(vid: number, sid: number, deckId: number | 'black
 }
 
 async function _removeFromForqScrape(vid: number, sid: number): Response {
-    await fetch('https://jpdb.io/deprioritize', {
+    const response = await fetch('https://jpdb.io/deprioritize', {
         method: 'POST',
         credentials: 'include',
         redirect: 'manual',
         headers: {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0',
             Accept: '*/*',
             'content-type': 'application/x-www-form-urlencoded',
         },
         body: `v=${vid}&s=${sid}&origin=`,
     });
+
+    if (response.status >= 400) {
+        throw Error(`Could not remove from FORQ, HTTP error ${response.status}`);
+    }
+
     return [null, SCRAPE_RATELIMIT];
 }
 
