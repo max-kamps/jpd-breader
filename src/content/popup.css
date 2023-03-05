@@ -1,9 +1,15 @@
+#transition-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 article {
     display: flex;
     flex-direction: column;
     gap: 0.25em;
 
-    width: 24em;
+    max-width: 24em;
     margin: 0;
     padding: 1em;
 

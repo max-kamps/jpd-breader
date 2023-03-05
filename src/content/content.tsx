@@ -165,7 +165,7 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
             const elem = (
                 <span
                     class={className}
-                    onmouseenter={({ target }) => Popup.get().showForWord(target! as HTMLElement)}
+                    onmouseenter={({ target, x, y }) => Popup.get().showForWord(target! as HTMLElement, x, y)}
                     onmouseleave={() => Popup.get().fadeOut()}>
                     {furiganaToRuby(token.furigana)}
                 </span>

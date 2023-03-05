@@ -3,9 +3,80 @@ import { config, requestAddToSpecial, requestMine, requestReview } from './conte
 import { Dialog } from './dialog.js';
 import { JpdbWordData } from './types.js';
 
+function getClosestClientRect(elem: HTMLElement, x: number, y: number): DOMRect {
+    const rects = elem.getClientRects();
+
+    if (rects.length === 1) return rects[0];
+
+    // Merge client rects that are adjacent
+    // This works around a Chrome issue, where sometimes, non-deterministically,
+    // inline child elements will get separate client rects, even if they are on the same line.
+
+    const { writingMode } = getComputedStyle(elem);
+    const horizontal = writingMode.startsWith('horizontal');
+
+    const mergedRects: DOMRect[] = [];
+    for (const rect of rects) {
+        if (mergedRects.length === 0) {
+            mergedRects.push(rect);
+            continue;
+        }
+
+        const prevRect = mergedRects[mergedRects.length - 1];
+
+        if (horizontal) {
+            if (rect.bottom === prevRect.bottom && rect.left === prevRect.right) {
+                mergedRects[mergedRects.length - 1] = new DOMRect(
+                    prevRect.x,
+                    prevRect.y,
+                    rect.right - prevRect.left,
+                    prevRect.height,
+                );
+            } else {
+                mergedRects.push(rect);
+            }
+        } else {
+            if (rect.right === prevRect.right && rect.top === prevRect.bottom) {
+                mergedRects[mergedRects.length - 1] = new DOMRect(
+                    prevRect.x,
+                    prevRect.y,
+                    prevRect.width,
+                    rect.bottom - prevRect.top,
+                );
+            } else {
+                mergedRects.push(rect);
+            }
+        }
+    }
+
+    // Debugging this was a nightmare, so I'm leaving this debug code here
+
+    // console.log(rects);
+    // console.log(mergedRects);
+
+    // document.querySelectorAll('Rect').forEach(x => x.parentElement?.removeChild(x));
+    // document.body.insertAdjacentHTML(
+    //     'beforeend',
+    //     mergedRects
+    //         .map(
+    //             (rect, i) =>
+    //                 `<Rect style="position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;background-color:rgba(255,0,0,0.3);box-sizing:border-box;border:solid black 1px;pointer-events:none;">${i}</Rect>`,
+    //         )
+    //         .join(''),
+    // );
+
+    return mergedRects
+        .map(rect => ({
+            rect,
+            distance: Math.max(rect.left - x, 0, x - rect.right) ** 2 + Math.max(rect.top - y, 0, y - rect.bottom) ** 2,
+        }))
+        .reduce((a, b) => (a.distance <= b.distance ? a : b)).rect;
+}
+
 export class Popup {
     #element: HTMLElement;
     #style: CSSStyleDeclaration;
+    #coverStyle: CSSStyleDeclaration;
     #vocabSection: HTMLElement;
     #data: JpdbWordData;
 
@@ -32,18 +103,17 @@ export class Popup {
                 id='jpdb-popup'
                 onmouseenter={demoMode ? undefined : () => this.fadeIn()}
                 onmouseleave={demoMode ? undefined : () => this.fadeOut()}
-                style={`all:initial;z-index:1000;${
+                style={`all:initial;z-index:2147483647;${
                     demoMode ? '' : 'position:absolute;top:0;left:0;opacity:0;visibility:hidden;'
                 };`}></div>
         );
 
-        this.#style = this.#element.style;
-
         const shadow = this.#element.attachShadow({ mode: 'closed' });
 
-        this.#vocabSection = <section id='vocab-content'></section>;
+        let cover: HTMLElement;
         shadow.append(
             <style>{config.popupCSS}</style>,
+            (cover = <div id='transition-cover'></div>),
             <article lang='ja'>
                 <section class='mine-buttons'>
                     Mine:
@@ -91,9 +161,12 @@ export class Popup {
                         Easy
                     </button>
                 </section>
-                {this.#vocabSection}
+                {(this.#vocabSection = <section id='vocab-content'></section>)}
             </article>,
         );
+
+        this.#style = this.#element.style;
+        this.#coverStyle = cover.style;
     }
 
     fadeIn() {
@@ -109,6 +182,8 @@ export class Popup {
     }
 
     render() {
+        if (this.#data === undefined) return;
+
         const card = this.#data.token.card;
 
         const url = `https://jpdb.io/vocabulary/${card.vid}/${encodeURIComponent(card.spelling)}/${encodeURIComponent(
@@ -143,41 +218,49 @@ export class Popup {
         this.render();
     }
 
-    showForWord(word: HTMLElement) {
+    showForWord(word: HTMLElement, mouseX = 0, mouseY = 0) {
         const data = (word as HTMLElement & { jpdbData?: JpdbWordData }).jpdbData;
         if (data === undefined) return;
 
-        const box = word.getBoundingClientRect();
+        this.setData(data); // Because we need the dimensions of the popup with the new data
+
+        const bbox = getClosestClientRect(word, mouseX, mouseY);
+
+        const wordWidth = bbox.width;
+        const wordHeight = bbox.height;
+        const wordLeft = window.scrollX + bbox.left;
+        const wordTop = window.scrollY + bbox.top;
+        const wordRight = window.scrollX + bbox.right;
+        const wordBottom = window.scrollY + bbox.bottom;
+
+        // window.inner... technically contains the scrollbar, so it's not 100% accurate
+        // Good enough though
+        const leftSpace = bbox.left;
+        const topSpace = bbox.top;
+        const rightSpace = window.innerWidth - bbox.right;
+        const bottomSpace = window.innerHeight - bbox.bottom;
+
+        const popupHeight = this.#element.offsetHeight;
+        const popupWidth = this.#element.offsetWidth;
+
+        let popupLeft: number;
+        let popupTop: number;
+
         const { writingMode } = getComputedStyle(word);
 
-        const rightSpace = window.innerWidth - box.left - box.width,
-            bottomSpace = window.innerHeight - box.top - box.height;
-
         if (writingMode.startsWith('horizontal')) {
-            this.#style.left = `${box.left + window.scrollX}px`;
-            this.#style.removeProperty('right');
-
-            if (box.top < bottomSpace) {
-                this.#style.top = `${box.bottom + window.scrollY}px`;
-                this.#style.removeProperty('bottom');
-            } else {
-                this.#style.bottom = `${window.innerHeight - box.top + window.scrollY}px`;
-                this.#style.removeProperty('top');
-            }
+            popupLeft = leftSpace < rightSpace ? wordLeft : wordRight - popupWidth;
+            popupTop = topSpace < bottomSpace ? wordBottom : wordTop - popupHeight;
         } else {
-            this.#style.top = `${box.top + window.scrollY}px`;
-            this.#style.removeProperty('bottom');
-
-            if (box.left < rightSpace) {
-                this.#style.left = `${box.right + window.scrollX}px`;
-                this.#style.removeProperty('right');
-            } else {
-                this.#style.right = `${window.innerWidth - box.left + window.scrollX}px`;
-                this.#style.removeProperty('left');
-            }
+            popupTop = topSpace < bottomSpace ? wordTop : wordBottom - popupHeight;
+            popupLeft = leftSpace < rightSpace ? wordRight : wordLeft - popupWidth;
         }
 
-        this.setData(data);
+        this.#style.transform = `translate(${popupLeft}px,${popupTop}px)`;
+        this.#coverStyle.transform = `translate(${wordLeft - popupLeft}px,${wordTop - popupTop}px)`;
+        this.#coverStyle.width = `${wordWidth}px`;
+        this.#coverStyle.height = `${wordHeight}px`;
+
         this.fadeIn();
     }
 }
