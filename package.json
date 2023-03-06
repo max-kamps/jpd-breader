@@ -1,6 +1,6 @@
 {
     "name": "jpdb-browser-reader",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "scripts": {
         "build": "prettier --write . && concurrently 'tsc --listFiles' 'copy-and-watch \"src/**/!(*.mts|*.ts)\" build/' ; mkdirp dist && npm-build-zip --destination dist/ --info",
         "watch": "concurrently 'tsc --listFiles --watch' 'copy-and-watch --watch \"src/**/!(*.mts|*.ts)\" build/'",
