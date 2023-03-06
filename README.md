@@ -9,15 +9,13 @@ No
 ## Current Limitations
 
 -   Probably has many bugs
--   Does not support reviewing or forqing yet
 
 ## Ongoing Work
 
 -   Make it work with a non-persistent background page
--   Package for installation
--   Finalize ttu integration
 -   Add Wikipedia integration
 -   Add customization menus that don't require entering custom CSS directly
+-   Make the UI nicer (particularly the mining dialog)
 
 ## Installation
 
