@@ -1,2 +1,6 @@
 'use strict';
-import(((globalThis as any).browser ?? (globalThis as any).chrome).runtime.getURL('/content/ttu.js'));
+(async () => {
+    const browser = (globalThis as any).browser ?? (globalThis as any).chrome;
+    const mod: typeof import('./ttu.js') = await import(browser.runtime.getURL('/content/ttu.js'));
+    await mod.startParsingVisible();
+})();

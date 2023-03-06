@@ -18,25 +18,27 @@ function* iterSelectedNodes(selection: Selection, node: Node): Generator<Text | 
     }
 }
 
-try {
-    const selection = getSelection();
-    if (selection === null) throw Error('No selection found');
+export async function parseSelection() {
+    try {
+        const selection = getSelection();
+        if (selection === null) throw Error('No selection found');
 
-    const selectedNodes = new Set<Text | HTMLElement>();
-    for (let i = 0; i < selection.rangeCount; i++) {
-        const range = selection.getRangeAt(i);
-        // TODO Support partial node selections?
-        for (const node of iterSelectedNodes(selection, range.commonAncestorContainer)) {
-            selectedNodes.add(node);
+        const selectedNodes = new Set<Text | HTMLElement>();
+        for (let i = 0; i < selection.rangeCount; i++) {
+            const range = selection.getRangeAt(i);
+            // TODO Support partial node selections?
+            for (const node of iterSelectedNodes(selection, range.commonAncestorContainer)) {
+                selectedNodes.add(node);
+            }
         }
+
+        const fragments = textFragments(Array.from(selectedNodes.values()));
+        const text = fragments.map(x => x.text).join('');
+        const tokens = await requestParse(text);
+        applyParseResult(fragments, tokens, false);
+
+        getSelection()?.empty();
+    } catch (error) {
+        showError(error);
     }
-
-    const fragments = textFragments(Array.from(selectedNodes.values()));
-    const text = fragments.map(x => x.text).join('');
-    const tokens = await requestParse(text);
-    applyParseResult(fragments, tokens, false);
-
-    getSelection()?.empty();
-} catch (error) {
-    showError(error);
 }
