@@ -339,9 +339,6 @@ async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVI
         throw Error(`While getting next review number for word ${vid}/${sid}: HTTP error ${response.statusText}`);
     }
 
-    // Run this concurrently while we do the parsing
-    const ratelimitSleep = sleep(SCRAPE_RATELIMIT * 1000);
-
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
     const reviewNoInput: HTMLInputElement | null = doc.querySelector(
         'form[action^="/review"] input[type=hidden][name=r]',
@@ -350,8 +347,6 @@ async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVI
     assertNonNull(reviewNoInput);
 
     const reviewNo = parseInt(reviewNoInput.value);
-
-    await ratelimitSleep;
 
     const reviewResponse = await fetch('https://jpdb.io/review', {
         method: 'POST',
@@ -368,7 +363,7 @@ async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVI
         throw Error(`While adding ${rating} review to word ${vid}/${sid}: HTTP error ${response.statusText}`);
     }
 
-    return [null, SCRAPE_RATELIMIT];
+    return [null, 2 * SCRAPE_RATELIMIT];
 }
 
 export function getCardState(vid: number, sid: number): Promise<CardState> {
