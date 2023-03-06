@@ -1,4 +1,4 @@
-import { jsxCreateElement, nonNull } from '../util.js';
+import { jsxCreateElement, nonNull, showError } from '../util.js';
 import { config, requestMine, requestReview } from './content.js';
 import { JpdbWordData } from './types.js';
 
@@ -91,49 +91,25 @@ export class Dialog {
                     <button class='cancel' onclick={() => this.#element.close()}>
                         Cancel
                     </button>
-                    <button
-                        class='add'
-                        onclick={() => {
-                            add();
-                        }}>
+                    <button class='add' onclick={async () => await add()}>
                         Add
                     </button>
                 </div>
                 <div>
                     Add and review
-                    <button
-                        class='nothing'
-                        onclick={() => {
-                            add('nothing');
-                        }}>
+                    <button class='nothing' onclick={async () => await add('nothing')}>
                         Nothing
                     </button>
-                    <button
-                        class='something'
-                        onclick={() => {
-                            add('something');
-                        }}>
+                    <button class='something' onclick={async () => await add('something')}>
                         Something
                     </button>
-                    <button
-                        class='hard'
-                        onclick={() => {
-                            add('hard');
-                        }}>
+                    <button class='hard' onclick={async () => await add('hard')}>
                         Hard
                     </button>
-                    <button
-                        class='good'
-                        onclick={() => {
-                            add('good');
-                        }}>
+                    <button class='good' onclick={async () => await add('good')}>
                         Good
                     </button>
-                    <button
-                        class='easy'
-                        onclick={() => {
-                            add('easy');
-                        }}>
+                    <button class='easy' onclick={async () => await add('easy')}>
                         Easy
                     </button>
                 </div>

@@ -63,6 +63,10 @@ export function snakeToCamel(string: string): string {
     return string.replaceAll(/(?<!^_*)_(.)/g, (m, p1) => p1.toUpperCase());
 }
 
+export function truncate(string: string, maxLength: number): string {
+    return string.length <= maxLength ? string : string.slice(0, maxLength - 1) + '…';
+}
+
 export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
     name: Tag,
     props: { [id: string]: any } | null,
@@ -73,7 +77,19 @@ export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
     if (props) {
         for (const [key, value] of Object.entries(props)) {
             if (key.startsWith('on')) {
-                elem.addEventListener(key.replace(/^on/, ''), value);
+                if (value instanceof Function) {
+                    elem.addEventListener(key.replace(/^on/, ''), async (...args: any) => {
+                        try {
+                            console.log('calling event handler', value);
+                            await value(...args);
+                            console.log('returing from', value);
+                        } catch (error) {
+                            showError(error);
+                        }
+                    });
+                } else {
+                    elem.addEventListener(key.replace(/^on/, ''), value);
+                }
             } else {
                 elem.setAttribute(key, value);
             }
@@ -83,4 +99,9 @@ export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
     elem.append(...content.flat());
 
     return elem;
+}
+
+export function showError(error: { message: string }) {
+    console.error(error);
+    alert(`Error: ${error.message}`); // TODO replace with proper toast?
 }

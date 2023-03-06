@@ -265,10 +265,11 @@ port.onMessage.addListener((message, port) => {
                 waitingPromises.delete(message.seq);
                 if (message.error !== undefined) {
                     console.error(message.error);
+
                     if (promise !== undefined) {
                         promise.reject(message.error);
                     } else {
-                        alert(`Error: ${message.error.message}`);
+                        throw Error(message.error.message, { cause: message.error });
                     }
                 } else {
                     promise.resolve(message.result);

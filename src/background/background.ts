@@ -222,6 +222,6 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
             await insertCSS(tab.id);
         }
 
-        await browser.tabs.executeScript(tab.id, { file: '/content/inject_contextmenu.js' });
+        await browser.tabs.executeScript(tab.id, { file: '/content/contextmenu_inject.js' });
     }
 });

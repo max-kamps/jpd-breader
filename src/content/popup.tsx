@@ -124,27 +124,31 @@ export class Popup {
                     Review:
                     <button
                         class='nothing'
-                        onclick={demoMode ? undefined : () => requestReview(this.#data.token.card, 'nothing')}>
+                        onclick={
+                            demoMode ? undefined : async () => await requestReview(this.#data.token.card, 'nothing')
+                        }>
                         Nothing
                     </button>
                     <button
                         class='something'
-                        onclick={demoMode ? undefined : () => requestReview(this.#data.token.card, 'something')}>
+                        onclick={
+                            demoMode ? undefined : async () => await requestReview(this.#data.token.card, 'something')
+                        }>
                         Something
                     </button>
                     <button
                         class='hard'
-                        onclick={demoMode ? undefined : () => requestReview(this.#data.token.card, 'hard')}>
+                        onclick={demoMode ? undefined : async () => await requestReview(this.#data.token.card, 'hard')}>
                         Hard
                     </button>
                     <button
                         class='good'
-                        onclick={demoMode ? undefined : () => requestReview(this.#data.token.card, 'good')}>
+                        onclick={demoMode ? undefined : async () => await requestReview(this.#data.token.card, 'good')}>
                         Good
                     </button>
                     <button
                         class='easy'
-                        onclick={demoMode ? undefined : () => requestReview(this.#data.token.card, 'easy')}>
+                        onclick={demoMode ? undefined : async () => await requestReview(this.#data.token.card, 'easy')}>
                         Easy
                     </button>
                 </section>
@@ -210,7 +214,9 @@ export class Popup {
             <button
                 class='blacklist'
                 onclick={
-                    this.#demoMode ? undefined : () => requestSetFlag(this.#data.token.card, 'blacklist', !blacklisted)
+                    this.#demoMode
+                        ? undefined
+                        : async () => await requestSetFlag(this.#data.token.card, 'blacklist', !blacklisted)
                 }>
                 {!blacklisted ? 'Blacklist' : 'Remove from blacklist'}
             </button>,
@@ -219,7 +225,7 @@ export class Popup {
                 onclick={
                     this.#demoMode
                         ? undefined
-                        : () => requestSetFlag(this.#data.token.card, 'never-forget', !neverForget)
+                        : async () => await requestSetFlag(this.#data.token.card, 'never-forget', !neverForget)
                 }>
                 {!neverForget ? 'Never forget' : 'Unmark as never forget'}
             </button>,
