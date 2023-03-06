@@ -30,7 +30,7 @@ export class Dialog {
         this.#element = (
             <dialog
                 id='jpdb-dialog'
-                style='all:revert;padding:0;border:none;background-color:transparent;'
+                style='all:revert;padding:0;margin:auto;border:none;background-color:transparent;'
                 // We can't use click because then mousedown inside the content and mouseup outside would count as a click
                 onmousedown={({ target }) => {
                     // Click on the dialog, but not on any children
