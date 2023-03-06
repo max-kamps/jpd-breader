@@ -5,16 +5,16 @@
         (globalThis.browser ?? chrome).runtime.getURL('/content/content.js')
     );
 
-    function* iterTextNodes(node) {
+    function* iterTextNodes(node: Node): Generator<Text | HTMLElement> {
         if (node.nodeType === Node.TEXT_NODE) {
-            yield node;
+            yield node as Text;
         } else if (node.nodeType == Node.ELEMENT_NODE) {
-            if (node.hasAttribute('data-ttu-spoiler-img')) {
+            if ((node as Element).hasAttribute('data-ttu-spoiler-img')) {
                 // Skip this node, we don't want to parse the spoiler label as text
                 return;
             }
-            if (node.tagName === 'RUBY') {
-                yield node;
+            if ((node as Element).tagName === 'RUBY') {
+                yield node as HTMLElement;
             } else {
                 for (const child of node.childNodes) {
                     yield* iterTextNodes(child);
@@ -23,7 +23,7 @@
         }
     }
 
-    const visibleParagraphs = new Set(); // queue of paragraphs waiting to be parsed
+    const visibleParagraphs = new Set<HTMLElement>(); // queue of paragraphs waiting to be parsed
 
     let parsingInProgress = false;
     async function parseVisibleParagraphs() {
@@ -51,12 +51,8 @@
 
             if (fragments.length > 0) {
                 const text = fragments.map(x => x.text).join('');
-
-                console.log('parsing', text);
-
-                const result = await content.postRequest('parse', { text });
-
-                content.applyParseResult(fragments, result, true);
+                const tokens = await content.requestParse(text);
+                content.applyParseResult(fragments, tokens, true);
             }
         }
 
@@ -68,25 +64,25 @@
             for (const entry of entries) {
                 if (entry.isIntersecting) {
                     // console.log('Entered view:', entry.target, entry.target.innerText);
-                    visibleParagraphs.add(entry.target);
+                    visibleParagraphs.add(entry.target as HTMLElement);
                 } else {
                     // console.log('Left view:', entry.target, entry.target.innerText);
-                    visibleParagraphs.delete(entry.target);
+                    visibleParagraphs.delete(entry.target as HTMLElement);
                 }
             }
             parseVisibleParagraphs();
         },
         {
-            rootMargin: '0px -120px 0px -120px', // TODO for debugging purposes, remove this
-            // rootMargin: '100% 100% 100% 100%',
+            // rootMargin: '0px -120px 0px -120px', // debugging purposes, remove this
+            rootMargin: '100% 100% 100% 100%',
         },
     );
-    document.body.insertAdjacentHTML(
-        'beforeend',
-        `<div style="position:fixed;top:0;right:120px;bottom:0;left:120px;box-shadow:inset 0 0 8px #f00;pointer-events:none;"></div>`,
-    );
+    // document.body.insertAdjacentHTML(
+    //     'beforeend',
+    //     `<div style="position:fixed;top:0;right:120px;bottom:0;left:120px;box-shadow:inset 0 0 8px #f00;pointer-events:none;"></div>`,
+    // );
 
-    function observeParagraph(p) {
+    function observeParagraph(p: HTMLElement) {
         if (p.innerText.trim().length == 0)
             // Paragraph is empty
             return;
@@ -107,8 +103,8 @@
             for (const node of mutation.addedNodes) {
                 if (node.nodeType !== Node.ELEMENT_NODE) continue;
 
-                if (node.nodeName === 'p') observeParagraph(node);
-                else node.querySelectorAll('p').forEach(observeParagraph);
+                if (node.nodeName === 'p') observeParagraph(node as HTMLElement);
+                else (node as HTMLElement).querySelectorAll('p').forEach(observeParagraph);
             }
         }
     });
