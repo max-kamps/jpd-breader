@@ -1,2 +1,2 @@
 'use strict';
-import((browser ?? chrome).runtime.getURL('/content/ttu.js'));
+import(((globalThis as any).browser ?? (globalThis as any).chrome).runtime.getURL('/content/ttu.js'));

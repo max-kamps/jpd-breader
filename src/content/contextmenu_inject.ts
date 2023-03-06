@@ -1,4 +1,4 @@
 'use strict';
 (async () => {
-    await import((browser ?? chrome).runtime.getURL('/content/contextmenu.js'));
+    await import(((globalThis as any).browser ?? (globalThis as any).chrome).runtime.getURL('/content/contextmenu.js'));
 })();
