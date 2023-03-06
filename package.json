@@ -2,8 +2,8 @@
     "name": "jpdb-browser-reader",
     "version": "0.0.1",
     "scripts": {
-        "build": "prettier --write . && concurrently 'tsc --listFiles' 'copy-and-watch \"src/**/!(*.mts|*.ts)\" dist/'",
-        "watch": "concurrently 'tsc --listFiles --watch' 'copy-and-watch --watch \"src/**/!(*.mts|*.ts)\" dist/'",
+        "build": "prettier --write . && concurrently 'tsc --listFiles' 'copy-and-watch \"src/**/!(*.mts|*.ts)\" build/' ; mkdirp dist && npm-build-zip --destination dist/ --info",
+        "watch": "concurrently 'tsc --listFiles --watch' 'copy-and-watch --watch \"src/**/!(*.mts|*.ts)\" build/'",
         "lint": "prettier --write . && eslint ."
     },
     "devDependencies": {
@@ -12,6 +12,8 @@
         "concurrently": "7.6.0",
         "copy-and-watch": "0.1.6",
         "eslint": "8.35.0",
+        "mkdirp": "^2.1.5",
+        "npm-build-zip": "^1.0.3",
         "prettier": "2.8.4",
         "typescript": "4.9.5"
     }

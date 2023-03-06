@@ -11,7 +11,7 @@
         "jsxFactory": "jsxCreateElement",
         "jsxFragmentFactory": "NOT_IMPLEMENTED",
         "typeRoots": ["dev_types"],
-        "outDir": "dist",
+        "outDir": "build",
         "rootDir": "src"
     }
 }
