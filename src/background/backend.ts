@@ -114,7 +114,7 @@ export function parse(text: string): Promise<[Token[], Card[]]> {
 
 // NOTE: If you change these, make sure to change the .map calls in _parse too
 const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'furigana'] as const;
-const VOCAB_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'meanings', 'card_state'] as const;
+const VOCAB_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'frequency_rank', 'meanings', 'card_state'] as const;
 async function _parse(text: string): Response<[Token[], Card[]]> {
     const options = {
         method: 'POST',
@@ -144,8 +144,8 @@ async function _parse(text: string): Response<[Token[], Card[]]> {
 
     const cards: Card[] = data.vocabulary.map(vocab => {
         // NOTE: If you change these, make sure to change VOCAB_FIELDS too
-        const [vid, sid, rid, spelling, reading, meanings, cardState] = vocab;
-        return { vid, sid, rid, spelling, reading, meanings, state: cardState ?? ['not-in-deck'] };
+        const [vid, sid, rid, spelling, reading, frequency_rank, meanings, cardState] = vocab;
+        return { vid, sid, rid, spelling, reading, frequency_rank, meanings, state: cardState ?? ['not-in-deck'] };
     });
 
     const tokens: Token[] = data.tokens.map(token => {
