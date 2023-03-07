@@ -193,9 +193,9 @@ export class Popup {
                     ))}
                 </div>
             </div>,
-            <small>
-                id: {card.vid} / {card.sid} / {card.rid}
-            </small>,
+            <span class='freq'>
+            	{card.frequency_rank ? `Top ${card.frequency_rank}` : ''}
+            </span>,
             <ol>
                 {card.meanings.map(gloss => (
                     <li>{gloss}</li>

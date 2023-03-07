@@ -37,5 +37,6 @@ export type Card = {
     state: CardState;
     spelling: string;
     reading: string;
+    frequency_rank: number | null;
     meanings: string[];
 };

@@ -176,3 +176,7 @@ button.easy {
 .state .failed {
     color: rgb(255, 0, 0);
 }
+
+.freq {
+    font-size: 12px;
+}
