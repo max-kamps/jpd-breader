@@ -61,6 +61,7 @@ $ npm run watch
 This will continuously rebuild the source code as it changes, and place the output in the folder `build`.
 It can be loaded as an unpacked extensino from there.
 Please remember to reload (Firefox) / update (Chrome) the extension on the "manage extensions" page before testing your changes.
+Also, please look at the Contributing section if you plan on contributing your changes.
 
 ## Usage
 
@@ -90,10 +91,13 @@ Yes, paste this into the Custom Word CSS box in the settings:
 
 ## Contributing
 
-Issues with feedback or ideas are welcome. You can also message me on the JPDB Discord server.
+Issues with feedback or ideas for new features are very welcome. You can also message me on the JPDB Discord server (@hmry#6502).
 
-Because this project is still very early in development, the code will likely move too fast to meaningfully contribute to.
-If that does not disuade you, feel free to submit pull requests anyway.
+Before committing, and especially before submitting a pull request, please run `npm run build` to reformat your code and to check if it completes without errors.
+This is because I haven't figured out how to set up pre-commit hooks yet, sorry... But maybe that can be your first contribution :P
+
+If your change is large, or adds new dependencies, please consider opening an issue beforehand so we can discuss.
+Otherwise I may reject your pull request, sorry.
 
 ## License
 
