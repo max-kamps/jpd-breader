@@ -6,20 +6,23 @@ A browser extension that parses any text in your browser using JPDB, and allows 
 
 Not really. It works, but it is buggy and the interface is quite ugly.
 
-## Current Limitations
+## Current limitations and known bugs
 
 -   MAJOR BUG: Changes the text by deleting conjugations from words without kanji.
 -   Always adds furigana
 -   Overwrites existing furigana (including gikun)
+-   Cannot be used with mokuro, or other websites that require you to hover over text
+-   Blocks you from clicking on links
 -   Probably has many other bugs (take a look at the issues tab)
 
-## Ongoing Work
+## Features currently in progress:
 
+-   Add Mokuro integration
 -   Add customization options for furigana
--   Add Mokuro and Wikipedia integration
+-   Add Wikipedia integration
 -   Make the UI nicer (particularly the mining dialog)
+-   Add visual customization options that don't require entering custom CSS directly
 -   Make it work with a non-persistent background page
--   Add customization menus that don't require entering custom CSS directly
 
 ## Installation
 
