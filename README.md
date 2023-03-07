@@ -8,14 +8,15 @@ Not really. It works, but it is buggy and the interface is quite ugly.
 
 ## Current Limitations
 
+-   MAJOR BUG: Changes the text by deleting conjugations from words without kanji.
 -   Always adds furigana
 -   Overwrites existing furigana (including gikun)
--   Probably has many bugs
+-   Probably has many other bugs (take a look at the issues tab)
 
 ## Ongoing Work
 
 -   Add customization options for furigana
--   Add Wikipedia integration
+-   Add Mokuro and Wikipedia integration
 -   Make the UI nicer (particularly the mining dialog)
 -   Make it work with a non-persistent background page
 -   Add customization menus that don't require entering custom CSS directly
@@ -65,7 +66,7 @@ Also, please look at the Contributing section if you plan on contributing your c
 
 ## Usage
 
-On ttu reader (and Wikipedia, eventually): Parsing begins automatically on page load.
+On ttu reader: Parts of the text are automatically parsed just before they scroll into view.
 
 On all other pages: Select some text, right click, click "Parse ... with jpdb".
 
