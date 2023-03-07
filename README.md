@@ -8,14 +8,17 @@ Not really. It works, but it is buggy and the interface is quite ugly.
 
 ## Current Limitations
 
+-   Always adds furigana
+-   Overwrites existing furigana (including gikun)
 -   Probably has many bugs
 
 ## Ongoing Work
 
--   Make it work with a non-persistent background page
+-   Add customization options for furigana
 -   Add Wikipedia integration
--   Add customization menus that don't require entering custom CSS directly
 -   Make the UI nicer (particularly the mining dialog)
+-   Make it work with a non-persistent background page
+-   Add customization menus that don't require entering custom CSS directly
 
 ## Installation
 
