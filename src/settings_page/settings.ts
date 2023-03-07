@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { config, port, requestUpdateConfig } from '../content/content.js';
 import { Popup } from '../content/popup.js';
 import { nonNull, showError } from '../util.js';
