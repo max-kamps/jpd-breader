@@ -13,6 +13,7 @@ Not really. It works, but it is buggy and the interface is quite ugly.
 -   Overwrites existing furigana (including gikun)
 -   Cannot be used with mokuro, or other websites that require you to hover over text
 -   Blocks you from clicking on links
+-   Blocks you from using Yomichan
 -   Probably has many other bugs (take a look at the issues tab)
 
 ## Features currently in progress:
@@ -37,16 +38,19 @@ Not really. It works, but it is buggy and the interface is quite ugly.
 
 ### Firefox
 1.  Download the latest `.xpi` file from the releases page
-2.  Open Firefox
-3.  Drag and drop the `.xpi` file into the Firefox window
+2.  Firefox should automatically ask you if you want to add the extension
 
-That's it, you are done. If you are experiencing issues with drag and drop, you can try this alternate approach:
+That's it, you are done. If this method does not work for you, you can try this alternate approach:
 
 1.  Download the latest `.xpi` file from the releases page
 2.  Open Firefox and navigate to `about:addons`
 3.  Click on the little gear icon to the right of `Manage Your Extensions`
 4.  Click `Install Add-on from File...`
 5.  In the file picker dialog, select the `.xpi` file
+
+### Mobile browsers (Firefox for Android, Kiwi Browser)
+Currently not supported. If you're feeling adventurous and want to try installing them on your own anyway, please report all issues you encounter here on GitHub.
+Your contributions will prove invaluable to supporting mobile browsers in the future.
 
 ## Building
 
@@ -63,7 +67,7 @@ $ npm install
 $ npm run watch
 ```
 This will continuously rebuild the source code as it changes, and place the output in the folder `build`.
-It can be loaded as an unpacked extensino from there.
+It can be loaded as an unpacked extension from there.
 Please remember to reload (Firefox) / update (Chrome) the extension on the "manage extensions" page before testing your changes.
 Also, please look at the Contributing section if you plan on contributing your changes.
 
@@ -101,7 +105,7 @@ Before committing, and especially before submitting a pull request, please run `
 This is because I haven't figured out how to set up pre-commit hooks yet, sorry... But maybe that can be your first contribution :P
 
 If your change is large, or adds new dependencies, please consider opening an issue beforehand so we can discuss.
-Otherwise I may reject your pull request, sorry.
+Otherwise, I may reject your pull request. Sorry.
 
 ## License
 
