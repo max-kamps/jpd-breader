@@ -27,6 +27,7 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
                             'options setting;  preference settings;  configuration;  setup',
                         ],
                         state: ['locked', 'new'],
+                        frequencyRank: 2400,
                     },
                 },
             });
