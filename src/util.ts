@@ -80,9 +80,7 @@ export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
                 if (value instanceof Function) {
                     elem.addEventListener(key.replace(/^on/, ''), async (...args: any) => {
                         try {
-                            console.log('calling event handler', value);
                             await value(...args);
-                            console.log('returing from', value);
                         } catch (error) {
                             showError(error);
                         }

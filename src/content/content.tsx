@@ -79,7 +79,7 @@ function furiganaToRuby(parts: (string | [string, string])[]): (HTMLElement | st
 }
 
 function replaceNode(original: Node, replacement: HTMLElement, keepOriginal = false) {
-    console.log('Replacing:', original, 'with', replacement);
+    // console.log('Replacing:', original, 'with', replacement);
 
     assertNonNull(original.parentNode);
 
@@ -108,7 +108,7 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
     //   Instead, we keep the existing elements by making them invisible,
     //   and positioning them at the top right corner of our new element.
     // TODO position at top left for horizontal writing
-    console.log('Applying results:', fragments, tokens);
+    // console.log('Applying results:', fragments, tokens);
     let tokenIndex = 0;
     let fragmentIndex = 0;
     let curOffset = 0;

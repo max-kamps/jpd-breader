@@ -8,7 +8,6 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
     if (message.command === 'updateConfig') {
         try {
             port.onMessage.removeListener(checkConnectionEstablished);
-            console.log(config);
 
             // TODO fix popup fading out on mouseout
             const popup = Popup.getDemoMode(nonNull(document.querySelector('#preview')));
@@ -66,7 +65,6 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
                     }
                 }
 
-                console.log(changes);
                 return changes;
             }
 
