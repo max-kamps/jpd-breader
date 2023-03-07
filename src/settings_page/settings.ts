@@ -1,15 +1,13 @@
-// @ts-nocheck
-
 import { config, port, requestUpdateConfig } from '../content/content.js';
 import { Popup } from '../content/popup.js';
 import { nonNull, showError } from '../util.js';
 
 function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
     if (message.command === 'updateConfig') {
+        // The connection has been established, we can now read the config
         try {
             port.onMessage.removeListener(checkConnectionEstablished);
 
-            // TODO fix popup fading out on mouseout
             const popup = Popup.getDemoMode(nonNull(document.querySelector('#preview')));
             popup.setData({
                 context: '',
@@ -36,32 +34,46 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
 
             for (const [key, value] of Object.entries(config)) {
                 const elem = document.querySelector(`[name="${key}"]`);
-                if (elem === null) continue;
 
-                if (elem.type === 'checkbox') elem.checked = value;
-                else elem.value = value;
+                if (elem === null) {
+                    continue;
+                } else if (elem instanceof HTMLInputElement) {
+                    if (elem.type === 'checkbox') {
+                        elem.checked = !!value;
+                    } else {
+                        elem.value = value.toString();
+                    }
+                }
             }
 
             function checkConfigChanges() {
-                const changes = {};
+                const changes: Record<string, any> = {};
 
                 for (const [key, value] of Object.entries(config)) {
                     const elem = document.querySelector(`[name="${key}"]`);
-                    if (elem === null) continue;
+                    if (elem === null) {
+                        continue;
+                    } else if (elem instanceof HTMLInputElement) {
+                        let newValue;
 
-                    let newValue;
-                    if (elem.type === 'checkbox') {
-                        newValue = elem.checked;
-                    } else if (elem.pattern === '\\d+|forq|blacklist|never-forget') {
-                        const i = parseInt(elem.value);
-                        newValue = isNaN(i) ? elem.value : i;
-                    } else {
-                        newValue = elem.value;
-                    }
+                        if (elem.type === 'checkbox') {
+                            newValue = elem.checked;
+                        } else if (elem.pattern === '\\d+|forq|blacklist|never-forget') {
+                            // HACK this is a janky way of checking if the input is a deck ID.
+                            // Maybe switch to a system where input elements indicate what type the represent,
+                            // once we have more than two types
+                            const i = parseInt(elem.value);
+                            newValue = isNaN(i) ? elem.value : i;
+                        } else {
+                            newValue = elem.value;
+                        }
 
-                    if (newValue !== value) {
-                        changes[key] = newValue;
-                        config[key] = newValue;
+                        if (newValue !== value) {
+                            // Safety: This is not safe...
+                            // HACK figure out a better way to typecheck config entries (see hack note above)
+                            (config as any)[key] = newValue;
+                            changes[key] = newValue;
+                        }
                     }
                 }
 

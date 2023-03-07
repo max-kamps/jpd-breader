@@ -1,5 +1,5 @@
 import { Card, Config, Token } from '../types.js';
-import { browser, assertNonNull, jsxCreateElement } from '../util.js';
+import { browser, assertNonNull, jsxCreateElement, nonNull } from '../util.js';
 import { Popup } from './popup.js';
 import { JpdbWordData } from './types.js';
 
@@ -165,7 +165,7 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
             const elem = (
                 <span
                     class={className}
-                    onmouseenter={({ target, x, y }) => Popup.get().showForWord(target! as HTMLElement, x, y)}
+                    onmouseenter={({ target, x, y }) => Popup.get().showForWord(nonNull(target) as HTMLElement, x, y)}
                     onmouseleave={() => Popup.get().fadeOut()}>
                     {furiganaToRuby(token.furigana)}
                 </span>
@@ -247,7 +247,7 @@ export async function requestReview(
     return await postRequest('review', { rating, vid: card.vid, sid: card.sid });
 }
 
-export async function requestUpdateConfig(changes: Config): Promise<null> {
+export async function requestUpdateConfig(changes: Partial<Config>): Promise<null> {
     return (await postRequest('updateConfig', { config: changes })) as null;
 }
 

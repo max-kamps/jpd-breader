@@ -1,4 +1,4 @@
-import { jsxCreateElement, nonNull, showError } from '../util.js';
+import { assertNonNull, jsxCreateElement, nonNull } from '../util.js';
 import { config, requestMine, requestReview } from './content.js';
 import { JpdbWordData } from './types.js';
 
@@ -47,13 +47,19 @@ export class Dialog {
         ) as HTMLDialogElement;
 
         const add = async (rating?: 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'fail' | 'pass') => {
+            assertNonNull(this.#data);
+
             await requestMine(
-                this.#data!.token.card,
+                this.#data.token.card,
                 addToForq.checked,
                 this.#sentence.innerText.trim() || undefined,
                 translation.innerText.trim() || undefined,
             );
-            if (rating) await requestReview(this.#data!.token.card, rating);
+
+            if (rating) {
+                await requestReview(this.#data.token.card, rating);
+            }
+
             this.#element.close();
         };
 

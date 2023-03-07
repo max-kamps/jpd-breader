@@ -134,8 +134,7 @@ button.easy {
     background-color: rgb(75, 141, 255);
 }
 
-.state .unparsed {
-}
+/* .state .unparsed { } */
 
 .state .locked {
     color: rgb(119, 119, 119);
