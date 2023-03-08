@@ -144,8 +144,8 @@ async function _parse(text: string): Response<[Token[], Card[]]> {
 
     const cards: Card[] = data.vocabulary.map(vocab => {
         // NOTE: If you change these, make sure to change VOCAB_FIELDS too
-        const [vid, sid, rid, spelling, reading, frequency_rank, meanings, cardState] = vocab;
-        return { vid, sid, rid, spelling, reading, frequency_rank, meanings, state: cardState ?? ['not-in-deck'] };
+        const [vid, sid, rid, spelling, reading, frequencyRank, meanings, cardState] = vocab;
+        return { vid, sid, rid, spelling, reading, frequencyRank, meanings, state: cardState ?? ['not-in-deck'] };
     });
 
     const tokens: Token[] = data.tokens.map(token => {
