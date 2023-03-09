@@ -39,10 +39,19 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
                 if (elem === null) {
                     continue;
                 } else if (elem instanceof HTMLInputElement) {
-                    if (elem.type === 'checkbox') {
-                        elem.checked = !!value;
-                    } else {
-                        elem.value = value.toString();
+                    switch (elem.dataset.type) {
+                        case 'boolean':
+                            elem.checked = Boolean(value);
+                            break;
+
+                        case 'string':
+                            elem.value = value?.toString() ?? '';
+                            break;
+
+                        case 'deckId':
+                            elem.pattern = /\d+|forq|blacklist|never-forget/.source;
+                            elem.value = value?.toString() ?? '';
+                            break;
                     }
                 }
             }
@@ -57,21 +66,26 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
                     } else if (elem instanceof HTMLInputElement) {
                         let newValue;
 
-                        if (elem.type === 'checkbox') {
-                            newValue = elem.checked;
-                        } else if (elem.pattern === '\\d+|forq|blacklist|never-forget') {
-                            // HACK this is a janky way of checking if the input is a deck ID.
-                            // Maybe switch to a system where input elements indicate what type the represent,
-                            // once we have more than two types
-                            const i = parseInt(elem.value);
-                            newValue = isNaN(i) ? elem.value : i;
-                        } else {
-                            newValue = elem.value;
+                        switch (elem.dataset.type) {
+                            case 'boolean':
+                                newValue = elem.checked;
+                                break;
+
+                            case 'string':
+                                newValue = elem.value;
+                                break;
+
+                            case 'deckId':
+                                {
+                                    const i = parseInt(elem.value);
+                                    newValue = isNaN(i) ? elem.value : i;
+                                }
+                                break;
                         }
 
                         if (newValue !== value) {
                             // Safety: This is not safe...
-                            // HACK figure out a better way to typecheck config entries (see hack note above)
+                            // HACK figure out a better way to typecheck config entries
                             (config as any)[key] = newValue;
                             changes[key] = newValue;
                         }
@@ -82,7 +96,9 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
             }
 
             nonNull(document.querySelector('input[type=submit]')).addEventListener('click', event => {
-                requestUpdateConfig(checkConfigChanges());
+                const changes = checkConfigChanges();
+                console.log('Submitting changes:', changes);
+                requestUpdateConfig(changes);
                 event.preventDefault();
             });
         } catch (error) {

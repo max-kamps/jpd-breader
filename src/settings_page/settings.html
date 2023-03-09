@@ -33,12 +33,28 @@
             #settings {
                 display: flex;
                 flex-direction: column;
-                gap: 1em;
+                gap: 1.5em;
             }
 
             section {
-                display: flex;
-                flex-direction: column;
+                display: grid;
+                grid-template-columns: max-content minmax(min-content, 1fr) max-content;
+                gap: 0.5em 1em;
+            }
+            section h1 {
+                grid-column: 1 / span 3;
+            }
+
+            section label {
+                grid-column: 1;
+            }
+
+            section textarea {
+                grid-column: 1 / span 3;
+            }
+
+            section button.reset {
+                grid-column: 3;
             }
 
             h1 {
@@ -56,59 +72,46 @@
     <body>
         <article>
             <nav>
+                Sections:
                 <a href="#general" class="active">General</a>
+                <a href="#keybinds">Keybinds</a>
                 <a href="#appearance">Appearance</a>
             </nav>
             <div id="settings">
-                <form id="config-form">
-                    <section id="general">
-                        <h1>General</h1>
-                        <div>
-                            <label for="api-token">API Token</label>
-                            <input type="text" id="api-token" name="apiToken" />
-                        </div>
-                        <div>
-                            <label for="mining-deck-id">Mining deck ID</label>
-                            <input
-                                type="text"
-                                id="mining-deck-id"
-                                name="miningDeckId"
-                                pattern="\d+|forq|blacklist|never-forget" />
-                        </div>
-                        <div>
-                            <label for="forq-deck-id">FORQ deck ID</label>
-                            <input
-                                type="text"
-                                id="forq-deck-id"
-                                name="forqDeckId"
-                                pattern="\d+|forq|blacklist|never-forget" />
-                        </div>
-                        <div>
-                            <label for="blacklist-deck-id">Blacklist deck ID</label>
-                            <input
-                                type="text"
-                                id="blacklist-deck-id"
-                                name="blacklistDeckId"
-                                pattern="\d+|forq|blacklist|never-forget" />
-                        </div>
-                        <div>
-                            <label for="never-forget-deck-id">Never forget deck ID</label>
-                            <input
-                                type="text"
-                                id="never-forget-deck-id"
-                                name="neverForgetDeckId"
-                                pattern="\d+|forq|blacklist|never-forget" />
-                        </div>
-                    </section>
-                    <section id="appearance">
-                        <h1>Appearance</h1>
-                        <label for="custom-word-css">Custom Word CSS</label>
-                        <textarea id="custom-word-css" name="customWordCSS"></textarea>
-                        <label for="custom-popup-css">Custom Popup CSS</label>
-                        <textarea id="custom-popup-css" name="customPopupCSS"></textarea>
-                    </section>
-                    <input type="submit" value="Save settings" />
-                </form>
+                <section id="general">
+                    <h1>General</h1>
+                    <label for="api-token">API Token</label>
+                    <input type="text" id="api-token" name="apiToken" data-type="string" />
+                    <button class="reset">Reset</button>
+                    <label for="mining-deck-id">Mining deck ID</label>
+                    <input type="text" id="mining-deck-id" name="miningDeckId" data-type="deckId" />
+                    <button class="reset">Reset</button>
+                    <label for="forq-deck-id">FORQ deck ID</label>
+                    <input type="text" id="forq-deck-id" name="forqDeckId" data-type="deckId" />
+                    <button class="reset">Reset</button>
+                    <label for="blacklist-deck-id">Blacklist deck ID</label>
+                    <input type="text" id="blacklist-deck-id" name="blacklistDeckId" data-type="deckId" />
+                    <button class="reset">Reset</button>
+                    <label for="never-forget-deck-id">Never forget deck ID</label>
+                    <input type="text" id="never-forget-deck-id" name="neverForgetDeckId" data-type="deckId" />
+                    <button class="reset">Reset</button>
+                </section>
+                <section id="keybinds">
+                    <h1>Keybinds</h1>
+                    <label for="show-popup">Show popup</label>
+                    <button id="show-popup" name="showPopupKeybind" data-type="keybind">...</button>
+                    <button class="reset">Reset</button>
+                </section>
+                <section id="appearance">
+                    <h1>Appearance</h1>
+                    <label for="custom-word-css">Custom Word CSS</label>
+                    <button class="reset">Reset</button>
+                    <textarea id="custom-word-css" name="customWordCSS" data-type="string"></textarea>
+                    <label for="custom-popup-css">Custom Popup CSS</label>
+                    <button class="reset">Reset</button>
+                    <textarea id="custom-popup-css" name="customPopupCSS" data-type="string"></textarea>
+                </section>
+                <input type="submit" value="Save settings" />
             </div>
             <aside id="preview"></aside>
         </article>
