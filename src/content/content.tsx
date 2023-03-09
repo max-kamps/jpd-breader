@@ -161,7 +161,12 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
 
             const className = `jpdb-word ${token.card.state.join(' ')}`;
 
-            const furi = token.furigana ?? [[fragment.text.slice(curOffset, curOffset + token.length), undefined]];
+            const furi = token.furigana ?? [
+                [
+                    fragment.text.slice(curOffset - fragment.offset, curOffset - fragment.offset + token.length),
+                    undefined,
+                ],
+            ];
 
             // FIXME(Security) Not escaped
             const elem = (
