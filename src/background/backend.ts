@@ -152,8 +152,12 @@ async function _parse(text: string): Response<[Token[], Card[]]> {
         // This is type-safe, but not... variable name safe :/
         // NOTE: If you change these, make sure to change TOKEN_FIELDS too
         const [vocabularyIndex, positionUtf16, lengthUtf16, furigana] = token;
+
         const card = cards[vocabularyIndex];
-        return { card, offset: positionUtf16, length: lengthUtf16, furigana: furigana ?? [card.reading] };
+        const normalizedFurigana: null | [string, string | undefined][] =
+            furigana && furigana.map(part => (typeof part === 'string' ? [part, undefined] : part));
+
+        return { card, offset: positionUtf16, length: lengthUtf16, furigana: normalizedFurigana };
     });
 
     return [[tokens, cards], API_RATELIMIT];

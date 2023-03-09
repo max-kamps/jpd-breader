@@ -65,10 +65,10 @@ export function textFragments(nodes: (HTMLElement | Text)[]): Fragment[] {
     return fragments;
 }
 
-function furiganaToRuby(parts: (string | [string, string])[]): (HTMLElement | string)[] {
+function furiganaToRuby(parts: [string, string | undefined][]): (HTMLElement | string)[] {
     return parts.map(x =>
-        typeof x === 'string' ? (
-            x
+        x[1] === undefined ? (
+            x[0]
         ) : (
             <ruby>
                 {x[0]}
@@ -161,13 +161,15 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
 
             const className = `jpdb-word ${token.card.state.join(' ')}`;
 
+            const furi = token.furigana ?? [[fragment.text.slice(curOffset, curOffset + token.length), undefined]];
+
             // FIXME(Security) Not escaped
             const elem = (
                 <span
                     class={className}
                     onmouseenter={({ target, x, y }) => Popup.get().showForWord(nonNull(target) as HTMLElement, x, y)}
                     onmouseleave={() => Popup.get().fadeOut()}>
-                    {furiganaToRuby(token.furigana)}
+                    {furiganaToRuby(furi)}
                 </span>
             ) as HTMLElement & { jpdbData: JpdbWordData };
 
