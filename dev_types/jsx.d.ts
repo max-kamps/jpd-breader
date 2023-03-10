@@ -8,12 +8,15 @@ type CommonAttributes = {
     contenteditable?: boolean;
 
     lang?: 'ja';
+    part?: string;
 
     onclick?: (event: MouseEvent) => void;
     onmousedown?: (event: MouseEvent) => void;
     onmouseup?: (event: MouseEvent) => void;
     onmouseenter?: (event: MouseEvent) => void;
     onmouseleave?: (event: MouseEvent) => void;
+
+    oninput?: (event: InputEvent) => void;
 };
 type AnyChildren = {
     children?: (string | Text | HTMLElement | (string | Text | HTMLElement)[])[];
@@ -38,6 +41,8 @@ type AttributesForTag = {
     ol: Regular;
     li: Regular;
 
+    template: Regular;
+
     a: {
         href: string;
         target?: '_self' | '_blank' | '_parent' | '_top';
@@ -46,10 +51,24 @@ type AttributesForTag = {
     label: {
         for?: string;
     } & Regular;
-    button: Regular;
+    button: {
+        name?: string;
+        disabled?: boolean;
+    } & Regular;
     input: {
         type: 'checkbox' | 'text';
+        name?: string;
+        pattern?: string;
+        disabled?: boolean;
     } & Regular;
+    textarea: {
+        name?: string;
+        disabled?: boolean;
+    } & Regular;
+
+    slot: {
+        name?: string;
+    };
 };
 
 declare namespace JSX {

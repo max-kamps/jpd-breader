@@ -88,7 +88,7 @@ export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
                 } else {
                     elem.addEventListener(key.replace(/^on/, ''), value);
                 }
-            } else {
+            } else if (value !== false) {
                 elem.setAttribute(key, value);
             }
         }

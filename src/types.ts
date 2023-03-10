@@ -2,12 +2,12 @@ type DeckId = number | 'blacklist' | 'never-forget' | 'forq';
 
 // Common types shared across both content and background scripts
 export type Config = {
-    apiToken: string;
+    apiToken: string | null;
 
-    miningDeckId: DeckId;
-    forqDeckId: DeckId;
-    blacklistDeckId: DeckId;
-    neverForgetDeckId: DeckId;
+    miningDeckId: DeckId | null;
+    forqDeckId: DeckId | null;
+    blacklistDeckId: DeckId | null;
+    neverForgetDeckId: DeckId | null;
 
     customWordCSS: string;
     customPopupCSS: string;

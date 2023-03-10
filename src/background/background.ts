@@ -10,11 +10,20 @@ if (isChrome) {
 
 // Config management
 
-const DEFAULT_WORD_CSS = await readExtFile('/content/word.css');
-const DEFAULT_POPUP_CSS = await readExtFile('/content/popup.css');
-const DEFAULT_DIALOG_CSS = await readExtFile('/content/dialog.css');
+const defaultConfig: Config = {
+    apiToken: null,
+    miningDeckId: null,
+    forqDeckId: 'forq',
+    blacklistDeckId: 'blacklist',
+    neverForgetDeckId: 'never-forget',
+    customWordCSS: '',
+    customPopupCSS: '',
+    wordCSS: await readExtFile('/content/word.css'),
+    popupCSS: await readExtFile('/content/popup.css'),
+    dialogCSS: await readExtFile('/content/dialog.css'),
+};
 
-function localStorageGet(key: string, fallback: any = undefined): any {
+function localStorageGet(key: string, fallback: any = null): any {
     const data = localStorage.getItem(key);
     if (data === null) return fallback;
 
@@ -30,16 +39,16 @@ function localStorageSet(key: string, value: any) {
 }
 
 export const config: Config = (() => {
-    const apiToken = localStorageGet('apiToken', '');
-    const miningDeckId = localStorageGet('miningDeckId', '');
-    const forqDeckId = localStorageGet('forqDeckId', 'forq');
-    const blacklistDeckId = localStorageGet('blacklistDeckId', 'blacklist');
-    const neverForgetDeckId = localStorageGet('neverForgetDeckId', 'never-forget');
-    const customWordCSS = localStorageGet('customWordCSS', '');
-    const customPopupCSS = localStorageGet('customPopupCSS', '');
-    const wordCSS = DEFAULT_WORD_CSS + customWordCSS;
-    const popupCSS = DEFAULT_POPUP_CSS + customPopupCSS;
-    const dialogCSS = DEFAULT_DIALOG_CSS;
+    const apiToken = localStorageGet('apiToken', defaultConfig.apiToken);
+    const miningDeckId = localStorageGet('miningDeckId', defaultConfig.miningDeckId);
+    const forqDeckId = localStorageGet('forqDeckId', defaultConfig.forqDeckId);
+    const blacklistDeckId = localStorageGet('blacklistDeckId', defaultConfig.blacklistDeckId);
+    const neverForgetDeckId = localStorageGet('neverForgetDeckId', defaultConfig.neverForgetDeckId);
+    const customWordCSS = localStorageGet('customWordCSS', defaultConfig.customWordCSS);
+    const customPopupCSS = localStorageGet('customPopupCSS', defaultConfig.customPopupCSS);
+    const wordCSS = defaultConfig.wordCSS + customWordCSS;
+    const popupCSS = defaultConfig.popupCSS + customPopupCSS;
+    const dialogCSS = defaultConfig.dialogCSS;
 
     return {
         apiToken,
@@ -93,8 +102,8 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                     const oldCSS = config.customWordCSS;
 
                     Object.assign(config, message.config);
-                    config.wordCSS = DEFAULT_WORD_CSS + config.customWordCSS;
-                    config.popupCSS = DEFAULT_POPUP_CSS + config.customPopupCSS;
+                    config.wordCSS = defaultConfig.wordCSS + config.customWordCSS;
+                    config.popupCSS = defaultConfig.popupCSS + config.customPopupCSS;
 
                     for (const [key, value] of Object.entries(config)) {
                         localStorageSet(key, value);
@@ -106,7 +115,7 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                         if (oldCSS) browser.tabs.removeCSS(port.sender.tab.id, { code: oldCSS });
                     }
 
-                    broadcastCommand('updateConfig', { config });
+                    broadcastCommand('updateConfig', { config, defaultConfig });
                 }
                 break;
 
@@ -123,6 +132,10 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
             case 'setFlag':
                 {
                     const deckId = message.flag === 'blacklist' ? config.blacklistDeckId : config.neverForgetDeckId;
+
+                    if (deckId === null) {
+                        throw Error(`No deck ID set for ${message.flag}, check the settings page`);
+                    }
 
                     if (message.state === true) {
                         await backend.addToDeck(message.vid, message.sid, deckId);
@@ -143,6 +156,14 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                 break;
 
             case 'mine':
+                if (config.miningDeckId === null) {
+                    throw Error(`No mining deck ID set, check the settings page`);
+                }
+
+                if (message.forq && config.forqDeckId === null) {
+                    throw Error(`No forq deck ID set, check the settings page`);
+                }
+
                 await backend.addToDeck(message.vid, message.sid, config.miningDeckId);
 
                 if (message.sentence || message.translation) {
@@ -150,7 +171,9 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                 }
 
                 if (message.forq) {
-                    await backend.addToDeck(message.vid, message.sid, config.forqDeckId);
+                    // Safety: This is safe, because we early-errored for this condition
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    await backend.addToDeck(message.vid, message.sid, config.forqDeckId!);
                 }
 
                 if (message.review) {
@@ -188,7 +211,7 @@ browser.runtime.onConnect.addListener(port => {
     port.onMessage.addListener(onPortMessage);
 
     // TODO filter to only url-relevant config options
-    postCommand(port, 'updateConfig', { config });
+    postCommand(port, 'updateConfig', { config, defaultConfig });
     browser.tabs.insertCSS(port.sender.tab.id, { code: config.customWordCSS });
 });
 

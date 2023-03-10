@@ -214,6 +214,7 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
 // Background script communication
 
 export let config: Config;
+export let defaultConfig: Config;
 
 const waitingPromises = new Map();
 let nextSeq = 0;
@@ -286,14 +287,13 @@ port.onMessage.addListener((message, port) => {
 
         case 'updateConfig':
             {
-                config = Object.assign(config ?? {}, message.config);
+                config = message.config;
+                defaultConfig = message.defaultConfig;
             }
             break;
 
         case 'updateWordState':
             {
-                config = Object.assign(config ?? {}, message.config);
-
                 for (const [vid, sid, state] of message.words) {
                     const idx = reverseIndex.get(`${vid}/${sid}`);
                     if (idx === undefined) continue;
