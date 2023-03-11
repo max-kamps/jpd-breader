@@ -5,3 +5,5 @@ export type JpdbWordData = {
     context: string;
     contextOffset: number;
 };
+
+export type JpdbWord = HTMLElement & { jpdbData: JpdbWordData };

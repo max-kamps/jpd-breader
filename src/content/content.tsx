@@ -1,9 +1,9 @@
 import { Card, Config, Token } from '../types.js';
-import { browser, assertNonNull, jsxCreateElement, nonNull } from '../util.js';
+import { browser, assertNonNull, jsxCreateElement } from '../util.js';
 import { Popup } from './popup.js';
-import { JpdbWordData } from './types.js';
+import { JpdbWord } from './types.js';
 
-let currentHover: [HTMLElement, number, number] | null = null;
+let currentHover: [JpdbWord, number, number] | null = null;
 let popupKeyHeld = false;
 
 window.addEventListener('keydown', ({ key }) => {
@@ -119,7 +119,7 @@ function replaceNode(original: Node, replacement: HTMLElement, keepOriginal = fa
     }
 }
 
-const reverseIndex = new Map<string, { className: string; elements: (HTMLElement & { jpdbData: JpdbWordData })[] }>();
+const reverseIndex = new Map<string, { className: string; elements: JpdbWord[] }>();
 
 export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTextNodes = false) {
     // keep_text_nodes is a workaround for a ttu issue.
@@ -196,9 +196,9 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
                     onmouseenter={({ target, x, y }) => {
                         if (target === null) return;
 
-                        currentHover = [target as HTMLElement, x, y];
+                        currentHover = [target as JpdbWord, x, y];
                         if (popupKeyHeld) {
-                            Popup.get().showForWord(target as HTMLElement, x, y);
+                            Popup.get().showForWord(target as JpdbWord, x, y);
                         }
                     }}
                     onmouseleave={() => {
@@ -206,7 +206,7 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
                     }}>
                     {furiganaToRuby(furi)}
                 </span>
-            ) as HTMLElement & { jpdbData: JpdbWordData };
+            ) as JpdbWord;
 
             const idx = reverseIndex.get(`${token.card.vid}/${token.card.sid}`);
             if (idx === undefined) {

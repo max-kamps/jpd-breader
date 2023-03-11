@@ -1,7 +1,7 @@
-import { jsxCreateElement } from '../util.js';
+import { assertNonNull, jsxCreateElement } from '../util.js';
 import { config, requestReview, requestSetFlag } from './content.js';
 import { Dialog } from './dialog.js';
-import { JpdbWordData } from './types.js';
+import { JpdbWord, JpdbWordData } from './types.js';
 
 function getClosestClientRect(elem: HTMLElement, x: number, y: number): DOMRect {
     const rects = elem.getClientRects();
@@ -232,9 +232,9 @@ export class Popup {
         this.render();
     }
 
-    showForWord(word: HTMLElement, mouseX = 0, mouseY = 0) {
-        const data = (word as HTMLElement & { jpdbData?: JpdbWordData }).jpdbData;
-        if (data === undefined) return;
+    showForWord(word: JpdbWord, mouseX = 0, mouseY = 0) {
+        const data = (word as JpdbWord).jpdbData;
+        assertNonNull(data);
 
         this.setData(data); // Because we need the dimensions of the popup with the new data
 
