@@ -212,6 +212,10 @@ async function _addToForqScrape(vid: number, sid: number): Response {
         throw Error(`While adding word ${vid}/${sid} to FORQ: HTTP error ${response.statusText}`);
     }
 
+    const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+    if (doc.querySelector('a[href="/login"]') !== null)
+        throw Error(`You are not logged in to jpdb.io - Adding cards to the FORQ requires being logged in`);
+
     return [null, SCRAPE_RATELIMIT];
 }
 
@@ -262,6 +266,10 @@ async function _removeFromForqScrape(vid: number, sid: number): Response {
     if (response.status >= 400) {
         throw Error(`While removing word ${vid}/${sid} from FORQ: HTTP error ${response.statusText}`);
     }
+
+    const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+    if (doc.querySelector('a[href="/login"]') !== null)
+        throw Error(`You are not logged in to jpdb.io - Removing cards from the FORQ requires being logged in`);
 
     return [null, SCRAPE_RATELIMIT];
 }
@@ -344,6 +352,9 @@ async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVI
     }
 
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+    if (doc.querySelector('a[href="/login"]') !== null)
+        throw Error(`You are not logged in to jpdb.io - Reviewing cards requires being logged in`);
+
     const reviewNoInput: HTMLInputElement | null = doc.querySelector(
         'form[action^="/review"] input[type=hidden][name=r]',
     );
