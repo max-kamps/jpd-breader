@@ -77,7 +77,6 @@ export class Popup {
     #demoMode: boolean;
     #element: HTMLElement;
     #style: CSSStyleDeclaration;
-    #coverStyle: CSSStyleDeclaration;
     #vocabSection: HTMLElement;
     #mineButtons: HTMLElement;
     #data: JpdbWordData;
@@ -114,10 +113,8 @@ export class Popup {
 
         const shadow = this.#element.attachShadow({ mode: 'closed' });
 
-        let cover: HTMLElement;
         shadow.append(
             <style>{config.popupCSS}</style>,
-            (cover = <div id='transition-cover'></div>),
             <article lang='ja'>
                 {(this.#mineButtons = <section class='mine-buttons'></section>)}
                 <section class='mine-buttons'>
@@ -157,7 +154,6 @@ export class Popup {
         );
 
         this.#style = this.#element.style;
-        this.#coverStyle = cover.style;
     }
 
     fadeIn() {
@@ -243,8 +239,6 @@ export class Popup {
 
         const bbox = getClosestClientRect(word, mouseX, mouseY);
 
-        const wordWidth = bbox.width;
-        const wordHeight = bbox.height;
         const wordLeft = window.scrollX + bbox.left;
         const wordTop = window.scrollY + bbox.top;
         const wordRight = window.scrollX + bbox.right;
@@ -262,60 +256,18 @@ export class Popup {
 
         let popupLeft: number;
         let popupTop: number;
-        let coverWidth: number;
-        let coverHeight: number;
-        let coverLeft: number;
-        let coverTop: number;
-        let coverClipPath: string;
 
         const { writingMode } = getComputedStyle(word);
-
-        const hdir = Math.sign(rightSpace - leftSpace);
-        const vdir = Math.sign(bottomSpace - topSpace);
 
         if (writingMode.startsWith('horizontal')) {
             popupTop = topSpace < bottomSpace ? wordBottom : wordTop - popupHeight;
             popupLeft = rightSpace > leftSpace ? wordLeft : wordRight - popupWidth;
-
-            coverHeight = wordHeight;
-            coverWidth = wordWidth + wordHeight;
-            coverTop = wordTop;
-            coverLeft = rightSpace > leftSpace ? wordLeft : wordRight - coverWidth;
-
-            coverClipPath = `path('\
-                M ${hdir == 1 ? 0 : coverWidth} ${vdir == 1 ? 0 : coverHeight} \
-                h ${hdir * wordWidth} \
-                c 0                          ${vdir * 0.3 * wordHeight} \
-                  ${hdir * 0.3 * wordHeight} ${vdir * wordHeight} \
-                  ${hdir * wordHeight}       ${vdir * wordHeight} \
-                h ${-hdir * coverWidth} \
-                Z')`;
         } else {
             popupTop = topSpace < bottomSpace ? wordTop : wordBottom - popupHeight;
             popupLeft = leftSpace < rightSpace ? wordRight : wordLeft - popupWidth;
-
-            coverWidth = wordWidth;
-            coverHeight = wordHeight + wordWidth;
-            coverLeft = wordLeft;
-            coverTop = bottomSpace > topSpace ? wordTop : wordBottom - coverHeight;
-
-            coverClipPath = `path('\
-                M ${hdir == 1 ? 0 : coverWidth} ${vdir == 1 ? 0 : coverHeight} \
-                v ${vdir * wordHeight} \
-                c ${hdir * 0.3 * wordWidth} 0 \
-                  ${hdir * wordWidth} ${vdir * 0.3 * wordWidth}\
-                  ${hdir * wordWidth} ${vdir * wordWidth}\
-                v ${-vdir * coverHeight} \
-                Z')`;
         }
 
         this.#style.transform = `translate(${popupLeft}px,${popupTop}px)`;
-
-        // Cover is positioned relative to the popup
-        this.#coverStyle.transform = `translate(${coverLeft - popupLeft}px,${coverTop - popupTop}px)`;
-        this.#coverStyle.width = `${coverWidth}px`;
-        this.#coverStyle.height = `${coverHeight}px`;
-        this.#coverStyle.clipPath = coverClipPath;
 
         this.fadeIn();
     }
