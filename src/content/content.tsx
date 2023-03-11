@@ -1,17 +1,49 @@
 import { Card, Config, Token } from '../types.js';
-import { browser, assertNonNull, jsxCreateElement } from '../util.js';
+import { browser, assertNonNull, jsxCreateElement, showError } from '../util.js';
 import { Popup } from './popup.js';
 import { JpdbWord } from './types.js';
 
 let currentHover: [JpdbWord, number, number] | null = null;
 let popupKeyHeld = false;
 
-window.addEventListener('keydown', ({ key }) => {
+window.addEventListener('keydown', async ({ key }) => {
     if (key === config.showPopupKey) {
         popupKeyHeld = true;
-        if (currentHover) {
+    }
+
+    if (currentHover) {
+        try {
             const [word, x, y] = currentHover;
-            Popup.get().showForWord(word, x, y);
+            const card = word.jpdbData.token.card;
+
+            switch (key) {
+                case config.showPopupKey:
+                    Popup.get().showForWord(word, x, y);
+                    break;
+                case config.blacklistKey:
+                    await requestSetFlag(card, 'blacklist', !card.state.includes('blacklisted'));
+                    break;
+                case config.neverForgetKey:
+                    await requestSetFlag(card, 'never-forget', !card.state.includes('never-forget'));
+                    break;
+                case config.nothingKey:
+                    await requestReview(card, 'nothing');
+                    break;
+                case config.somethingKey:
+                    await requestReview(card, 'something');
+                    break;
+                case config.hardKey:
+                    await requestReview(card, 'hard');
+                    break;
+                case config.goodKey:
+                    await requestReview(card, 'good');
+                    break;
+                case config.easyKey:
+                    await requestReview(card, 'easy');
+                    break;
+            }
+        } catch (error) {
+            showError(error);
         }
     }
 });
