@@ -199,7 +199,6 @@ async function _addToForqScrape(vid: number, sid: number): Response {
     const response = await fetch('https://jpdb.io/prioritize', {
         method: 'POST',
         credentials: 'include',
-        redirect: 'manual',
         headers: {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0',
             Accept: '*/*',
@@ -255,7 +254,6 @@ async function _removeFromForqScrape(vid: number, sid: number): Response {
     const response = await fetch('https://jpdb.io/deprioritize', {
         method: 'POST',
         credentials: 'include',
-        redirect: 'manual',
         headers: {
             Accept: '*/*',
             'content-type': 'application/x-www-form-urlencoded',
@@ -366,7 +364,6 @@ async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVI
     const reviewResponse = await fetch('https://jpdb.io/review', {
         method: 'POST',
         credentials: 'include',
-        redirect: 'manual',
         headers: {
             Accept: '*/*',
             'Content-Type': 'application/x-www-form-urlencoded',
