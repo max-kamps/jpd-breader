@@ -325,11 +325,11 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
 
             const saveButton = nonNull(document.querySelector('input[type=submit]'));
             saveButton.addEventListener('click', async event => {
+                event.preventDefault();
                 try {
                     const changes = checkConfigChanges();
                     console.log('Submitting changes:', changes);
                     await requestUpdateConfig(changes);
-                    event.preventDefault();
                     saveButton.classList.remove('has-unsaved-changes');
                 } catch (error) {
                     showError(error);
