@@ -37,7 +37,7 @@ const defaultConfig: Config = {
     popupCSS: await readExtFile('/content/popup.css'),
     dialogCSS: await readExtFile('/content/dialog.css'),
 
-    showPopupKey: null,
+    showPopupKey: 'Shift',
     blacklistKey: null,
     neverForgetKey: null,
     nothingKey: null,
