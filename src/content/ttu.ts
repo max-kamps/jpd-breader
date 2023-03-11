@@ -40,7 +40,7 @@ export async function startParsingVisible() {
                 // TODO iterate in fixed chunks of always 10 paragraphs (by child index), whether they are visible or not,
                 // rather than only picking *up to* 10 of the visible paragraphs.
                 const paragraphs = [...visibleParagraphs.values()]
-                    .sort((a, b) => a.offsetLeft - b.offsetLeft)
+                    .sort((a, b) => b.offsetLeft - a.offsetLeft)
                     .slice(0, 10);
                 for (const p of paragraphs) {
                     visibleParagraphs.delete(p);
