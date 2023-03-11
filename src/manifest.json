@@ -42,6 +42,9 @@
         "content/content.js",
         "content/dialog.js",
         "content/popup.js",
+        "content/word.css",
+        "content/popup.css",
+        "content/dialog.css",
         "util.js"
     ],
     "permissions": [

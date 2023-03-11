@@ -1,5 +1,5 @@
 import { assertNonNull, jsxCreateElement, nonNull } from '../util.js';
-import { config, requestMine, requestReview } from './content.js';
+import { requestMine, requestReview } from './content.js';
 import { JpdbWordData } from './types.js';
 
 export class Dialog {
@@ -57,7 +57,7 @@ export class Dialog {
         let addToForq: HTMLInputElement;
         let translation: HTMLElement;
         shadow.append(
-            <style>{config.dialogCSS}</style>,
+            <style>{`@import url("${browser.runtime.getURL('/content/dialog.css')}");`}</style>,
             <div
                 id='modal-wrapper'
                 // We can't use click because then mousedown inside the content and mouseup outside would count as a click

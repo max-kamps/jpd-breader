@@ -11,9 +11,6 @@ export type Config = {
 
     customWordCSS: string;
     customPopupCSS: string;
-    wordCSS: string;
-    popupCSS: string;
-    dialogCSS: string;
 
     showPopupKey: string | null;
     blacklistKey: string | null;

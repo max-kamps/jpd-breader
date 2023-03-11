@@ -1,5 +1,5 @@
 import { Config } from '../types.js';
-import { isChrome, browser, readExtFile } from '../util.js';
+import { isChrome, browser } from '../util.js';
 import * as backend from './backend.js';
 
 if (isChrome) {
@@ -33,9 +33,6 @@ const defaultConfig: Config = {
     neverForgetDeckId: 'never-forget',
     customWordCSS: '',
     customPopupCSS: '',
-    wordCSS: await readExtFile('/content/word.css'),
-    popupCSS: await readExtFile('/content/popup.css'),
-    dialogCSS: await readExtFile('/content/dialog.css'),
 
     showPopupKey: 'Shift',
     blacklistKey: null,
@@ -89,8 +86,6 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                     const oldCSS = config.customWordCSS;
 
                     Object.assign(config, message.config);
-                    config.wordCSS = defaultConfig.wordCSS + config.customWordCSS;
-                    config.popupCSS = defaultConfig.popupCSS + config.customPopupCSS;
 
                     for (const [key, value] of Object.entries(message.config)) {
                         localStorageSet(key, value);
