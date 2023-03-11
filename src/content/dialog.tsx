@@ -1,4 +1,4 @@
-import { assertNonNull, jsxCreateElement, nonNull } from '../util.js';
+import { assertNonNull, browser, jsxCreateElement, nonNull } from '../util.js';
 import { requestMine, requestReview } from './content.js';
 import { JpdbWordData } from './types.js';
 
