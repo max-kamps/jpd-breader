@@ -198,8 +198,8 @@ export class Popup {
             </ol>,
         );
 
-        const blacklisted = (card.state as string[]).includes('blacklisted');
-        const neverForget = (card.state as string[]).includes('never-forget');
+        const blacklisted = card.state.includes('blacklisted');
+        const neverForget = card.state.includes('never-forget');
 
         this.#mineButtons.replaceChildren(
             'Mine:',
