@@ -16,6 +16,8 @@ type CommonAttributes = {
     onmouseenter?: (event: MouseEvent) => void;
     onmouseleave?: (event: MouseEvent) => void;
 
+    onwheel?: (event: WheelEvent) => void;
+
     oninput?: (event: InputEvent) => void;
 };
 type AnyChildren = {
