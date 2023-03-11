@@ -34,7 +34,7 @@ class SettingElement extends HTMLElement {
         shadow.append(label, this._input, this._reset);
     }
 
-    renderInputElem(name: string): HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement {
+    renderInputElem(_name: string): HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement {
         throw Error('SettingElement subclass must implement render()');
     }
 
