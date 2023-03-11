@@ -14,6 +14,15 @@ export type Config = {
     wordCSS: string;
     popupCSS: string;
     dialogCSS: string;
+
+    showPopupKey: string | null;
+    blacklistKey: string | null;
+    neverForgetKey: string | null;
+    nothingKey: string | null;
+    somethingKey: string | null;
+    hardKey: string | null;
+    goodKey: string | null;
+    easyKey: string | null;
 };
 
 export type Token = {

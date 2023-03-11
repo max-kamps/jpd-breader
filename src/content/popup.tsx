@@ -104,8 +104,9 @@ export class Popup {
         this.#element = (
             <div
                 id='jpdb-popup'
-                onmouseenter={demoMode ? undefined : () => this.fadeIn()}
-                onmouseleave={demoMode ? undefined : () => this.fadeOut()}
+                onclick={event => {
+                    event.stopPropagation();
+                }}
                 style={`all:initial;z-index:2147483647;${
                     demoMode ? '' : 'position:absolute;top:0;left:0;opacity:0;visibility:hidden;'
                 };`}></div>

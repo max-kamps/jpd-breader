@@ -41,6 +41,9 @@ export class Dialog {
                     if (this.#clickStartedOutside && target === this.#element) this.#element.close();
 
                     this.#clickStartedOutside = false;
+                }}
+                onclick={event => {
+                    event.stopPropagation();
                 }}>
                 {shadowContainer}
             </dialog>

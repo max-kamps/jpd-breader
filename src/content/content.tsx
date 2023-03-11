@@ -3,6 +3,27 @@ import { browser, assertNonNull, jsxCreateElement, nonNull } from '../util.js';
 import { Popup } from './popup.js';
 import { JpdbWordData } from './types.js';
 
+let currentHover: [HTMLElement, number, number] | null = null;
+let popupKeyHeld = false;
+
+window.addEventListener('keydown', ({ key }) => {
+    if (key === config.showPopupKey) {
+        popupKeyHeld = true;
+        if (currentHover) {
+            const [word, x, y] = currentHover;
+            Popup.get().showForWord(word, x, y);
+        }
+    }
+});
+
+window.addEventListener('keyup', ({ key }) => {
+    if (key === config.showPopupKey) {
+        popupKeyHeld = false;
+    }
+});
+
+document.addEventListener('click', () => Popup.get().fadeOut());
+
 // Parsing-related functions
 
 type Fragment = {
@@ -172,8 +193,17 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
             const elem = (
                 <span
                     class={className}
-                    onmouseenter={({ target, x, y }) => Popup.get().showForWord(nonNull(target) as HTMLElement, x, y)}
-                    onmouseleave={() => Popup.get().fadeOut()}>
+                    onmouseenter={({ target, x, y }) => {
+                        if (target === null) return;
+
+                        currentHover = [target as HTMLElement, x, y];
+                        if (popupKeyHeld) {
+                            Popup.get().showForWord(target as HTMLElement, x, y);
+                        }
+                    }}
+                    onmouseleave={() => {
+                        currentHover = null;
+                    }}>
                     {furiganaToRuby(furi)}
                 </span>
             ) as HTMLElement & { jpdbData: JpdbWordData };

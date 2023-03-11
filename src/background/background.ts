@@ -10,19 +10,6 @@ if (isChrome) {
 
 // Config management
 
-const defaultConfig: Config = {
-    apiToken: null,
-    miningDeckId: null,
-    forqDeckId: 'forq',
-    blacklistDeckId: 'blacklist',
-    neverForgetDeckId: 'never-forget',
-    customWordCSS: '',
-    customPopupCSS: '',
-    wordCSS: await readExtFile('/content/word.css'),
-    popupCSS: await readExtFile('/content/popup.css'),
-    dialogCSS: await readExtFile('/content/dialog.css'),
-};
-
 function localStorageGet(key: string, fallback: any = null): any {
     const data = localStorage.getItem(key);
     if (data === null) return fallback;
@@ -38,31 +25,31 @@ function localStorageSet(key: string, value: any) {
     localStorage.setItem(key, JSON.stringify(value));
 }
 
-export const config: Config = (() => {
-    const apiToken = localStorageGet('apiToken', defaultConfig.apiToken);
-    const miningDeckId = localStorageGet('miningDeckId', defaultConfig.miningDeckId);
-    const forqDeckId = localStorageGet('forqDeckId', defaultConfig.forqDeckId);
-    const blacklistDeckId = localStorageGet('blacklistDeckId', defaultConfig.blacklistDeckId);
-    const neverForgetDeckId = localStorageGet('neverForgetDeckId', defaultConfig.neverForgetDeckId);
-    const customWordCSS = localStorageGet('customWordCSS', defaultConfig.customWordCSS);
-    const customPopupCSS = localStorageGet('customPopupCSS', defaultConfig.customPopupCSS);
-    const wordCSS = defaultConfig.wordCSS + customWordCSS;
-    const popupCSS = defaultConfig.popupCSS + customPopupCSS;
-    const dialogCSS = defaultConfig.dialogCSS;
+const defaultConfig: Config = {
+    apiToken: null,
+    miningDeckId: null,
+    forqDeckId: 'forq',
+    blacklistDeckId: 'blacklist',
+    neverForgetDeckId: 'never-forget',
+    customWordCSS: '',
+    customPopupCSS: '',
+    wordCSS: await readExtFile('/content/word.css'),
+    popupCSS: await readExtFile('/content/popup.css'),
+    dialogCSS: await readExtFile('/content/dialog.css'),
 
-    return {
-        apiToken,
-        miningDeckId,
-        forqDeckId,
-        blacklistDeckId,
-        neverForgetDeckId,
-        customWordCSS,
-        customPopupCSS,
-        wordCSS,
-        popupCSS,
-        dialogCSS,
-    };
-})();
+    showPopupKey: null,
+    blacklistKey: null,
+    neverForgetKey: null,
+    nothingKey: null,
+    somethingKey: null,
+    hardKey: null,
+    goodKey: null,
+    easyKey: null,
+};
+
+export const config = Object.fromEntries(
+    Object.entries(defaultConfig).map(([key, defaultValue]) => [key, localStorageGet(key, defaultValue)]),
+) as Config;
 
 // Content script communication
 
