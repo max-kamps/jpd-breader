@@ -97,6 +97,7 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                         if (oldCSS) browser.tabs.removeCSS(port.sender.tab.id, { code: oldCSS });
                     }
 
+                    postResponse(port, message, { result: null });
                     broadcastCommand('updateConfig', { config, defaultConfig });
                 }
                 break;
