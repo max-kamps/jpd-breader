@@ -25,7 +25,12 @@ class SettingElement extends HTMLElement {
         this._input = this.renderInputElem(this.getAttribute('name') ?? '');
 
         this._reset = (
-            <button part='reset-button' onclick={this.resetValue.bind(this)}>
+            <button
+                part='reset-button'
+                onclick={() => {
+                    this.resetValue();
+                    markUnsavedChanges();
+                }}>
                 Reset
             </button>
         ) as HTMLButtonElement;
@@ -85,7 +90,15 @@ customElements.define(
 
         renderInputElem(name: string): HTMLInputElement {
             return (
-                <input part='input' type='text' name={name} oninput={this.valueChanged.bind(this)} />
+                <input
+                    part='input'
+                    type='text'
+                    name={name}
+                    oninput={() => {
+                        this.valueChanged();
+                        markUnsavedChanges();
+                    }}
+                />
             ) as HTMLInputElement;
         }
 
@@ -112,7 +125,10 @@ customElements.define(
                     type='text'
                     name={name}
                     pattern='\d+|forq|blacklist|never-forget'
-                    oninput={this.valueChanged.bind(this)}
+                    oninput={() => {
+                        this.valueChanged();
+                        markUnsavedChanges();
+                    }}
                 />
             ) as HTMLInputElement;
         }
@@ -135,7 +151,13 @@ customElements.define(
 
         renderInputElem(name: string): HTMLTextAreaElement {
             return (
-                <textarea part='input' name={name} oninput={this.valueChanged.bind(this)}></textarea>
+                <textarea
+                    part='input'
+                    name={name}
+                    oninput={() => {
+                        this.valueChanged();
+                        markUnsavedChanges();
+                    }}></textarea>
             ) as HTMLTextAreaElement;
         }
 
@@ -181,6 +203,7 @@ customElements.define(
                 SettingKeybind._active = undefined;
                 this._value = event.key;
                 this._input.innerText = this._value ?? 'Click to set';
+                markUnsavedChanges();
                 this.valueChanged();
             };
 
@@ -208,7 +231,15 @@ customElements.define(
 
         renderInputElem(name: string): HTMLInputElement {
             return (
-                <input part='input' type='checkbox' name={name} oninput={this.valueChanged.bind(this)} />
+                <input
+                    part='input'
+                    type='checkbox'
+                    name={name}
+                    oninput={() => {
+                        this.valueChanged();
+                        markUnsavedChanges();
+                    }}
+                />
             ) as HTMLInputElement;
         }
 
@@ -221,6 +252,21 @@ customElements.define(
             this.valueChanged();
         }
     },
+);
+
+function markUnsavedChanges() {
+    document.querySelector('input[type=submit]')?.classList.add('has-unsaved-changes');
+}
+
+addEventListener(
+    'beforeunload',
+    event => {
+        if (document.querySelector('input[type=submit]')?.classList.contains('has-unsaved-changes')) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+    },
+    { capture: true },
 );
 
 // Wait until the background script connection has been established,
@@ -277,11 +323,17 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
                 return changes;
             }
 
-            nonNull(document.querySelector('input[type=submit]')).addEventListener('click', event => {
-                const changes = checkConfigChanges();
-                console.log('Submitting changes:', changes);
-                requestUpdateConfig(changes);
-                event.preventDefault();
+            const saveButton = nonNull(document.querySelector('input[type=submit]'));
+            saveButton.addEventListener('click', async event => {
+                try {
+                    const changes = checkConfigChanges();
+                    console.log('Submitting changes:', changes);
+                    await requestUpdateConfig(changes);
+                    event.preventDefault();
+                    saveButton.classList.remove('has-unsaved-changes');
+                } catch (error) {
+                    showError(error);
+                }
             });
         } catch (error) {
             showError(error);
