@@ -133,12 +133,17 @@ customElements.define(
             ) as HTMLInputElement;
         }
 
-        get value(): string | null {
-            return this._input.value || null;
+        get value(): string | number | null {
+            if (this._input.value) {
+                const n = parseInt(this._input.value);
+                return isNaN(n) ? this._input.value : n;
+            }
+
+            return null;
         }
 
-        set value(newValue: string | null) {
-            this._input.value = newValue ?? '';
+        set value(newValue: string | number | null) {
+            this._input.value = newValue ? newValue.toString() : '';
             this.valueChanged();
         }
     },
