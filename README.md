@@ -8,12 +8,8 @@ Not really. It works, but it is buggy and the interface is quite ugly.
 
 ## Current limitations and known bugs
 
--   MAJOR BUG: Changes the text by deleting conjugations from words without kanji.
 -   Always adds furigana
 -   Overwrites existing furigana (including gikun)
--   Cannot be used with mokuro, or other websites that require you to hover over text
--   Blocks you from clicking on links
--   Blocks you from using Yomichan
 -   Probably has many other bugs (take a look at the issues tab)
 
 ## Features currently in progress:
