@@ -70,13 +70,6 @@ export class Dialog {
                         this.closeModal();
                     }
                     this.#clickStartedOutside = false;
-                }}
-                onwheel={event => {
-                    const { target, currentTarget } = event;
-                    if (target === currentTarget) {
-                        event.stopPropagation();
-                    }
-                    event.preventDefault();
                 }}>
                 <article lang='ja'>
                     {(this.#header = <div id='header'></div>)}
