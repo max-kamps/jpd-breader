@@ -92,7 +92,7 @@ async function onPortMessage(message: any, port: browser.runtime.Port) {
                     config.wordCSS = defaultConfig.wordCSS + config.customWordCSS;
                     config.popupCSS = defaultConfig.popupCSS + config.customPopupCSS;
 
-                    for (const [key, value] of Object.entries(config)) {
+                    for (const [key, value] of Object.entries(message.config)) {
                         localStorageSet(key, value);
                     }
 
