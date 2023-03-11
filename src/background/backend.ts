@@ -154,8 +154,8 @@ async function _parse(text: string): Response<[Token[], Card[]]> {
         const [vocabularyIndex, positionUtf16, lengthUtf16, furigana] = token;
 
         const card = cards[vocabularyIndex];
-        const normalizedFurigana: null | [string, string | undefined][] =
-            furigana && furigana.map(part => (typeof part === 'string' ? [part, undefined] : part));
+        const normalizedFurigana: null | [string, string | null][] =
+            furigana && furigana.map(part => (typeof part === 'string' ? [part, null] : part));
 
         return { card, offset: positionUtf16, length: lengthUtf16, furigana: normalizedFurigana };
     });

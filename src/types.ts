@@ -26,7 +26,7 @@ export type Token = {
     offset: number;
     length: number;
     card: Card;
-    furigana: null | [string, string | undefined][];
+    furigana: null | [string, string | null][];
 };
 
 export type CardState = string[] &

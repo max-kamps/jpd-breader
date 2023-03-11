@@ -118,9 +118,9 @@ export function textFragments(nodes: (HTMLElement | Text)[]): Fragment[] {
     return fragments;
 }
 
-function furiganaToRuby(parts: [string, string | undefined][]): (HTMLElement | string)[] {
+function furiganaToRuby(parts: [string, string | null][]): (HTMLElement | string)[] {
     return parts.map(x =>
-        x[1] === undefined ? (
+        !x[1] ? (
             x[0]
         ) : (
             <ruby>
@@ -215,10 +215,7 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
             const className = `jpdb-word ${token.card.state.join(' ')}`;
 
             const furi = token.furigana ?? [
-                [
-                    fragment.text.slice(curOffset - fragment.offset, curOffset - fragment.offset + token.length),
-                    undefined,
-                ],
+                [fragment.text.slice(curOffset - fragment.offset, curOffset - fragment.offset + token.length), null],
             ];
 
             // FIXME(Security) Not escaped
