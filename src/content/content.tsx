@@ -10,6 +10,10 @@ let popupKeyHeld = false;
 window.addEventListener('keydown', async ({ key }) => {
     if (key === config.showPopupKey) {
         popupKeyHeld = true;
+
+        if (!currentHover) {
+            Popup.get().fadeOut();
+        }
     }
 
     if (currentHover) {
