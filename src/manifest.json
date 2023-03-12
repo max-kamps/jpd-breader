@@ -46,6 +46,10 @@
             "js": ["integrations/readwok.js"],
             "css": ["content/word.css"]
         },
+        {
+            "matches": ["*://ja.wikipedia.org/*"],
+            "js": ["integrations/wikipedia.js"],
+            "css": ["content/word.css"]
         }
     ],
     "background": {
@@ -59,6 +63,7 @@
         "integrations/mokuro.js",
         "integrations/common.js",
         "integrations/readwok.js",
+        "integrations/wikipedia.js",
         "content/content.js",
         "content/dialog.js",
         "content/popup.js",
