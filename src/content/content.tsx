@@ -1,4 +1,5 @@
-import { Card, Config, Token } from '../types.js';
+import { BackgroundResponseMap } from '../background/command_types.js';
+import { Card, Config, Grade, Token } from '../types.js';
 import { browser, assertNonNull, jsxCreateElement, showError } from '../util.js';
 import { Popup } from './popup.js';
 import { JpdbWord } from './types.js';
@@ -294,7 +295,10 @@ export let defaultConfig: Config;
 const waitingPromises = new Map();
 let nextSeq = 0;
 
-function postRequest(command: string, args: object) {
+function postRequest<Command extends keyof BackgroundResponseMap>(
+    command: Command,
+    args: object,
+): Promise<BackgroundResponseMap[Command]['result']> {
     const seq = nextSeq++;
     return new Promise((resolve, reject) => {
         waitingPromises.set(seq, { resolve, reject });
@@ -302,36 +306,24 @@ function postRequest(command: string, args: object) {
     });
 }
 
-export async function requestParse(text: string): Promise<Token[]> {
-    return (await postRequest('parse', { text })) as Token[];
+export async function requestParse(text: string) {
+    return await postRequest('parse', { text });
 }
 
-export async function requestSetFlag(
-    card: Card,
-    flag: 'blacklist' | 'never-forget' | 'forq',
-    state: boolean,
-): Promise<unknown> {
+export async function requestSetFlag(card: Card, flag: 'blacklist' | 'never-forget' | 'forq', state: boolean) {
     return await postRequest('setFlag', { vid: card.vid, sid: card.sid, flag, state });
 }
 
-export async function requestMine(
-    card: Card,
-    forq: boolean,
-    sentence?: string,
-    translation?: string,
-): Promise<unknown> {
+export async function requestMine(card: Card, forq: boolean, sentence?: string, translation?: string) {
     return await postRequest('mine', { forq, vid: card.vid, sid: card.sid, sentence, translation });
 }
 
-export async function requestReview(
-    card: Card,
-    rating: 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'fail' | 'pass',
-): Promise<unknown> {
+export async function requestReview(card: Card, rating: Grade) {
     return await postRequest('review', { rating, vid: card.vid, sid: card.sid });
 }
 
-export async function requestUpdateConfig(changes: Partial<Config>): Promise<null> {
-    return (await postRequest('updateConfig', { config: changes })) as null;
+export async function requestUpdateConfig(changes: Partial<Config>) {
+    return await postRequest('updateConfig', { config: changes });
 }
 
 export const port = browser.runtime.connect();

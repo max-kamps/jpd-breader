@@ -1,4 +1,6 @@
-type DeckId = number | 'blacklist' | 'never-forget' | 'forq';
+export type Grade = 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'pass' | 'fail' | 'known' | 'unknown';
+
+export type DeckId = number | 'blacklist' | 'never-forget' | 'forq';
 
 // Common types shared across both content and background scripts
 export type Config = {

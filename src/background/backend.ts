@@ -272,12 +272,7 @@ async function _removeFromForqScrape(vid: number, sid: number): Response {
     return [null, SCRAPE_RATELIMIT];
 }
 
-export function setSentence(
-    vid: number,
-    sid: number,
-    sentence: string | undefined,
-    translation: string | undefined,
-): Promise<null> {
+export function setSentence(vid: number, sid: number, sentence?: string, translation?: string): Promise<null> {
     return enqueue(() => _setSentence(vid, sid, sentence, translation));
 }
 
@@ -312,11 +307,7 @@ async function _setSentence(vid: number, sid: number, sentence?: string, transla
     return [null, API_RATELIMIT];
 }
 
-export function review(
-    vid: number,
-    sid: number,
-    rating: 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'pass' | 'fail',
-): Promise<null> {
+export function review(vid: number, sid: number, rating: keyof typeof REVIEW_GRADES): Promise<null> {
     return enqueue(() => _reviewScrape(vid, sid, rating));
 }
 

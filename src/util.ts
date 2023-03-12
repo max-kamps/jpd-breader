@@ -6,6 +6,8 @@ export const [browser, isChrome] = (() => {
     }
 })();
 
+export type Satisfies<T extends U, U> = T;
+
 export function assert(condition: boolean, message: string): asserts condition {
     if (!condition) {
         debugger;
