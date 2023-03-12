@@ -32,6 +32,11 @@
             "css": ["content/word.css"]
         },
         {
+            "matches": ["*://anacreondjt.gitlab.io/texthooker.html", "*://learnjapanese.moe/texthooker.html"],
+            "js": ["integrations/anacreon.js"],
+            "css": ["content/word.css"]
+        },
+        {
             "matches": ["*://app.readwok.com/*"],
             "js": ["integrations/readwok.js"],
             "css": ["content/word.css"]
@@ -45,6 +50,7 @@
     "web_accessible_resources": [
         "content/contextmenu.js",
         "integrations/ttu.js",
+        "integrations/anacreon.js",
         "integrations/common.js",
         "integrations/readwok.js",
         "content/content.js",
