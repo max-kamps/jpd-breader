@@ -1,3 +1,12 @@
+.jpdb-word ruby, .jpdb-word rt {
+    color: inherit !important;
+    font-size: inherit;
+}
+
+.jpdb-word rt {
+    font-size: 60%;
+}
+
 .jpdb-word:not(.unparsed):hover {
     text-decoration: underline;
 }
