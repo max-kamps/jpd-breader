@@ -28,8 +28,14 @@
     "content_scripts": [
         {
             "matches": ["*://reader.ttsu.app/*", "*://ttu-ebook.web.app/*"],
-            "js": ["content/ttu_inject.js"],
+            "js": ["integrations/ttu.js"],
             "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://app.readwok.com/*"],
+            "js": ["integrations/readwok.js"],
+            "css": ["content/word.css"]
+        },
         }
     ],
     "background": {
@@ -38,7 +44,9 @@
     },
     "web_accessible_resources": [
         "content/contextmenu.js",
-        "content/ttu.js",
+        "integrations/ttu.js",
+        "integrations/common.js",
+        "integrations/readwok.js",
         "content/content.js",
         "content/dialog.js",
         "content/popup.js",
