@@ -19,7 +19,6 @@ function* iterTextNodes(node: Node): Generator<Text | HTMLElement> {
     }
 }
 
-// export async function startParsingVisible(observeParagraph: (p: HTMLElement, paragraphOnScreenObserver: IntersectionObserver) => void) {
 export async function startParsingVisible(observeParagraph: Function, stuffAfter: Function) {
     try {
         const visibleParagraphs = new Set<HTMLElement>(); // queue of paragraphs waiting to be parsed

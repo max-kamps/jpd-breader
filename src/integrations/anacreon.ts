@@ -23,14 +23,9 @@
                 if (mutation.type !== 'childList') continue;
 
                 for (const node of mutation.addedNodes) {
-                    // if (node.nodeType !== Node.ELEMENT_NODE) continue;
-
                     if (node.nodeName === "DIV") {
-                        // (node as HTMLElement).querySelectorAll("span[class=\"\"]").forEach((e) => observeParagraph(e, paragraphOnScreenObserver));
                         (node as HTMLElement).querySelectorAll("span").forEach((e) => observeParagraph(e, paragraphOnScreenObserver));
-                        // observeParagraph(node as HTMLElement);
                     }
-                    // else (node as HTMLElement).querySelectorAll('p').forEach(observeParagraph);
                 }
             }
         });
