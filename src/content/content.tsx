@@ -168,11 +168,7 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
     let replacement = <span class='jpdb-parsed'></span>;
     const text = fragments.map(x => x.text).join('');
 
-    while (true) {
-        if (tokenIndex >= tokens.length || fragmentIndex >= fragments.length) {
-            break;
-        }
-
+    while (tokenIndex < tokens.length && fragmentIndex < fragments.length) {
         const fragment = fragments[fragmentIndex];
         const token = tokens[tokenIndex];
 
@@ -214,9 +210,29 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
 
             const className = `jpdb-word ${token.card.state.join(' ')}`;
 
-            const furi = token.furigana ?? [
-                [fragment.text.slice(curOffset - fragment.offset, curOffset - fragment.offset + token.length), null],
-            ];
+            const baseText = fragment.text.slice(
+                curOffset - fragment.offset,
+                curOffset - fragment.offset + token.length,
+            );
+
+            const furi = token.furigana ?? [[baseText, null]];
+            const jpdbBase = furi.map(x => x[0]).join('');
+
+            if (jpdbBase !== baseText) {
+                // Work around jpdb API bugs
+                if (baseText.startsWith(jpdbBase)) {
+                    furi.push([baseText.slice(jpdbBase.length), null]);
+                } else if (jpdbBase.startsWith(baseText)) {
+                    // Required for words that have okurigana and thus span multiple fragments
+                    // do nothing
+                } else {
+                    showError({
+                        message: `Warning: JPDB returned non-matching text ${baseText} -> ${jpdbBase}. Please report this.`,
+                    });
+                    tokenIndex++;
+                    continue;
+                }
+            }
 
             // FIXME(Security) Not escaped
             const elem = (
