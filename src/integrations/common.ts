@@ -1,5 +1,5 @@
 import { showError } from '../util.js';
-import { applyParseResult, requestParse, textFragments } from './content.js';
+import { applyParseResult, requestParse, textFragments } from '../content/content.js';
 
 function* iterTextNodes(node: Node): Generator<Text | HTMLElement> {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -19,7 +19,7 @@ function* iterTextNodes(node: Node): Generator<Text | HTMLElement> {
     }
 }
 
-export async function startParsingVisible() {
+export async function startParsingVisible(observeParagraph: Function, stuffAfter: Function) {
     try {
         const visibleParagraphs = new Set<HTMLElement>(); // queue of paragraphs waiting to be parsed
 
@@ -81,38 +81,9 @@ export async function startParsingVisible() {
         //     'beforeend',
         //     `<div style="position:fixed;top:0;right:120px;bottom:0;left:120px;box-shadow:inset 0 0 8px #f00;pointer-events:none;"></div>`,
         // );
+        //
+        stuffAfter(observeParagraph, paragraphOnScreenObserver);
 
-        function observeParagraph(p: HTMLElement) {
-            if (p.innerText.trim().length == 0)
-                // Paragraph is empty
-                return;
-
-            if (p.classList.contains('jpdb-parse-done'))
-                // Already parsed
-                return;
-
-            paragraphOnScreenObserver.observe(p);
-        }
-
-        document.querySelectorAll('p').forEach(observeParagraph);
-
-        const newParagraphObserver = new MutationObserver((mutations, _observer) => {
-            for (const mutation of mutations) {
-                if (mutation.type !== 'childList') continue;
-
-                for (const node of mutation.addedNodes) {
-                    if (node.nodeType !== Node.ELEMENT_NODE) continue;
-
-                    if (node.nodeName === 'p') observeParagraph(node as HTMLElement);
-                    else (node as HTMLElement).querySelectorAll('p').forEach(observeParagraph);
-                }
-            }
-        });
-
-        newParagraphObserver.observe(document.body, {
-            subtree: true,
-            childList: true,
-        });
     } catch (error) {
         showError(error);
     }

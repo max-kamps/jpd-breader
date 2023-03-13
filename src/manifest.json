@@ -28,7 +28,27 @@
     "content_scripts": [
         {
             "matches": ["*://reader.ttsu.app/*", "*://ttu-ebook.web.app/*"],
-            "js": ["content/ttu_inject.js"],
+            "js": ["integrations/ttu.js"],
+            "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://anacreondjt.gitlab.io/texthooker.html", "*://learnjapanese.moe/texthooker.html"],
+            "js": ["integrations/anacreon.js"],
+            "css": ["content/word.css"]
+        },
+        {
+            "matches": ["file:///*mokuro*.html"],
+            "js": ["integrations/mokuro.js"],
+            "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://app.readwok.com/*"],
+            "js": ["integrations/readwok.js"],
+            "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://ja.wikipedia.org/*"],
+            "js": ["integrations/wikipedia.js"],
             "css": ["content/word.css"]
         }
     ],
@@ -38,7 +58,12 @@
     },
     "web_accessible_resources": [
         "content/contextmenu.js",
-        "content/ttu.js",
+        "integrations/ttu.js",
+        "integrations/anacreon.js",
+        "integrations/mokuro.js",
+        "integrations/common.js",
+        "integrations/readwok.js",
+        "integrations/wikipedia.js",
         "content/content.js",
         "content/dialog.js",
         "content/popup.js",
