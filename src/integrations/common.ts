@@ -83,7 +83,6 @@ export async function startParsingVisible(observeParagraph: Function, stuffAfter
         // );
         //
         stuffAfter(observeParagraph, paragraphOnScreenObserver);
-
     } catch (error) {
         showError(error);
     }

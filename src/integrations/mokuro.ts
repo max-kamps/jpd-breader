@@ -14,16 +14,16 @@
 
     const stuffAfter = (observeParagraph: Function, paragraphOnScreenObserver: IntersectionObserver) => {
         const getCurrentPage = () => {
-            const id = document.getElementById("pageIdxDisplay") as HTMLElement;
-            const page = id.innerText.split("/")[0].split(",");
+            const id = document.getElementById('pageIdxDisplay') as HTMLElement;
+            const page = id.innerText.split('/')[0].split(',');
             return page;
         };
 
         const parseCurrentPage = () => {
             const startPages = getCurrentPage();
-            startPages.forEach((page) => {
+            startPages.forEach(page => {
                 const actualPage = parseInt(page) - 1;
-                const div = document.getElementById("page" + actualPage.toString()) as HTMLElement;
+                const div = document.getElementById('page' + actualPage.toString()) as HTMLElement;
                 observeParagraph(div, paragraphOnScreenObserver);
             });
         };
@@ -41,10 +41,9 @@
             }
         });
 
-        pageChangeObserver.observe(document.getElementById("pageIdxDisplay") as HTMLElement, {
+        pageChangeObserver.observe(document.getElementById('pageIdxDisplay') as HTMLElement, {
             childList: true,
         });
     };
     await mod.startParsingVisible(observeParagraph, stuffAfter);
-
 })();

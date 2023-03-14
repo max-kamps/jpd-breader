@@ -13,10 +13,10 @@
             return;
 
         paragraphOnScreenObserver.observe(p);
-    }
+    };
 
     const stuffAfter = (observeParagraph: Function, paragraphOnScreenObserver: IntersectionObserver) => {
-        document.querySelectorAll('p').forEach((e) => observeParagraph(e, paragraphOnScreenObserver));
+        document.querySelectorAll('p').forEach(e => observeParagraph(e, paragraphOnScreenObserver));
 
         const newParagraphObserver = new MutationObserver((mutations, _observer) => {
             for (const mutation of mutations) {
@@ -26,7 +26,10 @@
                     if (node.nodeType !== Node.ELEMENT_NODE) continue;
 
                     if (node.nodeName === 'p') observeParagraph(node as HTMLElement);
-                    else (node as HTMLElement).querySelectorAll('p').forEach((e) => observeParagraph(e, paragraphOnScreenObserver));
+                    else
+                        (node as HTMLElement)
+                            .querySelectorAll('p')
+                            .forEach(e => observeParagraph(e, paragraphOnScreenObserver));
                 }
             }
         });
@@ -36,7 +39,6 @@
             childList: true,
         });
     };
-
 
     await mod.startParsingVisible(observeParagraph, stuffAfter);
 })();

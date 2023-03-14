@@ -13,18 +13,20 @@
             return;
 
         paragraphOnScreenObserver.observe(p);
-    }
+    };
 
     const stuffAfter = (observeParagraph: Function, paragraphOnScreenObserver: IntersectionObserver) => {
-        document.querySelectorAll('.styles_text__WPY8-').forEach((e) => observeParagraph(e, paragraphOnScreenObserver));
+        document.querySelectorAll('.styles_text__WPY8-').forEach(e => observeParagraph(e, paragraphOnScreenObserver));
 
         const newParagraphObserver = new MutationObserver((mutations, _observer) => {
             for (const mutation of mutations) {
                 if (mutation.type !== 'childList') continue;
 
                 for (const node of mutation.addedNodes) {
-                    if (node.nodeName === "DIV") {
-                        (node as HTMLElement).querySelectorAll(".styles_text__WPY8-").forEach((e) => observeParagraph(e, paragraphOnScreenObserver));
+                    if (node.nodeName === 'DIV') {
+                        (node as HTMLElement)
+                            .querySelectorAll('.styles_text__WPY8-')
+                            .forEach(e => observeParagraph(e, paragraphOnScreenObserver));
                     }
                 }
             }
@@ -34,10 +36,7 @@
             subtree: true,
             childList: true,
         });
-
     };
 
     await mod.startParsingVisible(observeParagraph, stuffAfter);
-
-
 })();
