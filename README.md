@@ -62,9 +62,9 @@ For development, you can also run the build in watch mode:
 $ npm install
 $ npm run watch
 ```
-This will continuously rebuild the source code as it changes, and place the output in the folder `build`.
+This will continuously rebuild the source code as it changes, and place the output in the `build` folder.
 It can be loaded as an unpacked extension from there.
-Please remember to reload (Firefox) / update (Chrome) the extension on the "manage extensions" page before testing your changes.
+Please remember to reload the extension on the "manage extensions" page before testing your changes.
 Also, please look at the Contributing section if you plan on contributing your changes.
 
 ## Usage
@@ -97,11 +97,23 @@ Yes, paste this into the Custom Word CSS box in the settings:
 
 Issues with feedback or ideas for new features are very welcome. You can also message me on the JPDB Discord server (@hmry#6502).
 
-Before committing, and especially before submitting a pull request, please run `npm run build` to reformat your code and to check if it completes without errors.
-This is because I haven't figured out how to set up pre-commit hooks yet, sorry... But maybe that can be your first contribution :P
+The following commands may be of interest to you:
+*  `npm run check`: Checks your code for formatting issues, linter warnings and type errors. This gets run in CI, so your pull request will only be accepted if this passes. You can use eslint ignore comments if you get false positives, but leave a comment explaining why you think the error is false and safe to ignore.
+*  `npm run format`: Reformats your code, as well as fixing any fixable lint issues. Note, if your editor has a `prettier` plugin, installing that and turning on "format on save" will be more convenient.
+*  `npm run build`: Compiles the code, putting the compiled code into `build/`, and the finished zip file into `dist/`
+*  `npm run watch`: Automatically recompiles code when it changes, putting the output into `build/`. Using this is recommended during development.
+
+Please note the following:
+*  All coroutines must be awaited. All top-level code must be wrapped in try/catch that calls `showError(error)`. This is because extensions do not support the `error` and `unhandledrejection` events, and so any errors not caught explicitly would get ignored and not shown to the user.
+*  Event handlers added with `on<event>=` in JSX automatically get awaited and wrapped in a try/catch.
+
+(Don't worry *too* much about this. If you forget, I will (probably) notice during code review and fix it after merging.)
 
 If your change is large, or adds new dependencies, please consider opening an issue beforehand so we can discuss.
-Otherwise, I may reject your pull request. Sorry.
+Otherwise, I may choose to reject your pull request. Sorry.
+
+For contributing, you can use any editor you want, of course. I use VSCode, and have included my `.code-workspace` file with recommended project-specific settings if you want it. You may need to open it using the `File > Open Workspace from File` menu option. To make full use of it, you will need to install the Prettier (`esbenp.prettier-vscode`) and ESlint (`dbaeumer.vscode-eslint`) extensions.
+No matter which editor you choose, having Prettier format on save is something you might find worth setting up.
 
 ## License
 
