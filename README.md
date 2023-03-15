@@ -115,6 +115,24 @@ Otherwise, I may choose to reject your pull request. Sorry.
 For contributing, you can use any editor you want, of course. I use VSCode, and have included my `.code-workspace` file with recommended project-specific settings if you want it. You may need to open it using the `File > Open Workspace from File` menu option. To make full use of it, you will need to install the Prettier (`esbenp.prettier-vscode`) and ESlint (`dbaeumer.vscode-eslint`) extensions.
 No matter which editor you choose, having Prettier format on save is something you might find worth setting up.
 
+This project uses ttypescript to automatically transform files. Any module with a leading `@reader content-script` comment, such as
+```js
+// @reader content-script
+import { nonNull } from '../util.js'
+nonNull(12);
+```
+gets transformed into a file that can be used as a browser content script, like this:
+```js
+(async () => {
+    "use strict";
+    const $browser = globalThis.browser ?? globalThis.chrome,
+          $import = path => import($browser.runtime.getURL(path));
+
+    const { nonNull } = await $import("/util.js");
+    nonNull(12);
+})();
+```
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
