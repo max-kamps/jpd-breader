@@ -216,13 +216,11 @@ export default function (_program: ts.Program, _pluginOptions: Record<string, ne
             const isContentScript = comments.some(text => text === '@reader content-script');
 
             if (isContentScript) {
-                console.log('CONTENT SCRIPT', sourceFile.fileName);
-                // return ctx.factory.updateSourceFile(sourceFile, [ctx.factory.createBlock(sourceFile.statements)]);
+                console.log('Transforming content script', sourceFile.fileName);
                 return createWrapper(ts.visitEachChild(sourceFile, visitor, ctx), ctx.factory);
-            } else {
-                console.log('normal', sourceFile.fileName);
-                return sourceFile;
             }
+
+            return sourceFile;
         };
     };
 }
