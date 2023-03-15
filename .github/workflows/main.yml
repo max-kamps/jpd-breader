@@ -16,4 +16,4 @@ jobs:
         with:
           node-version: 16
       - run: npm install
-      - run: npm check
+      - run: npm run check
