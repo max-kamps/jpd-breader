@@ -213,31 +213,25 @@ export function applyParseResult(fragments: Fragment[], tokens: Token[], keepTex
             // TODO take into account fragment furigana
             // TODO Token might overlap end of fragment... Figure out this edge case later
 
-            const className = `jpdb-word ${token.card.state.join(' ')}`;
+            const base = text.slice(curOffset, curOffset + token.length);
+            const furi = token.furigana ?? [[base, null]];
+            const furiLength = furi.reduce((len, part) => len + part[0].length, 0);
 
-            const baseText = fragment.text.slice(
-                curOffset - fragment.offset,
-                curOffset - fragment.offset + token.length,
-            );
-
-            const furi = token.furigana ?? [[baseText, null]];
+            // Work around jpdb bug
+            if (furiLength < token.length) {
+                furi.push([base.slice(furiLength), null]);
+            }
             const jpdbBase = furi.map(x => x[0]).join('');
 
-            if (jpdbBase !== baseText) {
-                // Work around jpdb API bugs
-                if (baseText.startsWith(jpdbBase)) {
-                    furi.push([baseText.slice(jpdbBase.length), null]);
-                } else if (jpdbBase.startsWith(baseText)) {
-                    // Required for words that have okurigana and thus span multiple fragments
-                    // do nothing
-                } else {
-                    showError({
-                        message: `Warning: JPDB returned non-matching text ${baseText} -> ${jpdbBase}. Please report this.`,
-                    });
-                    tokenIndex++;
-                    continue;
-                }
+            if (jpdbBase !== base) {
+                showError({
+                    message: `Warning: JPDB returned non-matching text ${base} -> ${jpdbBase}. Please report this.`,
+                });
+                tokenIndex++;
+                continue;
             }
+
+            const className = `jpdb-word ${token.card.state.join(' ')}`;
 
             // FIXME(Security) Not escaped
             const elem = (
