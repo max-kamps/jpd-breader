@@ -72,12 +72,5 @@
         "content/dialog.css",
         "util.js"
     ],
-    "permissions": [
-        "tabs",
-        "activeTab",
-        "contextMenus",
-        "*://jpdb.io/*",
-        "*://reader.ttsu.app/*",
-        "*://ttu-ebook.web.app/*"
-    ]
+    "permissions": ["tabs", "activeTab", "contextMenus", "*://jpdb.io/*"]
 }

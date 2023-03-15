@@ -58,6 +58,7 @@ declare namespace browser.runtime {
 
     function connect(extensionId?: string, connectInfo?: { name?: string; includeTlsChannelId?: boolean }): Port;
     function getURL(path: string): string;
+    function getManifest(): typeof import('../src/manifest.json');
 
     const onInstalled: _WebExtEvent<(details: _OnInstalledDetails) => void>;
     const onStartup: _WebExtEvent<() => void>;

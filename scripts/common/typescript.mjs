@@ -1,6 +1,8 @@
 import console from 'node:console';
 import path from 'node:path';
-import ts from 'typescript';
+import ts from 'ttypescript';
+import dts from 'typescript';
+const { sys } = dts;
 
 function reportDiagnostic(diagnostic) {
     if (diagnostic.file) {
@@ -20,8 +22,8 @@ function reportDiagnostics(diagnostics) {
 
 const formatHost = {
     getCanonicalFileName: path => path,
-    getCurrentDirectory: ts.sys.getCurrentDirectory,
-    getNewLine: () => ts.sys.newLine,
+    getCurrentDirectory: sys.getCurrentDirectory,
+    getNewLine: () => sys.newLine,
 };
 
 function reportWatchStatusChanged(diagnostic) {
@@ -29,14 +31,14 @@ function reportWatchStatusChanged(diagnostic) {
 }
 
 function readConfig(configPath) {
-    const configJsonResult = ts.readConfigFile(configPath, ts.sys.readFile);
+    const configJsonResult = ts.readConfigFile(configPath, sys.readFile);
     const configJson = configJsonResult.config;
     if (!configJson) {
         reportDiagnostics([configJsonResult.error]);
         return [1, null];
     }
 
-    const configResult = ts.parseJsonConfigFileContent(configJson, ts.sys, path.dirname(configPath));
+    const configResult = ts.parseJsonConfigFileContent(configJson, sys, path.dirname(configPath));
     if (configResult.errors.length > 0) {
         reportDiagnostics(configResult.errors);
     }
@@ -97,23 +99,11 @@ export async function watch() {
     const host = ts.createWatchCompilerHost(
         'tsconfig.json',
         config,
-        ts.sys,
+        sys,
         createProgram,
         reportDiagnostic,
         reportWatchStatusChanged,
     );
-
-    //   const origCreateProgram = host.createProgram;
-    //   host.createProgram = (rootNames, options, host, oldProgram) => {
-    //     console.log("** We're about to create the program! **");
-    //     return origCreateProgram(rootNames, options, host, oldProgram);
-    //   };
-    //   const origPostProgramCreate = host.afterProgramCreate;
-
-    //   host.afterProgramCreate = program => {
-    //     console.log("** We finished making the program! **");
-    //     origPostProgramCreate!(program);
-    //   };
 
     ts.createWatchProgram(host);
 }
