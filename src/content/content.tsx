@@ -1,3 +1,4 @@
+import { Keybind } from '../types.js';
 import { showError } from '../util.js';
 import { config, requestReview, requestSetFlag } from './background_comms.js';
 import { Popup } from './popup.js';
@@ -6,57 +7,79 @@ import { JpdbWord } from './types.js';
 export let currentHover: [JpdbWord, number, number] | null = null;
 let popupKeyHeld = false;
 
-window.addEventListener('keydown', async ({ key }) => {
-    if (key === config.showPopupKey) {
-        popupKeyHeld = true;
+function matchesHotkey(
+    keyEvent: { key: string; code: string; getModifierState(key: string): boolean },
+    hotkey: Keybind,
+) {
+    return hotkey && keyEvent.code === hotkey.code && hotkey.modifiers.every(name => keyEvent.getModifierState(name));
+}
 
-        const popup = Popup.get();
-        popup.disablePointer();
+window.addEventListener('keydown', async event => {
+    try {
+        if (matchesHotkey(event, config.showPopupKey)) {
+            event.preventDefault();
+            popupKeyHeld = true;
 
-        if (!currentHover) {
-            popup.fadeOut();
+            const popup = Popup.get();
+            popup.disablePointer();
+
+            if (!currentHover) {
+                popup.fadeOut();
+            }
         }
-    }
 
-    if (currentHover) {
-        try {
+        if (currentHover) {
             const [word, x, y] = currentHover;
             const card = word.jpdbData.token.card;
 
-            switch (key) {
-                case config.showPopupKey:
-                    Popup.get().showForWord(word, x, y);
-                    break;
-                case config.blacklistKey:
-                    await requestSetFlag(card, 'blacklist', !card.state.includes('blacklisted'));
-                    break;
-                case config.neverForgetKey:
-                    await requestSetFlag(card, 'never-forget', !card.state.includes('never-forget'));
-                    break;
-                case config.nothingKey:
-                    await requestReview(card, 'nothing');
-                    break;
-                case config.somethingKey:
-                    await requestReview(card, 'something');
-                    break;
-                case config.hardKey:
-                    await requestReview(card, 'hard');
-                    break;
-                case config.goodKey:
-                    await requestReview(card, 'good');
-                    break;
-                case config.easyKey:
-                    await requestReview(card, 'easy');
-                    break;
+            if (matchesHotkey(event, config.showPopupKey)) {
+                event.preventDefault();
+                Popup.get().showForWord(word, x, y);
             }
-        } catch (error) {
-            showError(error);
+
+            if (matchesHotkey(event, config.blacklistKey)) {
+                event.preventDefault();
+                await requestSetFlag(card, 'blacklist', !card.state.includes('blacklisted'));
+            }
+
+            if (matchesHotkey(event, config.neverForgetKey)) {
+                event.preventDefault();
+                await requestSetFlag(card, 'never-forget', !card.state.includes('never-forget'));
+            }
+
+            if (matchesHotkey(event, config.nothingKey)) {
+                event.preventDefault();
+                await requestReview(card, 'nothing');
+            }
+
+            if (matchesHotkey(event, config.somethingKey)) {
+                event.preventDefault();
+                await requestReview(card, 'something');
+            }
+
+            if (matchesHotkey(event, config.hardKey)) {
+                event.preventDefault();
+                await requestReview(card, 'hard');
+            }
+
+            if (matchesHotkey(event, config.goodKey)) {
+                event.preventDefault();
+                await requestReview(card, 'good');
+            }
+
+            if (matchesHotkey(event, config.easyKey)) {
+                event.preventDefault();
+                await requestReview(card, 'easy');
+            }
         }
+    } catch (error) {
+        showError(error);
     }
 });
 
-window.addEventListener('keyup', ({ key }) => {
-    if (key === config.showPopupKey) {
+window.addEventListener('keyup', event => {
+    if (matchesHotkey(event, config.showPopupKey)) {
+        event.preventDefault();
         popupKeyHeld = false;
         Popup.get().enablePointer();
     }

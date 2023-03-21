@@ -35,7 +35,7 @@ const defaultConfig: Config = {
     customWordCSS: '',
     customPopupCSS: '',
 
-    showPopupKey: 'Shift',
+    showPopupKey: { key: 'Shift', code: 'ShiftLeft', modifiers: [] },
     blacklistKey: null,
     neverForgetKey: null,
     nothingKey: null,
@@ -44,6 +44,25 @@ const defaultConfig: Config = {
     goodKey: null,
     easyKey: null,
 };
+
+let configVersion = localStorageGet('schemaVersion', 0);
+if (configVersion === 0) {
+    // Keybinds changed from string to object
+    configVersion = 1;
+    for (const key of [
+        'showPopupKey',
+        'blacklistKey',
+        'neverForgetKey',
+        'nothingKey',
+        'somethingKey',
+        'hardKey',
+        'goodKey',
+        'easyKey',
+    ]) {
+        localStorage.removeItem(key);
+    }
+    localStorageSet('schemaVersion', 1);
+}
 
 export const config = Object.fromEntries(
     Object.entries(defaultConfig).map(([key, defaultValue]) => [key, localStorageGet(key, defaultValue)]),

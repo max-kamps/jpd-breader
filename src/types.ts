@@ -2,6 +2,8 @@ export type Grade = 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'pass' 
 
 export type DeckId = number | 'blacklist' | 'never-forget' | 'forq';
 
+export type Keybind = { key: string; code: string; modifiers: string[] } | null;
+
 // Common types shared across both content and background scripts
 export type Config = {
     apiToken: string | null;
@@ -14,14 +16,14 @@ export type Config = {
     customWordCSS: string;
     customPopupCSS: string;
 
-    showPopupKey: string | null;
-    blacklistKey: string | null;
-    neverForgetKey: string | null;
-    nothingKey: string | null;
-    somethingKey: string | null;
-    hardKey: string | null;
-    goodKey: string | null;
-    easyKey: string | null;
+    showPopupKey: Keybind;
+    blacklistKey: Keybind;
+    neverForgetKey: Keybind;
+    nothingKey: Keybind;
+    somethingKey: Keybind;
+    hardKey: Keybind;
+    goodKey: Keybind;
+    easyKey: Keybind;
 };
 
 export type Ruby = {

@@ -1,13 +1,14 @@
 import { config, defaultConfig, port, requestUpdateConfig } from '../content/background_comms.js';
 import { Popup } from '../content/popup.js';
+import { Keybind } from '../types.js';
 import { jsxCreateElement, nonNull, showError } from '../util.js';
 
 // Custom element definitions
 
 // Common behavior shared for all settings elements
 class SettingElement extends HTMLElement {
-    _input: HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement;
-    _reset: HTMLButtonElement;
+    input: HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement;
+    reset: HTMLButtonElement;
 
     static get observedAttributes() {
         return ['name'] as const;
@@ -22,9 +23,9 @@ class SettingElement extends HTMLElement {
             </label>
         );
 
-        this._input = this.renderInputElem(this.getAttribute('name') ?? '');
+        this.input = this.renderInputElem(this.getAttribute('name') ?? '');
 
-        this._reset = (
+        this.reset = (
             <button
                 part='reset-button'
                 onclick={() => {
@@ -36,7 +37,7 @@ class SettingElement extends HTMLElement {
         ) as HTMLButtonElement;
 
         const shadow = this.attachShadow({ mode: 'open' });
-        shadow.append(label, this._input, this._reset);
+        shadow.append(label, this.input, this.reset);
     }
 
     renderInputElem(_name: string): HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement {
@@ -52,11 +53,11 @@ class SettingElement extends HTMLElement {
     }
 
     set name(newValue: string) {
-        this._input.name = newValue;
+        this.input.name = newValue;
     }
 
     get name() {
-        return this._input.name;
+        return this.input.name;
     }
 
     get value(): unknown {
@@ -74,11 +75,11 @@ class SettingElement extends HTMLElement {
     valueChanged() {
         console.log('change', defaultConfig !== undefined, this.value, (defaultConfig as any)[this.name] ?? null);
         if (defaultConfig === undefined || this.value !== ((defaultConfig as any)[this.name] ?? null)) {
-            this._reset.disabled = false;
-            this._reset.innerText = 'Reset';
+            this.reset.disabled = false;
+            this.reset.innerText = 'Reset';
         } else {
-            this._reset.disabled = true;
-            this._reset.innerText = 'Default';
+            this.reset.disabled = true;
+            this.reset.innerText = 'Default';
         }
     }
 }
@@ -86,7 +87,7 @@ class SettingElement extends HTMLElement {
 customElements.define(
     'setting-token',
     class SettingToken extends SettingElement {
-        declare _input: HTMLInputElement;
+        declare input: HTMLInputElement;
 
         renderInputElem(name: string): HTMLInputElement {
             return (
@@ -103,11 +104,11 @@ customElements.define(
         }
 
         get value(): string | null {
-            return this._input.value || null;
+            return this.input.value || null;
         }
 
         set value(newValue: string | null) {
-            this._input.value = newValue ?? '';
+            this.input.value = newValue ?? '';
             this.valueChanged();
         }
     },
@@ -116,7 +117,7 @@ customElements.define(
 customElements.define(
     'setting-deckid',
     class SettingDeckId extends SettingElement {
-        declare _input: HTMLInputElement;
+        declare input: HTMLInputElement;
 
         renderInputElem(name: string): HTMLInputElement {
             return (
@@ -134,16 +135,16 @@ customElements.define(
         }
 
         get value(): string | number | null {
-            if (this._input.value) {
-                const n = parseInt(this._input.value);
-                return isNaN(n) ? this._input.value : n;
+            if (this.input.value) {
+                const n = parseInt(this.input.value);
+                return isNaN(n) ? this.input.value : n;
             }
 
             return null;
         }
 
         set value(newValue: string | number | null) {
-            this._input.value = newValue ? newValue.toString() : '';
+            this.input.value = newValue ? newValue.toString() : '';
             this.valueChanged();
         }
     },
@@ -152,7 +153,7 @@ customElements.define(
 customElements.define(
     'setting-string',
     class SettingString extends SettingElement {
-        declare _input: HTMLTextAreaElement;
+        declare input: HTMLTextAreaElement;
 
         renderInputElem(name: string): HTMLTextAreaElement {
             return (
@@ -167,63 +168,98 @@ customElements.define(
         }
 
         get value(): string {
-            return this._input.value;
+            return this.input.value;
         }
 
         set value(newValue: string) {
-            this._input.value = newValue;
+            this.input.value = newValue;
             this.valueChanged();
         }
     },
 );
 
+const modifiers = ['Control', 'Alt', 'AltGraph', 'Meta', 'Shift'];
+function keybindToString(bind: Keybind) {
+    return bind === null ? 'None' : `${bind.key} (${[...bind.modifiers, bind.code].join('+')})`;
+}
+
 customElements.define(
     'setting-keybind',
     class SettingKeybind extends SettingElement {
-        declare _input: HTMLButtonElement;
-        _value: string | null = null;
-        static _active?: [SettingKeybind, (event: KeyboardEvent) => void];
+        declare input: HTMLButtonElement;
+        #value: Keybind = null;
+        static active?: [SettingKeybind, (event: KeyboardEvent) => void];
 
         renderInputElem(name: string): HTMLButtonElement {
             return (
                 <button part='input' name={name} onclick={this.chooseKey.bind(this)}>
-                    {this._value ?? 'Click to set'}
+                    Loading...
                 </button>
             ) as HTMLButtonElement;
         }
 
         chooseKey() {
-            if (SettingKeybind._active) {
-                const [other, listener] = SettingKeybind._active;
-                other._input.innerText = other._value ?? 'Click to set';
+            if (SettingKeybind.active) {
+                const [other, listener] = SettingKeybind.active;
+                other.input.innerText = keybindToString(other.#value);
                 document.removeEventListener('keydown', listener);
 
                 if (other === this) {
-                    SettingKeybind._active = undefined;
+                    SettingKeybind.active = undefined;
                     return;
                 }
             }
 
             const keydownListener = (event: KeyboardEvent) => {
-                SettingKeybind._active = undefined;
-                this._value = event.key;
-                this._input.innerText = this._value ?? 'Click to set';
-                markUnsavedChanges();
-                this.valueChanged();
+                if (!modifiers.includes(event.key)) {
+                    SettingKeybind.active = undefined;
+
+                    this.#value =
+                        event.code === 'Escape'
+                            ? null
+                            : {
+                                  key: event.key,
+                                  code: event.code,
+                                  modifiers: modifiers.filter(name => event.getModifierState(name)),
+                              };
+
+                    this.input.innerText = keybindToString(this.#value);
+                    markUnsavedChanges();
+                    this.valueChanged();
+                    event.preventDefault();
+                    document.removeEventListener('keydown', keydownListener);
+                    document.removeEventListener('keyup', keyupListener);
+                }
             };
 
-            this._input.innerText = 'Press a key, click to cancel';
-            document.addEventListener('keydown', keydownListener, { once: true });
-            SettingKeybind._active = [this, keydownListener];
+            const keyupListener = (event: KeyboardEvent) => {
+                SettingKeybind.active = undefined;
+                this.#value = {
+                    key: event.key,
+                    code: event.code,
+                    modifiers: modifiers.filter(name => event.key !== name && event.getModifierState(name)),
+                };
+                this.input.innerText = keybindToString(this.#value);
+                markUnsavedChanges();
+                this.valueChanged();
+                event.preventDefault();
+                document.removeEventListener('keydown', keydownListener);
+                document.removeEventListener('keyup', keyupListener);
+            };
+
+            this.input.innerText = 'Press a key, click to cancel';
+            document.addEventListener('keydown', keydownListener);
+            document.addEventListener('keyup', keyupListener);
+            SettingKeybind.active = [this, keydownListener];
         }
 
-        get value(): string | null {
-            return this._value;
+        get value(): Keybind {
+            return this.#value;
         }
 
-        set value(newValue: string | null) {
-            this._value = newValue;
-            this._input.innerText = this._value ?? 'Click to set';
+        set value(newValue: Keybind) {
+            this.#value = newValue;
+            this.input.innerText = keybindToString(newValue);
             this.valueChanged();
         }
     },
@@ -232,7 +268,7 @@ customElements.define(
 customElements.define(
     'setting-boolean',
     class SettingBoolean extends SettingElement {
-        declare _input: HTMLInputElement;
+        declare input: HTMLInputElement;
 
         renderInputElem(name: string): HTMLInputElement {
             return (
@@ -249,11 +285,11 @@ customElements.define(
         }
 
         get value(): boolean {
-            return this._input.checked;
+            return this.input.checked;
         }
 
         set value(newValue: boolean) {
-            this._input.checked = newValue;
+            this.input.checked = newValue;
             this.valueChanged();
         }
     },

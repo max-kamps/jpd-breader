@@ -2,6 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
+        <script type="module" src="settings.js"></script>
         <style>
             body {
                 padding: 0;
@@ -49,6 +50,8 @@
 
             section h1 {
                 grid-column: 1 / span 3;
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
             }
 
             .setting {
@@ -75,10 +78,18 @@
                 grid-column: 1 / span 3;
             }
 
+            .explanation {
+                grid-column: 1 / span 3;
+                margin-bottom: 0.5em;
+                color: #555;
+            }
+
             .setting::part(reset-button) {
                 grid-column: 3;
             }
         </style>
+        <title>Reader Settings</title>
+        <link rel="icon" href="../icons/logo_32.png" />
     </head>
 
     <body>
@@ -100,6 +111,13 @@
                 </section>
                 <section id="keybinds">
                     <h1>Keybinds</h1>
+                    <div class="explanation">
+                        Click to change. Click again to cancel. Press escape to clear.<br />
+                        If desired, hold one or more modifier keys (like shift). Press a key to choose it as the
+                        hotkey.<br />
+                        Hotkeys are based on key position and independent of your current keyboard layout. <br />
+                        Clearing "Show popup" engages hover mode.
+                    </div>
                     <setting-keybind class="setting" name="showPopupKey">Show popup</setting-keybind>
                     <setting-keybind class="setting" name="blacklistKey">Blacklist</setting-keybind>
                     <setting-keybind class="setting" name="neverForgetKey">Mark as never forget</setting-keybind>
@@ -118,6 +136,5 @@
             </div>
             <aside id="preview"></aside>
         </article>
-        <script type="module" src="settings.js"></script>
     </body>
 </html>
