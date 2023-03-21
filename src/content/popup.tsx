@@ -172,6 +172,16 @@ export class Popup {
         this.#style.visibility = 'hidden';
     }
 
+    disablePointer() {
+        this.#style.pointerEvents = 'none';
+        this.#style.userSelect = 'none';
+    }
+
+    enablePointer() {
+        this.#style.pointerEvents = '';
+        this.#style.userSelect = '';
+    }
+
     render() {
         if (this.#data === undefined) return;
 

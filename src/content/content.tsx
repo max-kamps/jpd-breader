@@ -10,8 +10,11 @@ window.addEventListener('keydown', async ({ key }) => {
     if (key === config.showPopupKey) {
         popupKeyHeld = true;
 
+        const popup = Popup.get();
+        popup.disablePointer();
+
         if (!currentHover) {
-            Popup.get().fadeOut();
+            popup.fadeOut();
         }
     }
 
@@ -55,6 +58,7 @@ window.addEventListener('keydown', async ({ key }) => {
 window.addEventListener('keyup', ({ key }) => {
     if (key === config.showPopupKey) {
         popupKeyHeld = false;
+        Popup.get().enablePointer();
     }
 });
 
