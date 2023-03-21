@@ -4,7 +4,7 @@ A browser extension that parses any text in your browser using JPDB, and allows 
 
 ## Is this ready to use yet?
 
-Maybe? The some parts of the interface are temporary and quite ugly, but otherwise it should mostly work.
+Maybe? Some parts of the interface are temporary and quite ugly, but otherwise it should mostly work.
 
 ## Installation
 
@@ -19,10 +19,10 @@ Maybe? The some parts of the interface are temporary and quite ugly, but otherwi
 8.  Continue with the [Initial Setup](#initial-setup) section
 
 ### That sounds like a hassle. Why don't you upload the extension to the Chrome store instead?
-The Chrome store is not accepting new Manifest v2 extensions, only Manifest v3. But there are several problems with Manifest v3:
+The Chrome store is not accepting new manifest v2 extensions, only manifest v3. But there are several problems with Manifest v3:
 -   It does not support HTML parsing in background workers (which would break the review and add to FORQ features)
 -   Firefox does not support background workers yet (which would break everything on Firefox)
-Unfortunately, developing separate v2 and v3 versions of the addon would be too much work for me.
+Unfortunately, developing separate v2 and v3 versions of the add-on would be too much work for me.
 
 ### Firefox
 1.  Download the latest `.xpi` file from the releases page
@@ -50,12 +50,12 @@ You can also change various hotkeys
 ## Usage
 
 You can use the reader on any website. Just select some text, right click, and choose the "Parse ... with jpdb" option.
-Words will be colored according to their state (known, new, etc). Hover over words while holding to see their meaning, and to mine or review them.
+Words will be colored according to their state (known, new, etc.) Hover over words while holding to see their meaning, and to mine or review them.
 
 The following pages require special support for technical reasons, and will therefore start parsing immediately:
 -  [ッツ Reader](https://github.com/ttu-ttu/ebook-reader): [reader.ttsu.app](https://reader.ttsu.app), [ttu-ebook.web.app](https://ttu-ebook.web.app)
 -  Texthooker pages: [anacreondjt.gitlab.io/texthooker.html](https://anacreondjt.gitlab.io/texthooker.html), [learnjapanese.moe/texthooker.html](https://learnjapanese.moe/texthooker.html)
--  Manga html files probuced by [Mokuro](https://github.com/kha-white/mokuro): File name must contain "mokuro" and end in .html
+-  [Mokuro](https://github.com/kha-white/mokuro): File name must contain `mokuro` and end in `.html`
 -  Wikipedia: [ja.wikipedia.org](https://ja.wikipedia.org/)
 -  Readwok: [app.readwok.com](https://app.readwok.com/)
 
@@ -142,25 +142,25 @@ $ npm run watch
 This will continuously rebuild the source code as it changes, and place the output in the `build/` folder.
 It can be loaded as an unpacked extension from there.
 Please remember to wait until building is done, and reload the extension on the "manage extensions" page before testing your changes.
-Also, please look at the Contributing section if you plan on contributing your changes.
+Also, please look at the [Contributing](#contributing) section if you plan on contributing your changes.
 
 ## Contributing
 
 Issues with feedback or ideas for new features are very welcome. You can also message me on the JPDB Discord server (@hmry#6502).
 
 The following commands may be of interest to you:
-*  `npm run check`: Checks your code for formatting issues, linter warnings and type errors. This gets run in CI, so your pull request will only be accepted if this passes. You can use eslint ignore comments if you get false positives, but leave a comment explaining why you think the error is false and safe to ignore.
+*  `npm run check`: Checks your code for formatting issues, linter warnings and type errors. The CI also runs this, so your pull request will only be accepted if it passes. You can use eslint ignore comments if you get false positives, but leave a comment explaining why you think the error is false and safe to ignore.
 *  `npm run format`: Reformats your code, as well as fixing any fixable lint issues. Note, if your editor has a `prettier` plugin, installing that and turning on "format on save" will be more convenient.
 *  `npm run build`: Compiles the code, putting the compiled code into `build/`, and the finished zip file into `dist/`
 *  `npm run watch`: Automatically recompiles code when it changes, putting the output into `build/`. Using this is recommended during development.
 
 Please note the following:
-*  All coroutines must be awaited. All top-level code must be wrapped in try/catch that calls `showError(error)`. This is because extensions do not support the `error` and `unhandledrejection` events, so any errors not caught explicitly would get ignored and not shown to the user. (Working around browser bugs like this is annoying but unfortunately necessary.)
+*  All coroutines must be awaited. All top-level code must be wrapped in try/catch that calls `showError(error)`. This is because extensions do not support the `error` and `unhandledrejection` events, so any errors not caught explicitly would get ignored and not shown to the user. (Working around browser bugs like this is annoying but necessary.)
 *  Event handlers added with `on<event>=` in JSX automatically get awaited and wrapped in a try/catch.
 
 (Don't worry *too* much about this. If you forget, I will (probably) notice during code review and fix it after merging.)
 
-If your change is large, or adds new dependencies, please consider opening an issue beforehand so we can discuss.
+If your change is large, or adds new dependencies, please consider opening an issue beforehand, so we may discuss.
 Otherwise, I may choose to reject your pull request. Sorry.
 
 For contributing, you can of course use any editor you want. I use VSCode, and have included my `.code-workspace` file with recommended project-specific settings if you want it. You may need to open it using the `File > Open Workspace from File` menu option. To make full use of it, you will need to install the Prettier (`esbenp.prettier-vscode`) and ESlint (`dbaeumer.vscode-eslint`) extensions.
