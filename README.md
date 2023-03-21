@@ -57,7 +57,7 @@ The following pages require special support for technical reasons, and will ther
 -  Texthooker pages: [anacreondjt.gitlab.io/texthooker.html](https://anacreondjt.gitlab.io/texthooker.html), [learnjapanese.moe/texthooker.html](https://learnjapanese.moe/texthooker.html)
 -  [Mokuro](https://github.com/kha-white/mokuro): File name must contain `mokuro` and end in `.html`
 -  Wikipedia: [ja.wikipedia.org](https://ja.wikipedia.org/)
--  Readwok: [app.readwok.com](https://app.readwok.com/)
+-  ~~Readwok: [app.readwok.com](https://app.readwok.com/)~~ (Currently non-functional)
 
 
 ## Can I customize the colors? Can I customize which furigana get shown?

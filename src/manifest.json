@@ -42,11 +42,6 @@
             "css": ["content/word.css"]
         },
         {
-            "matches": ["*://app.readwok.com/*"],
-            "js": ["integrations/readwok.js"],
-            "css": ["content/word.css"]
-        },
-        {
             "matches": ["*://ja.wikipedia.org/*"],
             "js": ["integrations/wikipedia.js"],
             "css": ["content/word.css"]
@@ -62,7 +57,6 @@
         "integrations/anacreon.js",
         "integrations/mokuro.js",
         "integrations/common.js",
-        "integrations/readwok.js",
         "integrations/wikipedia.js",
         "content/content.js",
         "content/dialog.js",
@@ -82,7 +76,6 @@
         "*://anacreondjt.gitlab.io/texthooker.html",
         "*://learnjapanese.moe/texthooker.html",
         "file:///*mokuro*.html",
-        "*://app.readwok.com/*",
         "*://ja.wikipedia.org/*"
     ]
 }
