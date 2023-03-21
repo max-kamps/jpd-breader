@@ -1,3 +1,8 @@
+:where(rt) {
+    user-select: none;
+    pointer-events: none;
+}
+
 :where(.jpdb-word ruby, .jpdb-word rt) {
     color: inherit !important;
     font-size: inherit;
