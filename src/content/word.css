@@ -1,55 +1,54 @@
-.jpdb-word ruby,
-.jpdb-word rt {
+:where(.jpdb-word ruby, .jpdb-word rt) {
     color: inherit !important;
     font-size: inherit;
 }
 
-.jpdb-word rt {
+:where(.jpdb-word rt) {
     font-size: 60%;
 }
 
-.jpdb-word:not(.unparsed):hover {
+:where(.jpdb-word:not(.unparsed):hover) {
     text-decoration: underline;
 }
 
-/* .jpdb-word.unparsed { } */
+/* :where(.jpdb-word.unparsed) { } */
 
-.jpdb-word.locked {
+:where(.jpdb-word.locked) {
     color: rgb(119, 119, 119);
 }
 
-.jpdb-word.suspended {
+:where(.jpdb-word.suspended) {
     color: rgb(119, 119, 119);
 }
 
-.jpdb-word.blacklisted {
+:where(.jpdb-word.blacklisted) {
     color: rgb(119, 119, 119);
 }
 
-.jpdb-word.never-forget {
+:where(.jpdb-word.never-forget) {
     color: rgb(112, 192, 0);
 }
 
-.jpdb-word.not-in-deck {
+:where(.jpdb-word.not-in-deck) {
     color: rgba(75, 141, 255, 0.5);
 }
 
-.jpdb-word.new {
+:where(.jpdb-word.new) {
     color: rgb(75, 141, 255);
 }
 
-.jpdb-word.learning {
+:where(.jpdb-word.learning) {
     color: rgb(94, 167, 128);
 }
 
-.jpdb-word.known {
+:where(.jpdb-word.known) {
     color: rgb(112, 192, 0);
 }
 
-.jpdb-word.due {
+:where(.jpdb-word.due) {
     color: rgb(255, 69, 0);
 }
 
-.jpdb-word.failed {
+:where(.jpdb-word.failed) {
     color: rgb(255, 0, 0);
 }
