@@ -52,18 +52,15 @@
         "persistent": true
     },
     "web_accessible_resources": [
-        "content/contextmenu.js",
-        "integrations/ttu.js",
-        "integrations/anacreon.js",
-        "integrations/mokuro.js",
         "integrations/common.js",
-        "integrations/wikipedia.js",
+        "content/background_comms.js",
         "content/content.js",
         "content/dialog.js",
-        "content/popup.js",
-        "content/word.css",
-        "content/popup.css",
         "content/dialog.css",
+        "content/parse.js",
+        "content/popup.js",
+        "content/popup.css",
+        "content/word.css",
         "util.js"
     ],
     "permissions": [
