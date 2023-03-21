@@ -1,6 +1,6 @@
 {
     "name": "jpdb-browser-reader",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "scripts": {
         "preinstall": "git config core.hooksPath ./scripts/git_hooks",
         "format": "node scripts/format.mjs",
