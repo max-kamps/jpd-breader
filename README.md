@@ -122,7 +122,7 @@ Hide all jpdb furigana:
 
 Only show jpdb furigana while hovering:
 ```css
-.jpdb-word:not(:hover) .jpdb-furi { display: none; }
+.jpdb-word:not(:hover) .jpdb-furi { visibility: hidden; }
 ```
 
 ## Building
