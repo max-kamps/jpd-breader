@@ -1,53 +1,53 @@
 // @reader content-script
 
+import { requestParse } from '../content/background_comms.js';
+import { applyParseResult, Fragment } from '../content/parse.js';
 import { showError } from '../util.js';
-import { startParsingVisible } from './common.js';
+import { visibleObserver } from './common.js';
 
-//TODO merge all <p> in a textbox (otherwise parsing can get cut off or weird)?
-function observeParagraph(p: HTMLElement, paragraphOnScreenObserver: IntersectionObserver) {
-    if (p.classList.contains('jpdb-parse-done'))
-        // Already parsed
-        return;
+try {
+    const visible = visibleObserver(async elements => {
+        for (const page of elements) {
+            try {
+                // Manually create fragments, since mokuro puts every line in a separate <p>aragraph
+                const paragraphs = [...page.querySelectorAll('.textBox')].map(box => {
+                    const fragments: Fragment[] = [];
+                    let offset = 0;
+                    for (const p of box.children) {
+                        const text = p.firstChild as Text;
+                        text.data = text.data
+                            .replaceAll('．．．', '…')
+                            .replaceAll('．．', '…')
+                            .replaceAll('！！', '‼')
+                            .replaceAll('！？', '“⁉');
 
-    paragraphOnScreenObserver.observe(p);
-}
+                        const start = offset;
+                        const length = text.length;
+                        const end = (offset += length);
 
-function stuffAfter(paragraphOnScreenObserver: IntersectionObserver) {
-    const getCurrentPage = () => {
-        const id = document.getElementById('pageIdxDisplay') as HTMLElement;
-        const page = id.innerText.split('/')[0].split(',');
-        return page;
-    };
+                        fragments.push({ node: text, start, end, length, hasRuby: false });
+                    }
+                    return fragments;
+                });
 
-    const parseCurrentPage = () => {
-        const startPages = getCurrentPage();
-        startPages.forEach(page => {
-            const actualPage = parseInt(page) - 1;
-            const div = document.getElementById('page' + actualPage.toString()) as HTMLElement;
-            observeParagraph(div, paragraphOnScreenObserver);
-        });
-    };
+                if (paragraphs.length > 0) {
+                    console.log(
+                        'Parsing',
+                        paragraphs.flat().map(fragment => fragment.node.data),
+                    );
 
-    parseCurrentPage();
-
-    const pageChangeObserver = new MutationObserver((mutations, _observer) => {
-        for (const mutation of mutations) {
-            if (mutation.type !== 'childList') continue;
-            for (const node of mutation.addedNodes) {
-                if (node.nodeName === '#text') {
-                    parseCurrentPage();
+                    const tokens = await requestParse(paragraphs);
+                    applyParseResult(paragraphs, tokens);
                 }
+            } catch (error) {
+                showError(error);
             }
         }
     });
 
-    pageChangeObserver.observe(document.getElementById('pageIdxDisplay') as HTMLElement, {
-        childList: true,
-    });
-}
-
-try {
-    await startParsingVisible(stuffAfter);
+    for (const page of document.querySelectorAll('#pagesContainer > div')) {
+        visible.observe(page);
+    }
 } catch (error) {
     showError(error);
 }

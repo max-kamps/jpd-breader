@@ -1,82 +1,276 @@
-import { applyParseResult, requestParse, textFragments } from '../content/content.js';
+import { requestParse } from '../content/background_comms.js';
+import { applyParseResult, displayCategory, Fragment, Paragraph } from '../content/parse.js';
+import { showError } from '../util.js';
 
-function* iterTextNodes(node: Node): Generator<Text | HTMLElement> {
-    if (node.nodeType === Node.TEXT_NODE) {
-        yield node as Text;
-    } else if (node.nodeType == Node.ELEMENT_NODE) {
-        if ((node as Element).hasAttribute('data-ttu-spoiler-img')) {
-            // Skip this node, we don't want to parse the spoiler label as text
-            return;
+export function paragraphsInNode(node: Node, filter: (node: Node) => boolean = () => true): Paragraph[] {
+    let offset = 0;
+    const fragments: Fragment[] = [];
+    const paragraphs: Paragraph[] = [];
+
+    function breakParagraph() {
+        // Remove fragments from the end that are just whitespace
+        // (the ones from the start have already been ignored)
+
+        let end = fragments.length - 1;
+        for (; end >= 0; end--) {
+            if (fragments[end].node.data.trim().length > 0) break;
         }
-        if ((node as Element).tagName === 'RUBY') {
-            yield node as HTMLElement;
+
+        const trimmedFragments = fragments.slice(0, end + 1);
+
+        if (trimmedFragments.length) {
+            paragraphs.push(trimmedFragments);
+        }
+
+        fragments.splice(0);
+        offset = 0;
+    }
+
+    function pushText(text: Text, hasRuby: boolean) {
+        // Ignore empty text nodes, as well as whitespace at the beginning of the run
+        if (text.data.length > 0 && !(fragments.length === 0 && text.data.trim().length === 0)) {
+            fragments.push({
+                start: offset,
+                length: text.length,
+                end: (offset += text.length),
+                node: text,
+                hasRuby,
+            });
+        }
+    }
+
+    function recurse(node: Node, hasRuby: boolean) {
+        const display = displayCategory(node);
+
+        if (display === 'block') {
+            breakParagraph();
+        }
+
+        if (display === 'none' || display === 'ruby-text' || filter(node) === false) return;
+
+        if (display === 'text') {
+            pushText(node as Text, hasRuby);
         } else {
+            if (display === 'ruby') {
+                hasRuby = true;
+            }
+
             for (const child of node.childNodes) {
-                yield* iterTextNodes(child);
+                recurse(child, hasRuby);
+            }
+
+            if (display === 'block') {
+                breakParagraph();
             }
         }
     }
+
+    // TODO check if any of the parents of node are ruby?
+    recurse(node, false);
+    return paragraphs;
 }
 
-export async function startParsingVisible(stuffAfter: (paragraphOnScreenObserver: IntersectionObserver) => void) {
-    const visibleParagraphs = new Set<HTMLElement>(); // queue of paragraphs waiting to be parsed
+// export function paragraphsInNode(node: Node, filter: (node: Node) => boolean = () => true): Paragraph[] {
+//     // TODO Support partial selections in start and end text nodes
+
+//     // console.log('start:', start, 'end:', end);
+
+//     let hasRuby = false;
+
+//     const stack: { node: Node; display: ReturnType<typeof displayCategory>; hasRuby: boolean }[] = [];
+
+//     let offset = 0;
+//     const fragments: Fragment[] = [];
+//     const paragraphs: Paragraph[] = [];
+
+//     function breakParagraph() {
+//         // Remove fragments from the end that are just whitespace
+//         // (the ones from the start have already been ignored)
+
+//         let end = fragments.length - 1;
+//         for (; end >= 0; end--) {
+//             if (fragments[end].node.data.trim().length > 0) break;
+//         }
+
+//         const trimmedFragments = fragments.slice(0, end + 1);
+
+//         if (trimmedFragments.length) {
+//             paragraphs.push(trimmedFragments);
+//         }
+
+//         fragments.splice(0);
+//         offset = 0;
+//     }
+
+//     outerLoop: while (true) {
+//         // console.log('current:', current, 'hasRuby:', hasRuby);
+
+//         const display = displayCategory(node);
+//         stack.push({ display, hasRuby, node });
+
+//         const ignore = display === 'none' || display === 'ruby-text' || filter(node) === false;
+
+//         if (!ignore) {
+//             if (display === 'text') {
+//                 const text = node as Text;
+//                 // console.log('Pushing as text');
+//                 // Ignore empty text nodes, as well as whitespace at the beginning of the run
+//                 if (text.data.length > 0 && !(fragments.length === 0 && text.data.trim().length === 0)) {
+//                     fragments.push({
+//                         start: offset,
+//                         length: text.length,
+//                         end: (offset += text.length),
+//                         node: text,
+//                         hasRuby,
+//                     });
+//                 }
+//             } else if (display === 'ruby') {
+//                 hasRuby = true;
+//             } else if (display === 'block') {
+//                 breakParagraph();
+//             }
+//         }
+
+//         if (!ignore && node.firstChild !== null) {
+//             // console.log('Continuing with child');
+//             node = node.firstChild;
+//         } else {
+//             let parent;
+//             do {
+//                 parent = nonNull(stack.pop());
+//                 // console.log('Parent:', parent.node);
+
+//                 if (stack.length == 0) {
+//                     break outerLoop;
+//                 }
+
+//                 // Break the paragraph because we are leaving the parent block element
+//                 if (parent.display === 'block') {
+//                     breakParagraph();
+//                 }
+//             } while (parent.node.nextSibling === null);
+
+//             // console.log('Continuing with parents sibling');
+//             node = parent.node.nextSibling;
+//             hasRuby = parent.hasRuby;
+//             break;
+//         }
+//     }
+
+//     breakParagraph();
+//     return paragraphs;
+// }
+
+export function visibleObserver(callback: (elements: HTMLElement[]) => void): IntersectionObserver {
+    const visibleElements = new Set<HTMLElement>(); // queue of paragraphs waiting to be parsed
 
     let parsingInProgress = false;
     async function parseVisibleParagraphs() {
         // This function keeps running as long as there are visible paragraphs waiting to be parsed.
 
-        if (parsingInProgress || visibleParagraphs.size == 0)
+        if (parsingInProgress || visibleElements.size == 0)
             // Only run one instance of this function at a time
             return;
 
         parsingInProgress = true;
 
-        while (visibleParagraphs.size > 0) {
-            // Get earliest (rightmost) paragraph
-            // TODO support horizontal writing?
-            // TODO check to not exceed 2MB(?) limit
-            // TODO iterate in fixed chunks of always 10 paragraphs (by child index), whether they are visible or not,
-            // rather than only picking *up to* 10 of the visible paragraphs.
-            const paragraphs = [...visibleParagraphs.values()].sort((a, b) => b.offsetLeft - a.offsetLeft).slice(0, 10);
-            for (const p of paragraphs) {
-                visibleParagraphs.delete(p);
-                paragraphOnScreenObserver.unobserve(p);
+        while (visibleElements.size > 0) {
+            const elements = [...visibleElements.values()]
+                // HACK Get earliest (top-rightmost) paragraph.
+                // This is necessary because the "add context" feature currently depends on the order things were parsed in.
+                .sort((a, b) => a.offsetTop - b.offsetTop && b.offsetLeft - a.offsetLeft)
+                // TODO Find a better way of picking multiple elements. Right now we always pick *up to 10*.
+                // But that's suboptimal if the user slowly scrols one element at a time.
+                // Ideally, we would choose as many elements fit into the jpdb parse character limit,
+                // and get additional elements if the number of visible elements is below some limit.
+                .slice(0, 10);
+
+            for (const e of elements) {
+                visibleElements.delete(e);
+                elementVisibleObserver.unobserve(e);
             }
 
-            const fragments = textFragments(paragraphs.flatMap(p => [...iterTextNodes(p)]));
-
-            if (fragments.length > 0) {
-                const text = fragments.map(x => x.text).join('');
-                const tokens = await requestParse(text);
-                applyParseResult(fragments, tokens, true);
+            try {
+                callback(elements);
+            } catch (error) {
+                showError(error);
             }
         }
 
         parsingInProgress = false;
     }
 
-    const paragraphOnScreenObserver = new IntersectionObserver(
+    const elementVisibleObserver = new IntersectionObserver(
         (entries, _observer) => {
-            for (const entry of entries) {
-                if (entry.isIntersecting) {
-                    // console.log('Entered view:', entry.target, entry.target.innerText);
-                    visibleParagraphs.add(entry.target as HTMLElement);
-                } else {
-                    // console.log('Left view:', entry.target, entry.target.innerText);
-                    visibleParagraphs.delete(entry.target as HTMLElement);
+            try {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        // console.log('Entered view:', entry.target, entry.target.innerText);
+                        visibleElements.add(entry.target as HTMLElement);
+                    } else {
+                        // console.log('Left view:', entry.target, entry.target.innerText);
+                        visibleElements.delete(entry.target as HTMLElement);
+                    }
                 }
+                parseVisibleParagraphs();
+            } catch (error) {
+                showError(error);
             }
-            parseVisibleParagraphs();
         },
         {
             // rootMargin: '0px -120px 0px -120px', // debugging purposes, remove this
             rootMargin: '100% 100% 100% 100%',
         },
     );
+
     // document.body.insertAdjacentHTML(
     //     'beforeend',
     //     `<div style="position:fixed;top:0;right:120px;bottom:0;left:120px;box-shadow:inset 0 0 8px #f00;pointer-events:none;"></div>`,
     // );
     //
-    stuffAfter(paragraphOnScreenObserver);
+    return elementVisibleObserver;
+}
+
+export function addedObserver(selector: string, callback: (elements: HTMLElement[]) => void): MutationObserver {
+    const newParagraphObserver = new MutationObserver((mutations, _observer) => {
+        for (const mutation of mutations) {
+            if (mutation.type !== 'childList') continue;
+
+            const filteredNodes: HTMLElement[] = [];
+
+            for (const node of mutation.addedNodes) {
+                // TODO support non-elements (like text nodes)
+                if (node instanceof HTMLElement) {
+                    if (node.matches(selector)) {
+                        filteredNodes.push(node);
+                    }
+
+                    // TODO support non-html elements
+                    filteredNodes.push(...(node.querySelectorAll(selector) as Iterable<HTMLElement>));
+                }
+            }
+
+            if (filteredNodes.length) callback(filteredNodes);
+        }
+    });
+
+    return newParagraphObserver;
+}
+
+export async function parseNodes(nodes: Node[], filter: (node: Node) => boolean = () => true) {
+    try {
+        const paragraphs = nodes.flatMap(node => paragraphsInNode(node, filter));
+
+        if (paragraphs.length > 0) {
+            console.log(
+                'Parsing',
+                paragraphs.flat().map(fragment => fragment.node.data),
+            );
+
+            const tokens = await requestParse(paragraphs);
+            applyParseResult(paragraphs, tokens);
+        }
+    } catch (error) {
+        showError(error);
+    }
 }

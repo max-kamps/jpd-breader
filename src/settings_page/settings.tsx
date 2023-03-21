@@ -1,4 +1,4 @@
-import { config, defaultConfig, port, requestUpdateConfig } from '../content/content.js';
+import { config, defaultConfig, port, requestUpdateConfig } from '../content/background_comms.js';
 import { Popup } from '../content/popup.js';
 import { jsxCreateElement, nonNull, showError } from '../util.js';
 
@@ -287,9 +287,10 @@ function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
                 context: '',
                 contextOffset: 0,
                 token: {
-                    offset: 0,
+                    start: 0,
+                    end: 0,
                     length: 0,
-                    furigana: [],
+                    rubies: [],
                     card: {
                         vid: 1386060,
                         sid: 1337383451,

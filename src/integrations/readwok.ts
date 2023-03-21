@@ -1,48 +1,22 @@
 // @reader content-script
 
 import { showError } from '../util.js';
-import { startParsingVisible } from './common.js';
+import { addedObserver, parseNodes } from './common.js';
 
-function observeParagraph(p: HTMLElement, paragraphOnScreenObserver: IntersectionObserver) {
-    if (p.innerText.trim().length == 0) {
-        // Paragraph is empty
-        return;
-    }
+try {
+    // Parse lines that already exist
+    parseNodes([...document.querySelectorAll('div[class*="styles_text_"]')]);
 
-    if (p.classList.contains('jpdb-parse-done'))
-        // Already parsed
-        return;
-
-    paragraphOnScreenObserver.observe(p);
-}
-
-function stuffAfter(paragraphOnScreenObserver: IntersectionObserver) {
-    document
-        .querySelectorAll('.styles_text__WPY8-')
-        .forEach(e => observeParagraph(e as HTMLElement, paragraphOnScreenObserver));
-
-    const newParagraphObserver = new MutationObserver((mutations, _observer) => {
-        for (const mutation of mutations) {
-            if (mutation.type !== 'childList') continue;
-
-            for (const node of mutation.addedNodes) {
-                if (node.nodeName === 'DIV') {
-                    (node as HTMLElement)
-                        .querySelectorAll('.styles_text__WPY8-')
-                        .forEach(e => observeParagraph(e as HTMLElement, paragraphOnScreenObserver));
-                }
-            }
-        }
+    // Parse new lines as they are added
+    const added = addedObserver('div[class*="styles_text_"]', elements => {
+        console.log(elements);
+        parseNodes(elements);
     });
 
-    newParagraphObserver.observe(document.body, {
+    added.observe(document.body, {
         subtree: true,
         childList: true,
     });
-}
-
-try {
-    await startParsingVisible(stuffAfter);
 } catch (error) {
     showError(error);
 }

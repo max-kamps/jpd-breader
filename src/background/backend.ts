@@ -1,6 +1,6 @@
+import { Card, Token } from '../types.js';
 import { assertNonNull, sleep, truncate } from '../util.js';
 import { config } from './background.js';
-import { Card, Token } from '../types.js';
 
 const API_RATELIMIT = 0.2; // seconds between requests
 const SCRAPE_RATELIMIT = 1.1; // seconds between requests
@@ -108,14 +108,15 @@ type VocabFields = {
 
 type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
 
-export function parse(text: string): Promise<[Token[], Card[]]> {
+export function parse(text: string[]): Promise<[Token[][], Card[]]> {
     return enqueue(() => _parse(text));
 }
 
 // NOTE: If you change these, make sure to change the .map calls in _parse too
 const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'furigana'] as const;
 const VOCAB_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'frequency_rank', 'meanings', 'card_state'] as const;
-async function _parse(text: string): Response<[Token[], Card[]]> {
+
+async function _parse(text: string[]): Response<[Token[][], Card[]]> {
     const options = {
         method: 'POST',
         headers: {
@@ -124,7 +125,8 @@ async function _parse(text: string): Response<[Token[], Card[]]> {
             Accept: 'application/json',
         },
         body: JSON.stringify({
-            text,
+            // HACK work around jpdb API bug
+            text: text.map(string => string + ' ○○'),
             token_fields: TOKEN_FIELDS,
             vocabulary_fields: VOCAB_FIELDS,
         }),
@@ -134,11 +136,11 @@ async function _parse(text: string): Response<[Token[], Card[]]> {
 
     if (!(200 <= response.status && response.status <= 299)) {
         const data: JpdbError = await response.json();
-        throw Error(`While parsing 「${truncate(text, 20)}」: ${data.error_message}`);
+        throw Error(`While parsing 「${truncate(text.join(' '), 20)}」: ${data.error_message}`);
     }
 
     const data: {
-        tokens: MapFieldTuple<typeof TOKEN_FIELDS, TokenFields>[];
+        tokens: MapFieldTuple<typeof TOKEN_FIELDS, TokenFields>[][];
         vocabulary: MapFieldTuple<typeof VOCAB_FIELDS, VocabFields>[];
     } = await response.json();
 
@@ -148,17 +150,37 @@ async function _parse(text: string): Response<[Token[], Card[]]> {
         return { vid, sid, rid, spelling, reading, frequencyRank, meanings, state: cardState ?? ['not-in-deck'] };
     });
 
-    const tokens: Token[] = data.tokens.map(token => {
-        // This is type-safe, but not... variable name safe :/
-        // NOTE: If you change these, make sure to change TOKEN_FIELDS too
-        const [vocabularyIndex, positionUtf16, lengthUtf16, furigana] = token;
+    const tokens: Token[][] = data.tokens.map(tokens =>
+        // HACK remove the ○○ we added earlier to avoid jpdb bugs
+        tokens.slice(0, -1).map(token => {
+            // This is type-safe, but not... variable name safe :/
+            // NOTE: If you change these, make sure to change TOKEN_FIELDS too
+            const [vocabularyIndex, positionUtf16, lengthUtf16, furigana] = token;
 
-        const card = cards[vocabularyIndex];
-        const normalizedFurigana: null | [string, string | null][] =
-            furigana && furigana.map(part => (typeof part === 'string' ? [part, null] : part));
+            const card = cards[vocabularyIndex];
 
-        return { card, offset: positionUtf16, length: lengthUtf16, furigana: normalizedFurigana };
-    });
+            let offset = positionUtf16;
+            const rubies =
+                furigana === null
+                    ? []
+                    : furigana.flatMap(part => {
+                          if (typeof part === 'string') return [];
+                          const [base, ruby] = part;
+                          const start = offset;
+                          const length = base.length;
+                          const end = (offset = start + length);
+                          return { text: ruby, start, end, length };
+                      });
+
+            return {
+                card,
+                start: positionUtf16,
+                end: positionUtf16 + lengthUtf16,
+                length: lengthUtf16,
+                rubies,
+            };
+        }),
+    );
 
     return [[tokens, cards], API_RATELIMIT];
 }

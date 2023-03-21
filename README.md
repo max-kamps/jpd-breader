@@ -4,22 +4,7 @@ A browser extension that parses any text in your browser using JPDB, and allows 
 
 ## Is this ready to use yet?
 
-Not really. It works, but it is buggy and the interface is quite ugly.
-
-## Current limitations and known bugs
-
--   Always adds furigana
--   Overwrites existing furigana (including gikun)
--   Probably has many other bugs (take a look at the issues tab)
-
-## Features currently in progress:
-
--   Add Mokuro integration
--   Add customization options for furigana
--   Add Wikipedia integration
--   Make the UI nicer (particularly the mining dialog)
--   Add visual customization options that don't require entering custom CSS directly
--   Make it work with a non-persistent background page
+Maybe? The some parts of the interface are temporary and quite ugly, but otherwise it should mostly work.
 
 ## Installation
 
@@ -31,10 +16,18 @@ Not really. It works, but it is buggy and the interface is quite ugly.
 5.  Click the `Load unpacked` button at the top left
 6.  In the file picker dialog, navigate to the folder you unpacked earlier. You should see a file called `manifest.json` inside the folder
 7.  Click select/open/choose to exit the dialog and load the extension
+8.  Continue with the [Initial Setup](#initial-setup) section
+
+### That sounds like a hassle. Why don't you upload the extension to the Chrome store instead?
+The Chrome store is not accepting new Manifest v2 extensions, only Manifest v3. But there are several problems with Manifest v3:
+-   It does not support HTML parsing in background workers (which would break the review and add to FORQ features)
+-   Firefox does not support background workers yet (which would break everything on Firefox)
+Unfortunately, developing separate v2 and v3 versions of the addon would be too much work for me.
 
 ### Firefox
 1.  Download the latest `.xpi` file from the releases page
-2.  Firefox should automatically ask you if you want to add the extension
+2.  Firefox should automatically ask you if you want to add the extension. Click `Add`
+3.  Continue with the [Initial Setup](#initial-setup) section
 
 That's it, you are done. If this method does not work for you, you can try this alternate approach:
 
@@ -43,55 +36,113 @@ That's it, you are done. If this method does not work for you, you can try this 
 3.  Click on the little gear icon to the right of `Manage Your Extensions`
 4.  Click `Install Add-on from File...`
 5.  In the file picker dialog, select the `.xpi` file
+6.  Continue with the [Initial Setup](#initial-setup) section
 
 ### Mobile browsers (Firefox for Android, Kiwi Browser)
-Currently not supported. If you're feeling adventurous and want to try installing them on your own anyway, please report all issues you encounter here on GitHub.
+Currently not supported. If you're feeling adventurous and want to try installing them on your own anyway, please report any issues you encounter here on GitHub.
 Your contributions will prove invaluable to supporting mobile browsers in the future.
+
+## Initial Setup
+Open the settings page. You can find it by clicking on the reader icon (読) in the browser menu bar. It might be hidden behind the extension overflow menu, which looks like a little puzzle piece (🧩)
+Here you will need to enter your jpdb API key. It can be found at the very bottom of the [jpdb settings page](https://jpdb.io/settings).
+You can also change various hotkeys
+
+## Usage
+
+You can use the reader on any website. Just select some text, right click, and choose the "Parse ... with jpdb" option.
+Words will be colored according to their state (known, new, etc). Hover over words while holding to see their meaning, and to mine or review them.
+
+The following pages require special support for technical reasons, and will therefore start parsing immediately:
+-  [ッツ Reader](https://github.com/ttu-ttu/ebook-reader): [reader.ttsu.app](https://reader.ttsu.app), [ttu-ebook.web.app](https://ttu-ebook.web.app)
+-  Texthooker pages: [anacreondjt.gitlab.io/texthooker.html](https://anacreondjt.gitlab.io/texthooker.html), [learnjapanese.moe/texthooker.html](https://learnjapanese.moe/texthooker.html)
+-  Manga html files probuced by [Mokuro](https://github.com/kha-white/mokuro): File name must contain "mokuro" and end in .html
+-  Wikipedia: [ja.wikipedia.org](https://ja.wikipedia.org/)
+-  Readwok: [app.readwok.com](https://app.readwok.com/)
+
+
+## Can I customize the colors? Can I customize which furigana get shown?
+
+Customization is currently done with custom CSS, because that took the least amount of time to develop :)
+
+List of classes:
+- `.jpdb-word` - Any part of the text that was run through the jpdb parser
+- `.jpdb-furi` - Furigana added via jpdb. Note that these might not necessarily be correct, as they are machine-generated.
+- `.unparsed` - Parts where jpdb could not identify any words
+- `.not-in-deck` - Words that were not in any of your decks. Note that these are not necessarily new, they might have been reviewed before.
+    jpdb does not track the state of words that are not in any decks.
+- `.locked` - Locked words
+- `.redundant` - Redundant words
+- `.new` - New words
+- `.learning` - Learning words
+- `.known` - Known words
+- `.never-forget` - Words that are marked as never forget, or are part of a deck that is marked never forget.
+- `.due` - Due words (that is, words that are in the `Due` state. If you have failed your last review, the words will be `Failed` instead!)
+- `.failed` - Failed words
+- `.suspended` - Suspended words (for example, through the "Suspend words outside of a given top most common words" feature)
+- `.blacklisted` - Blacklisted words (either individually, or through settings like "Blacklist particles", "Blacklist katakana loanwords", etc.)
+
+Here are some common customizations you might want. Feel free to take inspiration from multiple of them, merge them together, and create your own.
+Notes if you aren't super familiar with CSS:
+- Selectors with more classes are higher priority. For example, `.jpdb-word.new` will overwrite `.jpdb-word`.
+- For selectors with the same number of classes, *lower/later lines* have higher priority.
+- You can add `!important` after a property (like `color: red !important;`) to overwrite the priority system.
+- CSS supports many color formats, like hex `#a2ff0e` or `rgb(126, 230, 17)`. Pick whichever you find easiest.
+
+Feel free to ask in the [jpdb Discord thread](https://discord.com/channels/799891866924875786/1083527692672057395) if you need some help.
+
+Don't color words:
+```css
+.jpdb-word { color: inherit; }
+```
+
+Only color new words:
+```css
+.jpdb-word { color: inherit; }
+.jpdb-word.not-in-deck { color: rgb(126, 173, 255); }
+.jpdb-word.new { color: rgb(75, 141, 255); }
+```
+
+Show an underline under new words:
+```css
+.jpdb-word.new {
+    color: inherit;
+    text-decoration: underline 3px rgb(75, 141, 255);
+}
+```
+
+Hide jpdb furigana in known and due words:
+```css
+.jpdb-word.known .jpdb-furi, .jpdb-word.due .jpdb-furi { display: none; }
+```
+
+Hide all jpdb furigana:
+```css
+.jpdb-furi { display: none; }
+```
+
+Only show jpdb furigana while hovering:
+```css
+.jpdb-word:not(:hover) .jpdb-furi { display: none; }
+```
 
 ## Building
 
-You can run the following command to build a zip file:
-The resulting file will be located in the `dist` folder
+You can run the following command to build the release zip file:
 ```sh
 $ npm install
 $ npm run build
 ```
+The resulting file will be located in the `dist/` folder
 
 For development, you can also run the build in watch mode:
 ```sh
 $ npm install
 $ npm run watch
 ```
-This will continuously rebuild the source code as it changes, and place the output in the `build` folder.
+This will continuously rebuild the source code as it changes, and place the output in the `build/` folder.
 It can be loaded as an unpacked extension from there.
-Please remember to reload the extension on the "manage extensions" page before testing your changes.
+Please remember to wait until building is done, and reload the extension on the "manage extensions" page before testing your changes.
 Also, please look at the Contributing section if you plan on contributing your changes.
-
-## Usage
-
-On ttu reader: Parts of the text are automatically parsed just before they scroll into view.
-
-On all other pages: Select some text, right click, click "Parse ... with jpdb".
-
-Words will be colored according to their state. Hover over words to see their meaning, and to mine or review them.
-
-## Can I set it to only color new words?
-
-Yes, paste this into the Custom Word CSS box in the settings:
-```css
-.jpdb-word.unparsed     { }
-.jpdb-word.locked       { color: inherit; }
-.jpdb-word.redundant    { color: inherit; }
-.jpdb-word.not-in-deck  { color: rgb(126, 173, 255); }
-.jpdb-word.new          { color: rgb(75, 141, 255); }
-.jpdb-word.learning     { color: inherit; }
-.jpdb-word.known        { color: inherit; }
-.jpdb-word.never-forget { color: inherit; }
-.jpdb-word.due          { color: inherit; }
-.jpdb-word.failed       { color: inherit; }
-.jpdb-word.suspended    { color: inherit; }
-.jpdb-word.blacklisted  { color: inherit; }
-```
 
 ## Contributing
 
@@ -104,7 +155,7 @@ The following commands may be of interest to you:
 *  `npm run watch`: Automatically recompiles code when it changes, putting the output into `build/`. Using this is recommended during development.
 
 Please note the following:
-*  All coroutines must be awaited. All top-level code must be wrapped in try/catch that calls `showError(error)`. This is because extensions do not support the `error` and `unhandledrejection` events, and so any errors not caught explicitly would get ignored and not shown to the user.
+*  All coroutines must be awaited. All top-level code must be wrapped in try/catch that calls `showError(error)`. This is because extensions do not support the `error` and `unhandledrejection` events, so any errors not caught explicitly would get ignored and not shown to the user. (Working around browser bugs like this is annoying but unfortunately necessary.)
 *  Event handlers added with `on<event>=` in JSX automatically get awaited and wrapped in a try/catch.
 
 (Don't worry *too* much about this. If you forget, I will (probably) notice during code review and fix it after merging.)
@@ -112,7 +163,7 @@ Please note the following:
 If your change is large, or adds new dependencies, please consider opening an issue beforehand so we can discuss.
 Otherwise, I may choose to reject your pull request. Sorry.
 
-For contributing, you can use any editor you want, of course. I use VSCode, and have included my `.code-workspace` file with recommended project-specific settings if you want it. You may need to open it using the `File > Open Workspace from File` menu option. To make full use of it, you will need to install the Prettier (`esbenp.prettier-vscode`) and ESlint (`dbaeumer.vscode-eslint`) extensions.
+For contributing, you can of course use any editor you want. I use VSCode, and have included my `.code-workspace` file with recommended project-specific settings if you want it. You may need to open it using the `File > Open Workspace from File` menu option. To make full use of it, you will need to install the Prettier (`esbenp.prettier-vscode`) and ESlint (`dbaeumer.vscode-eslint`) extensions.
 No matter which editor you choose, having Prettier format on save is something you might find worth setting up.
 
 This project uses ttypescript to automatically transform files. Any module with a leading `@reader content-script` comment, such as
@@ -121,7 +172,7 @@ This project uses ttypescript to automatically transform files. Any module with 
 import { nonNull } from '../util.js'
 nonNull(12);
 ```
-gets transformed into a file that can be used as a browser content script, like this:
+will get transformed into a file that can be used as a browser content script, like this:
 ```js
 (async () => {
     "use strict";

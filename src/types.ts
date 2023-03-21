@@ -24,11 +24,19 @@ export type Config = {
     easyKey: string | null;
 };
 
+export type Ruby = {
+    text: string | null;
+    start: number;
+    end: number;
+    length: number;
+};
+
 export type Token = {
-    offset: number;
+    start: number;
+    end: number;
     length: number;
     card: Card;
-    furigana: null | [string, string | null][];
+    rubies: Ruby[];
 };
 
 export type CardState = string[] &

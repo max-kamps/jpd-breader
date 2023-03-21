@@ -1,48 +1,37 @@
 // @reader content-script
 
 import { showError } from '../util.js';
-import { startParsingVisible } from './common.js';
+import { addedObserver, parseNodes, visibleObserver } from './common.js';
 
-function observeParagraph(p: HTMLElement, paragraphOnScreenObserver: IntersectionObserver) {
-    if (p.innerText.trim().length == 0) {
-        // Paragraph is empty
-        return;
+function shouldParse(node: Node): boolean {
+    if (node instanceof HTMLElement) {
+        return !node.matches(`[data-ttu-spoiler-img]`);
+    } else {
+        return true;
     }
-
-    if (p.classList.contains('jpdb-parse-done'))
-        // Already parsed
-        return;
-
-    paragraphOnScreenObserver.observe(p);
-}
-
-function stuffAfter(paragraphOnScreenObserver: IntersectionObserver) {
-    document.querySelectorAll('p').forEach(e => observeParagraph(e, paragraphOnScreenObserver));
-
-    const newParagraphObserver = new MutationObserver((mutations, _observer) => {
-        for (const mutation of mutations) {
-            if (mutation.type !== 'childList') continue;
-
-            for (const node of mutation.addedNodes) {
-                if (node.nodeType !== Node.ELEMENT_NODE) continue;
-
-                if (node.nodeName === 'p') observeParagraph(node as HTMLElement, paragraphOnScreenObserver);
-                else
-                    (node as HTMLElement)
-                        .querySelectorAll('p')
-                        .forEach(e => observeParagraph(e, paragraphOnScreenObserver));
-            }
-        }
-    });
-
-    newParagraphObserver.observe(document.body, {
-        subtree: true,
-        childList: true,
-    });
 }
 
 try {
-    await startParsingVisible(stuffAfter);
+    // Parse lines (<p>) as they come into view
+    const visible = visibleObserver(elements => {
+        parseNodes(elements, shouldParse);
+    });
+
+    for (const section of document.querySelectorAll('.main p')) {
+        visible.observe(section);
+    }
+
+    // Ttu may add new paragraphs after our extension loads, so observe those too
+    const added = addedObserver('.main p', elements => {
+        for (const element of elements) {
+            visible.observe(element);
+        }
+    });
+
+    added.observe(document.body, {
+        subtree: true,
+        childList: true,
+    });
 } catch (error) {
     showError(error);
 }

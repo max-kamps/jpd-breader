@@ -14,6 +14,7 @@
         ],
         "@typescript-eslint/no-explicit-any": "off",
         "no-constant-condition": "off",
-        "no-inner-declarations": "off"
+        "no-inner-declarations": "off",
+        "no-fallthrough": "off"
     }
 }

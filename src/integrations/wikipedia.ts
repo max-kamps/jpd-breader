@@ -1,50 +1,41 @@
 // @reader content-script
 
 import { showError } from '../util.js';
-import { startParsingVisible } from './common.js';
+import { addedObserver, parseNodes, visibleObserver } from './common.js';
 
-function observeParagraph(p: HTMLElement, paragraphOnScreenObserver: IntersectionObserver) {
-    if (p.innerText.trim().length == 0) {
-        // Paragraph is empty
-        return;
+function shouldParse(node: Node): boolean {
+    if (node instanceof HTMLElement) {
+        return !node.matches(`
+            .p-lang-btn,
+            .vector-menu-heading-label,
+            .vector-toc-toggle,
+            .vector-page-toolbar,
+            .mw-editsection,
+            sup.reference`);
+    } else {
+        return true;
     }
-
-    if (p.classList.contains('jpdb-parse-done'))
-        // Already parsed
-        return;
-
-    paragraphOnScreenObserver.observe(p);
-}
-
-function stuffAfter(paragraphOnScreenObserver: IntersectionObserver) {
-    document
-        .querySelectorAll('p,li,a,.wikitable,.mw-page-title-main,.mbox-text-span,.thumbcaption,.mw-headline')
-        .forEach(e => observeParagraph(e as HTMLElement, paragraphOnScreenObserver));
-
-    const newParagraphObserver = new MutationObserver((mutations, _observer) => {
-        for (const mutation of mutations) {
-            if (mutation.type !== 'childList') continue;
-
-            for (const node of mutation.addedNodes) {
-                if (node.nodeType !== Node.ELEMENT_NODE) continue;
-
-                if (node.nodeName === 'p') observeParagraph(node as HTMLElement, paragraphOnScreenObserver);
-                else
-                    (node as HTMLElement)
-                        .querySelectorAll('p')
-                        .forEach(e => observeParagraph(e, paragraphOnScreenObserver));
-            }
-        }
-    });
-
-    newParagraphObserver.observe(document.body, {
-        subtree: true,
-        childList: true,
-    });
 }
 
 try {
-    await startParsingVisible(stuffAfter);
+    // Parse headline and content as they becomes visible
+    const visible = visibleObserver(elements => {
+        parseNodes(elements, shouldParse);
+    });
+
+    for (const section of document.querySelectorAll('#firstHeading, #mw-content-text .mw-parser-output > *')) {
+        visible.observe(section);
+    }
+
+    // Parse popups as they get added
+    const added = addedObserver('.mwe-popups-extract > *', elements => {
+        parseNodes(elements, shouldParse);
+    });
+
+    added.observe(document.body, {
+        subtree: true,
+        childList: true,
+    });
 } catch (error) {
     showError(error);
 }

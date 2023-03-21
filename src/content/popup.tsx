@@ -1,5 +1,5 @@
 import { assertNonNull, browser, jsxCreateElement } from '../util.js';
-import { config, requestReview, requestSetFlag } from './content.js';
+import { config, requestReview, requestSetFlag } from './background_comms.js';
 import { Dialog } from './dialog.js';
 import { JpdbWord, JpdbWordData } from './types.js';
 

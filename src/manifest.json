@@ -72,5 +72,17 @@
         "content/dialog.css",
         "util.js"
     ],
-    "permissions": ["tabs", "activeTab", "contextMenus", "*://jpdb.io/*"]
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "contextMenus",
+        "*://jpdb.io/*",
+        "*://reader.ttsu.app/*",
+        "*://ttu-ebook.web.app/*",
+        "*://anacreondjt.gitlab.io/texthooker.html",
+        "*://learnjapanese.moe/texthooker.html",
+        "file:///*mokuro*.html",
+        "*://app.readwok.com/*",
+        "*://ja.wikipedia.org/*"
+    ]
 }

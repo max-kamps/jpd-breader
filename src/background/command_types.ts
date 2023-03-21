@@ -29,11 +29,11 @@ export type UpdateConfigRequest = RequestCommon & {
 
 export type ParseRequest = RequestCommon & {
     command: 'parse';
-    text: string;
+    text: string[];
 };
 
 export type ParseResponse = ResponseCommon & {
-    result: Token[];
+    result: Token[][];
 };
 
 export type SetFlagRequest = RequestCommon & {

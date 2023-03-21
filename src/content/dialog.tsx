@@ -1,5 +1,5 @@
 import { assertNonNull, browser, jsxCreateElement, nonNull } from '../util.js';
-import { requestMine, requestReview } from './content.js';
+import { requestMine, requestReview } from './background_comms.js';
 import { JpdbWordData } from './types.js';
 
 export class Dialog {
