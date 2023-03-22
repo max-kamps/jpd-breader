@@ -70,7 +70,7 @@ function paragraphsInRange(range: Range): Paragraph[] {
         offset = 0;
     }
 
-    while (true) {
+    outerLoop: while (true) {
         // console.log('current:', current, 'hasRuby:', hasRuby, 'ignore:', ignore);
 
         const display = displayCategory(current);
@@ -114,10 +114,16 @@ function paragraphsInRange(range: Range): Paragraph[] {
             let parent;
             do {
                 parent = stack.pop();
+
                 if (!parent) {
                     throw Error('Reached end of document while iterating nodes');
                 }
+
                 // console.log('Parent:', parent.node);
+
+                if (parent.node === end) {
+                    break outerLoop;
+                }
 
                 if (parent.display === 'block' && !parent.ignore) {
                     breakParagraph();
