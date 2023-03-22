@@ -169,6 +169,7 @@ function applyParagraph(fragments: Paragraph, tokens: Token[]) {
                         // Ruby is contained in fragment
                         if (ruby.start > fragment.start) {
                             splitFragment(fragments, fragmentIndex, ruby.start);
+                            insertAfter(<rt></rt>, fragment.node);
                             fragment = fragment = fragments[++fragmentIndex];
                         }
 

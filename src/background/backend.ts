@@ -164,12 +164,16 @@ async function _parse(text: string[]): Response<[Token[][], Card[]]> {
                 furigana === null
                     ? []
                     : furigana.flatMap(part => {
-                          if (typeof part === 'string') return [];
-                          const [base, ruby] = part;
-                          const start = offset;
-                          const length = base.length;
-                          const end = (offset = start + length);
-                          return { text: ruby, start, end, length };
+                          if (typeof part === 'string') {
+                              offset += part.length;
+                              return [];
+                          } else {
+                              const [base, ruby] = part;
+                              const start = offset;
+                              const length = base.length;
+                              const end = (offset = start + length);
+                              return { text: ruby, start, end, length };
+                          }
                       });
 
             return {
