@@ -42,7 +42,7 @@
             "css": ["content/word.css"]
         },
         {
-            "matches": ["*://ja.wikipedia.org/*"],
+            "matches": ["*://ja.wikipedia.org/*", "*://ja.m.wikipedia.org/*"],
             "js": ["integrations/wikipedia.js"],
             "css": ["content/word.css"]
         }
@@ -73,6 +73,7 @@
         "*://anacreondjt.gitlab.io/texthooker.html",
         "*://learnjapanese.moe/texthooker.html",
         "file:///*mokuro*.html",
-        "*://ja.wikipedia.org/*"
+        "*://ja.wikipedia.org/*",
+        "*://ja.m.wikipedia.org/*"
     ]
 }
