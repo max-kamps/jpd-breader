@@ -17,12 +17,12 @@ try {
         parseNodes(elements, shouldParse);
     });
 
-    for (const section of document.querySelectorAll('.book-content p')) {
+    for (const section of document.querySelectorAll('.book-content > * > *')) {
         visible.observe(section);
     }
 
     // Ttu may add new paragraphs after our extension loads, so observe those too
-    const added = addedObserver('.book-content p', elements => {
+    const added = addedObserver('.book-content > * > *', elements => {
         for (const element of elements) {
             visible.observe(element);
         }
