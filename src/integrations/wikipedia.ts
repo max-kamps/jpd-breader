@@ -1,7 +1,7 @@
 // @reader content-script
 
 import { showError } from '../util.js';
-import { addedObserver, parseNodes, visibleObserver } from './common.js';
+import { addedObserver, parseVisibleObserver } from './common.js';
 
 function shouldParse(node: Node): boolean {
     if (node instanceof HTMLElement) {
@@ -18,19 +18,14 @@ function shouldParse(node: Node): boolean {
 }
 
 try {
-    // Parse headline and content as they becomes visible
-    const visible = visibleObserver(elements => {
-        parseNodes(elements, shouldParse);
-    });
+    const visible = parseVisibleObserver(shouldParse);
 
-    for (const section of document.querySelectorAll('#firstHeading, #mw-content-text .mw-parser-output > *')) {
-        visible.observe(section);
-    }
-
-    // Parse popups as they get added
-    const added = addedObserver('.mwe-popups-extract > *', elements => {
-        parseNodes(elements, shouldParse);
-    });
+    const added = addedObserver(
+        '#firstHeading, #mw-content-text .mw-parser-output > *, .mwe-popups-extract > *',
+        elements => {
+            for (const element of elements) visible.observe(element);
+        },
+    );
 
     added.observe(document.body, {
         subtree: true,

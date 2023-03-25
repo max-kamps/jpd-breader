@@ -1,5 +1,6 @@
 import { config, defaultConfig, port, requestUpdateConfig } from '../content/background_comms.js';
 import { Popup } from '../content/popup.js';
+import { BackgroundToContentMessage } from '../message_types.js';
 import { Keybind } from '../types.js';
 import { jsxCreateElement, nonNull, showError } from '../util.js';
 
@@ -312,8 +313,8 @@ addEventListener(
 
 // Wait until the background script connection has been established,
 // so we can access the config that it sends.
-function checkConnectionEstablished(message: any, port: browser.runtime.Port) {
-    if (message.command === 'updateConfig') {
+function checkConnectionEstablished(message: BackgroundToContentMessage, port: browser.runtime.Port) {
+    if (message.type === 'updateConfig') {
         // The connection has been established, we can now read the config
         try {
             port.onMessage.removeListener(checkConnectionEstablished);

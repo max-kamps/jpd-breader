@@ -1,7 +1,7 @@
-import { Config } from '../types.js';
-import { isChrome, browser } from '../util.js';
+import { BackgroundToContentMessage, ContentToBackgroundMessage, ResponseTypeMap } from '../message_types.js';
+import { Config, DeckId, Grade, Token } from '../types.js';
+import { browser, isChrome, PromiseHandle, sleep } from '../util.js';
 import * as backend from './backend.js';
-import { BackgroundRequest, BackgroundResponseMap } from './command_types.js';
 
 if (isChrome) {
     (Error.prototype as any).toJSON = function () {
@@ -68,29 +68,145 @@ export const config = Object.fromEntries(
     Object.entries(defaultConfig).map(([key, defaultValue]) => [key, localStorageGet(key, defaultValue)]),
 ) as Config;
 
+// API call queue
+
+type Call<T> = PromiseHandle<T> & {
+    func(): backend.Response<T>;
+};
+
+const pendingAPICalls: Call<unknown>[] = [];
+let callerRunning = false;
+
+async function apiCaller() {
+    // If no API calls are pending, stop running
+    if (callerRunning || pendingAPICalls.length === 0)
+        // Only run one instance of this function at a time
+        return;
+
+    callerRunning = true;
+
+    while (pendingAPICalls.length > 0) {
+        // Get first call from queue
+
+        // Safety: We know this can't be undefined, because we checked that the length > 0
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const call = pendingAPICalls.shift()!;
+
+        try {
+            const [result, wait] = await call.func();
+            call.resolve(result);
+            await sleep(wait);
+        } catch (error) {
+            call.reject(error);
+            // TODO implement exponential backoff
+            await sleep(1500);
+        }
+    }
+
+    callerRunning = false;
+}
+
+function enqueue<T>(func: () => backend.Response<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+        pendingAPICalls.push({ func, resolve, reject });
+        apiCaller();
+    });
+}
+
+export async function addToDeck(vid: number, sid: number, deckId: DeckId) {
+    return enqueue(() => backend.addToDeck(vid, sid, deckId));
+}
+export async function removeFromDeck(vid: number, sid: number, deckId: DeckId) {
+    return enqueue(() => backend.removeFromDeck(vid, sid, deckId));
+}
+export async function setSentence(vid: number, sid: number, sentence?: string, translation?: string) {
+    return enqueue(() => backend.setSentence(vid, sid, sentence, translation));
+}
+export async function review(vid: number, sid: number, rating: Grade) {
+    return enqueue(() => backend.review(vid, sid, rating));
+}
+export async function getCardState(vid: number, sid: number) {
+    return enqueue(() => backend.getCardState(vid, sid));
+}
+
+const maxParseLength = 16384;
+
+type PendingParagraph = PromiseHandle<Token[]> & {
+    text: string;
+    length: number;
+};
+const pendingParagraphs = new Map<number, PendingParagraph>();
+
+async function batchParses() {
+    // Greedily take as many paragraphs as can fit
+    let length = 0;
+    const strings: string[] = [];
+    const handles: PromiseHandle<Token[]>[] = [];
+
+    for (const [seq, paragraph] of pendingParagraphs) {
+        length += paragraph.length;
+        if (length > maxParseLength) break;
+        strings.push(paragraph.text);
+        handles.push(paragraph);
+        pendingParagraphs.delete(seq);
+    }
+
+    if (strings.length === 0) return [null, 0] as [null, number];
+
+    try {
+        const [[tokens, cards], timeout] = await backend.parse(strings);
+
+        for (const [i, handle] of handles.entries()) {
+            handle.resolve(tokens[i]);
+        }
+
+        broadcast({ type: 'updateWordState', words: cards.map(card => [card.vid, card.sid, card.state]) });
+
+        return [null, timeout] as [null, number];
+    } catch (error) {
+        for (const handle of handles) {
+            handle.reject(error);
+        }
+
+        throw error;
+    }
+}
+
+export function enqueueParse(seq: number, text: string): Promise<Token[]> {
+    return new Promise((resolve, reject) => {
+        pendingParagraphs.set(seq, {
+            text,
+            // HACK work around the ○○ we will add later
+            length: new TextEncoder().encode(text).length + 7,
+            resolve,
+            reject,
+        });
+    });
+}
+
+export function startParse() {
+    pendingAPICalls.push({ func: batchParses, resolve: () => {}, reject: () => {} });
+    apiCaller();
+}
+
 // Content script communication
 
 const ports = new Set<browser.runtime.ContentScriptPort>();
 
-function postCommand(port: browser.runtime.Port, command: string, args: { [key: string]: any }) {
-    port.postMessage({ command, ...args });
+function post(port: browser.runtime.Port, message: BackgroundToContentMessage) {
+    port.postMessage(message);
 }
 
-function postResponse<T extends BackgroundRequest>(
+function broadcast(message: BackgroundToContentMessage) {
+    for (const port of ports) port.postMessage(message);
+}
+
+function postResponse<T extends ContentToBackgroundMessage & { seq: number }>(
     port: browser.runtime.Port,
     request: T,
-    result: BackgroundResponseMap[T['command']]['result'],
+    result: ResponseTypeMap[T['type']]['result'],
 ) {
-    port.postMessage({ command: 'response', seq: request.seq, result });
-}
-
-function postError(port: browser.runtime.Port, request: { seq: number }, error: { message: string }) {
-    port.postMessage({ command: 'response', seq: request.seq, error });
-}
-
-function broadcastCommand(command: string, args: { [key: string]: any }) {
-    const message = { command, ...args };
-    for (const port of ports) port.postMessage(message);
+    port.postMessage({ type: 'success', seq: request.seq, result });
 }
 
 function onPortDisconnect(port: browser.runtime.Port) {
@@ -99,14 +215,18 @@ function onPortDisconnect(port: browser.runtime.Port) {
 }
 
 async function broadcastNewWordState(vid: number, sid: number) {
-    broadcastCommand('updateWordState', {
-        words: [[vid, sid, await backend.getCardState(vid, sid)]],
-    });
+    broadcast({ type: 'updateWordState', words: [[vid, sid, await getCardState(vid, sid)]] });
 }
 
-const commandHandlers: {
-    [Req in BackgroundRequest as Req['command']]: (request: Req, port: browser.runtime.Port) => Promise<void>;
+const messageHandlers: {
+    [Req in ContentToBackgroundMessage as Req['type']]: (request: Req, port: browser.runtime.Port) => Promise<void>;
 } = {
+    async cancel(request, port) {
+        // Right now, only parse requests can actually be canceled
+        pendingParagraphs.delete(request.seq);
+        post(port, { type: 'canceled', seq: request.seq });
+    },
+
     async updateConfig(request, port) {
         const oldCSS = config.customWordCSS;
 
@@ -127,15 +247,16 @@ const commandHandlers: {
         }
 
         postResponse(port, request, null);
-        broadcastCommand('updateConfig', { config, defaultConfig });
+        broadcast({ type: 'updateConfig', config, defaultConfig });
     },
 
     async parse(request, port) {
-        const [tokens, cards] = await backend.parse(request.text);
-        postResponse(port, request, tokens);
-        broadcastCommand('updateWordState', {
-            words: cards.map(card => [card.vid, card.sid, card.state]),
-        });
+        for (const [seq, text] of request.texts) {
+            enqueueParse(seq, text)
+                .then(tokens => post(port, { type: 'success', seq: seq, result: tokens }))
+                .catch(error => post(port, { type: 'error', seq: seq, error }));
+        }
+        startParse();
     },
 
     async setFlag(request, port) {
@@ -146,9 +267,9 @@ const commandHandlers: {
         }
 
         if (request.state === true) {
-            await backend.addToDeck(request.vid, request.sid, deckId);
+            await addToDeck(request.vid, request.sid, deckId);
         } else {
-            await backend.removeFromDeck(request.vid, request.sid, deckId);
+            await removeFromDeck(request.vid, request.sid, deckId);
         }
 
         postResponse(port, request, null);
@@ -156,7 +277,7 @@ const commandHandlers: {
     },
 
     async review(request, port) {
-        await backend.review(request.vid, request.sid, request.rating);
+        await review(request.vid, request.sid, request.rating);
         postResponse(port, request, null);
         await broadcastNewWordState(request.vid, request.sid);
     },
@@ -170,10 +291,12 @@ const commandHandlers: {
             throw Error(`No forq deck ID set, check the settings page`);
         }
 
-        await backend.addToDeck(request.vid, request.sid, config.miningDeckId);
+        // Safety: This is safe, because we early-errored for this condition
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        await addToDeck(request.vid, request.sid, config.miningDeckId!);
 
         if (request.sentence || request.translation) {
-            await backend.setSentence(
+            await setSentence(
                 request.vid,
                 request.sid,
                 request.sentence ?? undefined,
@@ -184,11 +307,11 @@ const commandHandlers: {
         if (request.forq) {
             // Safety: This is safe, because we early-errored for this condition
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            await backend.addToDeck(request.vid, request.sid, config.forqDeckId!);
+            await addToDeck(request.vid, request.sid, config.forqDeckId!);
         }
 
         if (request.review) {
-            await backend.review(request.vid, request.sid, request.review);
+            await review(request.vid, request.sid, request.review);
         }
 
         postResponse(port, request, null);
@@ -196,13 +319,13 @@ const commandHandlers: {
     },
 };
 
-async function onPortMessage(request: BackgroundRequest, port: browser.runtime.Port) {
-    console.log('message:', request, port);
+async function onPortMessage(message: ContentToBackgroundMessage, port: browser.runtime.Port) {
+    console.log('message:', message, port);
 
     try {
-        await commandHandlers[request.command](request as any, port);
+        await messageHandlers[message.type](message as any, port);
     } catch (error) {
-        postError(port, request, error);
+        post(port, { type: 'error', seq: (message as any).seq ?? null, error });
     }
 }
 
@@ -221,7 +344,7 @@ browser.runtime.onConnect.addListener(port => {
     port.onMessage.addListener(onPortMessage);
 
     // TODO filter to only url-relevant config options
-    postCommand(port, 'updateConfig', { config, defaultConfig });
+    post(port, { type: 'updateConfig', config, defaultConfig });
     browser.tabs.insertCSS(port.sender.tab.id, { code: config.customWordCSS, cssOrigin: 'author' });
 });
 

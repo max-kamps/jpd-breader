@@ -1,14 +1,19 @@
 // @reader content-script
 
-import { requestParse } from '../content/background_comms.js';
-import { applyParseResult, Fragment } from '../content/parse.js';
-import { showError } from '../util.js';
+import { createParseBatch, ParseBatch, requestParse } from '../content/background_comms.js';
+import { applyTokens, Fragment } from '../content/parse.js';
+import { CANCELED, showError } from '../util.js';
 import { visibleObserver } from './common.js';
 
 try {
-    const visible = visibleObserver(async elements => {
-        for (const page of elements) {
-            try {
+    const pendingBatches = new Map<HTMLElement, ParseBatch>();
+
+    const visible = visibleObserver(
+        elements => {
+            const batches: ParseBatch[] = [];
+            for (const page of elements) {
+                if (pendingBatches.get(page) !== undefined) continue;
+
                 // Manually create fragments, since mokuro puts every line in a separate <p>aragraph
                 const paragraphs = [...page.querySelectorAll('.textBox')].map(box => {
                     const fragments: Fragment[] = [];
@@ -30,20 +35,50 @@ try {
                     return fragments;
                 });
 
-                if (paragraphs.length > 0) {
-                    console.log(
-                        'Parsing',
-                        paragraphs.flat().map(fragment => fragment.node.data),
-                    );
-
-                    const tokens = await requestParse(paragraphs);
-                    applyParseResult(paragraphs, tokens);
+                if (paragraphs.length === 0) {
+                    visible.unobserve(page);
+                    continue;
                 }
-            } catch (error) {
-                showError(error);
+
+                const batch = createParseBatch(paragraphs);
+                const applied = batch.entries.map(({ paragraph, promise }) =>
+                    promise
+                        .then(tokens => {
+                            applyTokens(paragraph, tokens);
+                        })
+                        .catch(error => {
+                            if (error !== CANCELED) {
+                                showError(error);
+                            }
+                            throw error;
+                        }),
+                );
+
+                Promise.all(applied)
+                    .then(_ => visible.unobserve(page))
+                    .finally(() => {
+                        pendingBatches.delete(page);
+                        page.style.backgroundColor = '';
+                    });
+
+                pendingBatches.set(page, batch);
+                batches.push(batch);
+                page.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
             }
-        }
-    });
+            requestParse(batches);
+        },
+        elements => {
+            for (const element of elements) {
+                const batch = pendingBatches.get(element);
+                if (batch) {
+                    for (const { promise } of batch.entries) {
+                        promise.cancel();
+                    }
+                    element.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
+                }
+            }
+        },
+    );
 
     for (const page of document.querySelectorAll('#pagesContainer > div')) {
         visible.observe(page);

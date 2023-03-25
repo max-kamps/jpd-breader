@@ -105,3 +105,16 @@ export function showError(error: { message: string }) {
     console.error(error);
     alert(`Error: ${error.message}`); // TODO replace with proper toast?
 }
+
+export type PromiseHandle<T> = {
+    resolve(value: T): void;
+    reject(reason: { message: string }): void;
+};
+
+export const CANCELED = Symbol('canceled');
+export type CancellablePromise<T> = Promise<T> & { cancel(): void };
+
+export type CancellablePromiseHandle<T> = {
+    resolve(value: T): void;
+    reject(reason: typeof CANCELED | { message: string }): void;
+};

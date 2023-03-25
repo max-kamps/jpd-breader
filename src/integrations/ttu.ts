@@ -1,7 +1,7 @@
 // @reader content-script
 
 import { showError } from '../util.js';
-import { addedObserver, parseNodes, visibleObserver } from './common.js';
+import { addedObserver, parseVisibleObserver } from './common.js';
 
 function shouldParse(node: Node): boolean {
     if (node instanceof HTMLElement) {
@@ -12,17 +12,9 @@ function shouldParse(node: Node): boolean {
 }
 
 try {
-    // Parse lines (<p>) as they come into view
-    const visible = visibleObserver(elements => {
-        parseNodes(elements, shouldParse);
-    });
+    const visible = parseVisibleObserver(shouldParse);
 
-    for (const section of document.querySelectorAll('.book-content > * > *')) {
-        visible.observe(section);
-    }
-
-    // Ttu may add new paragraphs after our extension loads, so observe those too
-    const added = addedObserver('.book-content > * > *', elements => {
+    const added = addedObserver('.book-content p, .book-content div.calibre1', elements => {
         for (const element of elements) {
             visible.observe(element);
         }

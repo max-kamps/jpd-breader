@@ -97,14 +97,7 @@ function wrap(node: Node, wrapper: HTMLElement) {
 }
 
 export const reverseIndex = new Map<string, { className: string; elements: JpdbWord[] }>();
-function applyParagraph(fragments: Paragraph, tokens: Token[]) {
-    // keep_text_nodes is a workaround for a ttu issue.
-    //   Ttu returns to your bookmarked position at load time.
-    //   To do that, it scrolls to a specific text node.
-    //   If we delete those nodes, it will crash on load when a bookmark exists.
-    //   Instead, we keep the existing elements by making them invisible,
-    //   and positioning them at the top right corner of our new element.
-    // TODO position at top left for horizontal writing
+export function applyTokens(fragments: Paragraph, tokens: Token[]) {
     // console.log('Applying results:', fragments, tokens);
 
     let fragmentIndex = 0;
@@ -195,12 +188,5 @@ function applyParagraph(fragments: Paragraph, tokens: Token[]) {
     for (const fragment of fragments.slice(fragmentIndex)) {
         // console.log('Unparsed original:', fragment.node.data);
         wrap(fragment.node, <span class='jpdb-word unparsed'></span>);
-    }
-}
-
-export function applyParseResult(paragraphs: Paragraph[], tokens: Token[][]) {
-    for (const [i, paragraph] of paragraphs.entries()) {
-        const paragraphTokens = tokens[i];
-        applyParagraph(paragraph, paragraphTokens);
     }
 }

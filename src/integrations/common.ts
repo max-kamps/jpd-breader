@@ -1,6 +1,6 @@
-import { requestParse } from '../content/background_comms.js';
-import { applyParseResult, displayCategory, Fragment, Paragraph } from '../content/parse.js';
-import { showError } from '../util.js';
+import { createParseBatch, ParseBatch, requestParse } from '../content/background_comms.js';
+import { applyTokens, displayCategory, Fragment, Paragraph } from '../content/parse.js';
+import { CANCELED, showError } from '../util.js';
 
 export function paragraphsInNode(node: Node, filter: (node: Node) => boolean = () => true): Paragraph[] {
     let offset = 0;
@@ -70,168 +70,36 @@ export function paragraphsInNode(node: Node, filter: (node: Node) => boolean = (
     return paragraphs;
 }
 
-// export function paragraphsInNode(node: Node, filter: (node: Node) => boolean = () => true): Paragraph[] {
-//     // TODO Support partial selections in start and end text nodes
-
-//     // console.log('start:', start, 'end:', end);
-
-//     let hasRuby = false;
-
-//     const stack: { node: Node; display: ReturnType<typeof displayCategory>; hasRuby: boolean }[] = [];
-
-//     let offset = 0;
-//     const fragments: Fragment[] = [];
-//     const paragraphs: Paragraph[] = [];
-
-//     function breakParagraph() {
-//         // Remove fragments from the end that are just whitespace
-//         // (the ones from the start have already been ignored)
-
-//         let end = fragments.length - 1;
-//         for (; end >= 0; end--) {
-//             if (fragments[end].node.data.trim().length > 0) break;
-//         }
-
-//         const trimmedFragments = fragments.slice(0, end + 1);
-
-//         if (trimmedFragments.length) {
-//             paragraphs.push(trimmedFragments);
-//         }
-
-//         fragments.splice(0);
-//         offset = 0;
-//     }
-
-//     outerLoop: while (true) {
-//         // console.log('current:', current, 'hasRuby:', hasRuby);
-
-//         const display = displayCategory(node);
-//         stack.push({ display, hasRuby, node });
-
-//         const ignore = display === 'none' || display === 'ruby-text' || filter(node) === false;
-
-//         if (!ignore) {
-//             if (display === 'text') {
-//                 const text = node as Text;
-//                 // console.log('Pushing as text');
-//                 // Ignore empty text nodes, as well as whitespace at the beginning of the run
-//                 if (text.data.length > 0 && !(fragments.length === 0 && text.data.trim().length === 0)) {
-//                     fragments.push({
-//                         start: offset,
-//                         length: text.length,
-//                         end: (offset += text.length),
-//                         node: text,
-//                         hasRuby,
-//                     });
-//                 }
-//             } else if (display === 'ruby') {
-//                 hasRuby = true;
-//             } else if (display === 'block') {
-//                 breakParagraph();
-//             }
-//         }
-
-//         if (!ignore && node.firstChild !== null) {
-//             // console.log('Continuing with child');
-//             node = node.firstChild;
-//         } else {
-//             let parent;
-//             do {
-//                 parent = nonNull(stack.pop());
-//                 // console.log('Parent:', parent.node);
-
-//                 if (stack.length == 0) {
-//                     break outerLoop;
-//                 }
-
-//                 // Break the paragraph because we are leaving the parent block element
-//                 if (parent.display === 'block') {
-//                     breakParagraph();
-//                 }
-//             } while (parent.node.nextSibling === null);
-
-//             // console.log('Continuing with parents sibling');
-//             node = parent.node.nextSibling;
-//             hasRuby = parent.hasRuby;
-//             break;
-//         }
-//     }
-
-//     breakParagraph();
-//     return paragraphs;
-// }
-
-export function visibleObserver(callback: (elements: HTMLElement[]) => void): IntersectionObserver {
-    const visibleElements = new Set<HTMLElement>(); // queue of paragraphs waiting to be parsed
-
-    let parsingInProgress = false;
-    async function parseVisibleParagraphs() {
-        // This function keeps running as long as there are visible paragraphs waiting to be parsed.
-
-        if (parsingInProgress || visibleElements.size == 0)
-            // Only run one instance of this function at a time
-            return;
-
-        parsingInProgress = true;
-
-        while (visibleElements.size > 0) {
-            const elements = [...visibleElements.values()]
-                // HACK Get earliest (top-rightmost) paragraph.
-                // This is necessary because the "add context" feature currently depends on the order things were parsed in.
-                .sort((a, b) => a.offsetTop - b.offsetTop && b.offsetLeft - a.offsetLeft)
-                // TODO Find a better way of picking multiple elements. Right now we always pick *up to 10*.
-                // But that's suboptimal if the user slowly scrols one element at a time.
-                // Ideally, we would choose as many elements fit into the jpdb parse character limit,
-                // and get additional elements if the number of visible elements is below some limit.
-                .slice(0, 10);
-
-            for (const e of elements) {
-                visibleElements.delete(e);
-                elementVisibleObserver.unobserve(e);
-            }
-
-            try {
-                callback(elements);
-            } catch (error) {
-                showError(error);
-            }
-        }
-
-        parsingInProgress = false;
-    }
-
+export function visibleObserver(
+    enterCallback: (elements: HTMLElement[]) => void,
+    exitCallback: (elements: HTMLElement[]) => void,
+): IntersectionObserver {
     const elementVisibleObserver = new IntersectionObserver(
         (entries, _observer) => {
             try {
-                for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        // console.log('Entered view:', entry.target, entry.target.innerText);
-                        visibleElements.add(entry.target as HTMLElement);
-                    } else {
-                        // console.log('Left view:', entry.target, entry.target.innerText);
-                        visibleElements.delete(entry.target as HTMLElement);
-                    }
-                }
-                parseVisibleParagraphs();
+                const exited = entries.filter(entry => !entry.isIntersecting).map(entry => entry.target as HTMLElement);
+                if (exited.length !== 0) exitCallback(exited);
+
+                const entered = entries.filter(entry => entry.isIntersecting).map(entry => entry.target as HTMLElement);
+                if (entered.length !== 0) enterCallback(entered);
             } catch (error) {
                 showError(error);
             }
         },
         {
-            // rootMargin: '0px -120px 0px -120px', // debugging purposes, remove this
-            rootMargin: '100% 100% 100% 100%',
+            rootMargin: '50% 50% 50% 50%',
         },
     );
 
-    // document.body.insertAdjacentHTML(
-    //     'beforeend',
-    //     `<div style="position:fixed;top:0;right:120px;bottom:0;left:120px;box-shadow:inset 0 0 8px #f00;pointer-events:none;"></div>`,
-    // );
-    //
     return elementVisibleObserver;
 }
 
 export function addedObserver(selector: string, callback: (elements: HTMLElement[]) => void): MutationObserver {
+    const existingElements = document.querySelectorAll(selector);
+    if (existingElements.length > 0) {
+        callback([...existingElements] as HTMLElement[]);
+    }
+
     const newParagraphObserver = new MutationObserver((mutations, _observer) => {
         for (const mutation of mutations) {
             if (mutation.type !== 'childList') continue;
@@ -257,20 +125,55 @@ export function addedObserver(selector: string, callback: (elements: HTMLElement
     return newParagraphObserver;
 }
 
-export async function parseNodes(nodes: Node[], filter: (node: Node) => boolean = () => true) {
-    try {
-        const paragraphs = nodes.flatMap(node => paragraphsInNode(node, filter));
+export function parseVisibleObserver(filter: (node: Node) => boolean = () => true) {
+    const pendingBatches = new Map<HTMLElement, ParseBatch>();
 
-        if (paragraphs.length > 0) {
-            console.log(
-                'Parsing',
-                paragraphs.flat().map(fragment => fragment.node.data),
-            );
+    const visible = visibleObserver(
+        elements => {
+            const batches: ParseBatch[] = [];
+            for (const element of elements) {
+                if (pendingBatches.get(element) !== undefined) continue;
 
-            const tokens = await requestParse(paragraphs);
-            applyParseResult(paragraphs, tokens);
-        }
-    } catch (error) {
-        showError(error);
-    }
+                const paragraphs = paragraphsInNode(element, filter);
+                if (paragraphs.length === 0) {
+                    visible.unobserve(element);
+                    continue;
+                }
+
+                const batch = createParseBatch(paragraphs);
+                const applied = batch.entries.map(({ paragraph, promise }) =>
+                    promise
+                        .then(tokens => {
+                            applyTokens(paragraph, tokens);
+                        })
+                        .catch(error => {
+                            if (error !== CANCELED) {
+                                showError(error);
+                            }
+                            throw error;
+                        }),
+                );
+
+                Promise.all(applied)
+                    .then(_ => visible.unobserve(element))
+                    .finally(() => {
+                        pendingBatches.delete(element);
+                    });
+
+                pendingBatches.set(element, batch);
+                batches.push(batch);
+            }
+            requestParse(batches);
+        },
+        elements => {
+            for (const element of elements) {
+                const batch = pendingBatches.get(element);
+                if (batch) {
+                    for (const { promise } of batch.entries) promise.cancel();
+                }
+            }
+        },
+    );
+
+    return visible;
 }

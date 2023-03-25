@@ -1,6 +1,6 @@
-import { BackgroundResponseMap } from '../background/command_types.js';
+import { BackgroundToContentMessage, ContentToBackgroundMessage, ResponseTypeMap } from '../message_types.js';
 import { Card, Config, Grade, Token } from '../types.js';
-import { browser } from '../util.js';
+import { browser, CANCELED, CancellablePromise, CancellablePromiseHandle, showError } from '../util.js';
 import { Paragraph, reverseIndex } from './parse.js';
 import { Popup } from './popup.js';
 
@@ -9,63 +9,107 @@ import { Popup } from './popup.js';
 export let config: Config;
 export let defaultConfig: Config;
 
-const waitingPromises = new Map();
+const waitingPromises = new Map<number, CancellablePromiseHandle<unknown>>();
 let nextSeq = 0;
-function postRequest<Command extends keyof BackgroundResponseMap>(
-    command: Command,
-    args: object,
-): Promise<BackgroundResponseMap[Command]['result']> {
+function registerRequest<T>(): [number, CancellablePromise<T>] {
     const seq = nextSeq++;
-    return new Promise((resolve, reject) => {
+    const promise: any = new Promise((resolve, reject) => {
         waitingPromises.set(seq, { resolve, reject });
-        port.postMessage({ command, seq, ...args });
     });
+
+    promise.cancel = () => {
+        port.postMessage({ type: 'cancel', seq });
+    };
+
+    return [seq, promise];
 }
 
-export async function requestParse(paragraphs: Paragraph[]) {
-    return (await postRequest('parse', {
-        text: paragraphs.map(fragments => fragments.map(fragment => fragment.node.data).join('')),
-    })) as Token[][];
+function post<T extends Omit<ContentToBackgroundMessage, 'seq'>>(message: T) {
+    const [seq, promise] = registerRequest<ResponseTypeMap[T['type']]['result']>();
+    port.postMessage({ ...message, seq });
+    return promise;
 }
 
-export async function requestSetFlag(card: Card, flag: 'blacklist' | 'never-forget' | 'forq', state: boolean) {
-    return await postRequest('setFlag', { vid: card.vid, sid: card.sid, flag, state });
+export type ParseBatch = {
+    entries: {
+        paragraph: Paragraph;
+        promise: CancellablePromise<Token[]>;
+    }[];
+    texts: [number, string][];
+};
+
+export function createParseBatch(paragraphs: Paragraph[]): ParseBatch {
+    const texts: [number, string][] = [];
+    const entries: ParseBatch['entries'] = [];
+
+    for (const paragraph of paragraphs) {
+        const text = paragraph.map(fragment => fragment.node.data).join('');
+        const [seq, promise] = registerRequest<Token[]>();
+        texts.push([seq, text]);
+        entries.push({ paragraph, promise });
+    }
+
+    return { entries, texts };
 }
 
-export async function requestMine(card: Card, forq: boolean, sentence?: string, translation?: string) {
-    return await postRequest('mine', { forq, vid: card.vid, sid: card.sid, sentence, translation });
+export function requestParse(batches: ParseBatch[]) {
+    post({ type: 'parse', texts: batches.flatMap(batch => batch.texts) });
 }
 
-export async function requestReview(card: Card, rating: Grade) {
-    return await postRequest('review', { rating, vid: card.vid, sid: card.sid });
+export function requestSetFlag(card: Card, flag: 'blacklist' | 'never-forget' | 'forq', state: boolean) {
+    return post({ type: 'setFlag', vid: card.vid, sid: card.sid, flag, state });
 }
 
-export async function requestUpdateConfig(changes: Partial<Config>) {
-    return await postRequest('updateConfig', { config: changes });
+export function requestMine(card: Card, forq: boolean, sentence?: string, translation?: string) {
+    return post({ type: 'mine', forq, vid: card.vid, sid: card.sid, sentence, translation });
+}
+
+export function requestReview(card: Card, rating: Grade) {
+    return post({ type: 'review', rating, vid: card.vid, sid: card.sid });
+}
+
+export function requestUpdateConfig(changes: Partial<Config>) {
+    return post({ type: 'updateConfig', config: changes });
 }
 
 export const port = browser.runtime.connect();
 port.onDisconnect.addListener(() => {
     console.error('disconnect:', port);
 });
-port.onMessage.addListener((message, port) => {
+port.onMessage.addListener((message: BackgroundToContentMessage, port) => {
     console.log('message:', message, port);
 
-    switch (message.command) {
-        case 'response':
+    switch (message.type) {
+        case 'success':
             {
                 const promise = waitingPromises.get(message.seq);
                 waitingPromises.delete(message.seq);
-                if (message.error !== undefined) {
-                    console.error(message.error);
-
-                    if (promise !== undefined) {
-                        promise.reject(message.error);
-                    } else {
-                        throw Error(message.error.message, { cause: message.error });
-                    }
-                } else {
+                if (promise) {
                     promise.resolve(message.result);
+                } else {
+                    console.warn(`No promise with seq ${message.seq}, result dropped`);
+                }
+            }
+            break;
+
+        case 'error':
+            {
+                const promise = waitingPromises.get(message.seq);
+                waitingPromises.delete(message.seq);
+                if (promise) {
+                    promise.reject(message.error);
+                } else {
+                    showError(message.error);
+                }
+            }
+            break;
+
+        case 'canceled':
+            {
+                const promise = waitingPromises.get(message.seq);
+                waitingPromises.delete(message.seq);
+                if (promise) {
+                    promise.reject(CANCELED);
                 }
             }
             break;
@@ -97,8 +141,5 @@ port.onMessage.addListener((message, port) => {
                 Popup.get().render();
             }
             break;
-
-        default:
-            console.error('Unknown command');
     }
 });

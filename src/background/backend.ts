@@ -1,59 +1,11 @@
-import { Card, Token } from '../types.js';
-import { assertNonNull, sleep, truncate } from '../util.js';
+import { Card, CardState, DeckId, Token } from '../types.js';
+import { assertNonNull, truncate } from '../util.js';
 import { config } from './background.js';
 
 const API_RATELIMIT = 0.2; // seconds between requests
 const SCRAPE_RATELIMIT = 1.1; // seconds between requests
 
 export type Response<T = null> = Promise<[T, number]>;
-
-export type Call = {
-    func: () => Response<any>;
-    resolve: (value: any) => void;
-    reject: (reason: any) => void;
-};
-
-const pendingAPICalls: Call[] = [];
-let callerRunning = false;
-
-async function apiCaller() {
-    // If no API calls are pending, stop running
-    if (callerRunning || pendingAPICalls.length === 0)
-        // Only run one instance of this function at a time
-        return;
-
-    callerRunning = true;
-
-    while (pendingAPICalls.length > 0) {
-        // Get first call from queue
-
-        // Safety: We know this can't be undefined, because we checked that the length > 0
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const call = pendingAPICalls.shift()!;
-
-        console.log('Servicing API call:', call);
-
-        try {
-            const [result, wait] = await call.func();
-            call.resolve(result);
-            await sleep(wait);
-        } catch (error) {
-            call.reject(error);
-            // TODO implement exponential backoff
-            await sleep(1500);
-        }
-    }
-
-    callerRunning = false;
-}
-
-function enqueue<T>(func: () => Response<T>): Promise<T> {
-    return new Promise((resolve, reject) => {
-        console.log('Enqueueing API call:', func);
-        pendingAPICalls.push({ func, resolve, reject });
-        apiCaller();
-    });
-}
 
 type JpdbError = {
     error:
@@ -86,7 +38,7 @@ type TokenFields = {
     furigana: null | (string | [string, string])[];
 };
 
-type CardState =
+type ApiCardState =
     | ['new' | 'learning' | 'known' | 'never-forget' | 'due' | 'failed' | 'suspended' | 'blacklisted']
     | ['redundant', 'learning' | 'known' | 'never-forget' | 'due' | 'failed' | 'suspended']
     | ['locked', 'new' | 'due' | 'failed']
@@ -102,21 +54,17 @@ type VocabFields = {
     frequency_rank: number | null;
     meanings: string[];
     card_level: number | null;
-    card_state: CardState;
+    card_state: ApiCardState;
     due_at: number;
 };
 
 type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
 
-export function parse(text: string[]): Promise<[Token[][], Card[]]> {
-    return enqueue(() => _parse(text));
-}
-
 // NOTE: If you change these, make sure to change the .map calls in _parse too
 const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'furigana'] as const;
 const VOCAB_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'frequency_rank', 'meanings', 'card_state'] as const;
 
-async function _parse(text: string[]): Response<[Token[][], Card[]]> {
+export async function parse(text: string[]): Response<[Token[][], Card[]]> {
     const options = {
         method: 'POST',
         headers: {
@@ -189,15 +137,15 @@ async function _parse(text: string[]): Response<[Token[][], Card[]]> {
     return [[tokens, cards], API_RATELIMIT];
 }
 
-export function addToDeck(
-    vid: number,
-    sid: number,
-    deckId: number | 'blacklist' | 'never-forget' | 'forq',
-): Promise<null> {
-    return enqueue(() => (deckId === 'forq' ? _addToForqScrape(vid, sid) : _addToDeck(vid, sid, deckId)));
+export function addToDeck(vid: number, sid: number, deckId: DeckId): Response {
+    if (deckId === 'forq') {
+        return addToForqScrape(vid, sid);
+    } else {
+        return addToDeckAPI(vid, sid, deckId);
+    }
 }
 
-async function _addToDeck(vid: number, sid: number, deckId: number | 'blacklist' | 'never-forget'): Response {
+async function addToDeckAPI(vid: number, sid: number, deckId: number | 'blacklist' | 'never-forget'): Response {
     const options = {
         method: 'POST',
         headers: {
@@ -221,7 +169,7 @@ async function _addToDeck(vid: number, sid: number, deckId: number | 'blacklist'
     return [null, API_RATELIMIT];
 }
 
-async function _addToForqScrape(vid: number, sid: number): Response {
+async function addToForqScrape(vid: number, sid: number): Response {
     const response = await fetch('https://jpdb.io/prioritize', {
         method: 'POST',
         credentials: 'include',
@@ -244,15 +192,15 @@ async function _addToForqScrape(vid: number, sid: number): Response {
     return [null, SCRAPE_RATELIMIT];
 }
 
-export function removeFromDeck(
-    vid: number,
-    sid: number,
-    deckId: number | 'blacklist' | 'never-forget' | 'forq',
-): Promise<null> {
-    return enqueue(() => (deckId === 'forq' ? _removeFromForqScrape(vid, sid) : _removeFromDeck(vid, sid, deckId)));
+export function removeFromDeck(vid: number, sid: number, deckId: DeckId): Response {
+    if (deckId === 'forq') {
+        return removeFromForqScrape(vid, sid);
+    } else {
+        return removeFromDeckAPI(vid, sid, deckId);
+    }
 }
 
-async function _removeFromDeck(vid: number, sid: number, deckId: number | 'blacklist' | 'never-forget'): Response {
+async function removeFromDeckAPI(vid: number, sid: number, deckId: number | 'blacklist' | 'never-forget'): Response {
     const options = {
         method: 'POST',
         headers: {
@@ -276,7 +224,7 @@ async function _removeFromDeck(vid: number, sid: number, deckId: number | 'black
     return [null, API_RATELIMIT];
 }
 
-async function _removeFromForqScrape(vid: number, sid: number): Response {
+async function removeFromForqScrape(vid: number, sid: number): Response {
     const response = await fetch('https://jpdb.io/deprioritize', {
         method: 'POST',
         credentials: 'include',
@@ -298,11 +246,7 @@ async function _removeFromForqScrape(vid: number, sid: number): Response {
     return [null, SCRAPE_RATELIMIT];
 }
 
-export function setSentence(vid: number, sid: number, sentence?: string, translation?: string): Promise<null> {
-    return enqueue(() => _setSentence(vid, sid, sentence, translation));
-}
-
-async function _setSentence(vid: number, sid: number, sentence?: string, translation?: string): Response {
+export async function setSentence(vid: number, sid: number, sentence?: string, translation?: string): Response {
     const body: any = { vid, sid };
     if (sentence) body.sentence = sentence;
     if (translation) body.translation = translation;
@@ -333,10 +277,6 @@ async function _setSentence(vid: number, sid: number, sentence?: string, transla
     return [null, API_RATELIMIT];
 }
 
-export function review(vid: number, sid: number, rating: keyof typeof REVIEW_GRADES): Promise<null> {
-    return enqueue(() => _reviewScrape(vid, sid, rating));
-}
-
 const REVIEW_GRADES = {
     nothing: '1',
     something: '2',
@@ -352,7 +292,7 @@ const REVIEW_GRADES = {
     never_forget: 'w',
     blacklist: '-1',
 };
-async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVIEW_GRADES): Response {
+export async function review(vid: number, sid: number, rating: keyof typeof REVIEW_GRADES): Response {
     // Get current review number
     const response = await fetch(`https://jpdb.io/review?c=vf%2C${vid}%2C${sid}`, {
         method: 'GET',
@@ -395,11 +335,7 @@ async function _reviewScrape(vid: number, sid: number, rating: keyof typeof REVI
     return [null, 2 * SCRAPE_RATELIMIT];
 }
 
-export function getCardState(vid: number, sid: number): Promise<CardState> {
-    return enqueue(() => _getCardState(vid, sid));
-}
-
-async function _getCardState(vid: number, sid: number): Response<CardState> {
+export async function getCardState(vid: number, sid: number): Response<CardState> {
     const options = {
         method: 'POST',
         headers: {
@@ -426,5 +362,5 @@ async function _getCardState(vid: number, sid: number): Response<CardState> {
     const vocabInfo = data.vocabulary_info[0];
     if (vocabInfo === null) throw Error(`Can't get state for word ${vid}/${sid}, word does not exist`);
 
-    return [vocabInfo[0], API_RATELIMIT];
+    return [vocabInfo[0] ?? ['not-in-deck'], API_RATELIMIT];
 }

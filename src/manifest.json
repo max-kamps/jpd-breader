@@ -42,6 +42,11 @@
             "css": ["content/word.css"]
         },
         {
+            "matches": ["*://app.readwok.com/*"],
+            "js": ["integrations/readwok.js"],
+            "css": ["content/word.css"]
+        },
+        {
             "matches": ["*://ja.wikipedia.org/*", "*://ja.m.wikipedia.org/*"],
             "js": ["integrations/wikipedia.js"],
             "css": ["content/word.css"]
@@ -74,6 +79,7 @@
         "*://learnjapanese.moe/texthooker.html",
         "file:///*mokuro*.html",
         "*://ja.wikipedia.org/*",
+        "*://app.readwok.com/*",
         "*://ja.m.wikipedia.org/*"
     ]
 }

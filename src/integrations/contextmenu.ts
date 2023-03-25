@@ -1,8 +1,8 @@
 // @reader content-script
 
-import { requestParse } from '../content/background_comms.js';
-import { applyParseResult, displayCategory, Fragment, Paragraph } from '../content/parse.js';
-import { showError } from '../util.js';
+import { createParseBatch, requestParse } from '../content/background_comms.js';
+import { applyTokens, displayCategory, Fragment, Paragraph } from '../content/parse.js';
+import { CANCELED, showError } from '../util.js';
 
 function paragraphsInRange(range: Range): Paragraph[] {
     // TODO Support partial selections in start and end text nodes
@@ -152,13 +152,24 @@ try {
         paragraphs.push(...paragraphsInRange(range));
     }
 
-    console.log(
-        'Parsing',
-        paragraphs.flat().map(fragment => fragment.node.data),
-    );
+    if (paragraphs.length > 0) {
+        const batch = createParseBatch(paragraphs);
+        const applied = batch.entries.map(({ paragraph, promise }) =>
+            promise
+                .then(tokens => {
+                    applyTokens(paragraph, tokens);
+                })
+                .catch(error => {
+                    if (error !== CANCELED) {
+                        showError(error);
+                    }
+                    throw error;
+                }),
+        );
 
-    const tokens = await requestParse(paragraphs);
-    applyParseResult(paragraphs, tokens);
+        requestParse([batch]);
+        await Promise.allSettled(applied);
+    }
 
     getSelection()?.empty();
 } catch (error) {

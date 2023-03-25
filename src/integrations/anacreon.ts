@@ -1,15 +1,13 @@
 // @reader content-script
 
 import { showError } from '../util.js';
-import { addedObserver, parseNodes } from './common.js';
+import { addedObserver, parseVisibleObserver } from './common.js';
 
 try {
-    // Parse lines that already exist
-    parseNodes([...document.querySelectorAll('.textline, .line_box')]);
+    const visible = parseVisibleObserver();
 
-    // Parse new lines as they are added
     const added = addedObserver('.textline, .line_box', elements => {
-        parseNodes(elements);
+        for (const element of elements) visible.observe(element);
     });
 
     added.observe(document.querySelector('#textlog') ?? document.body, {
