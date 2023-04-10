@@ -12,7 +12,11 @@ function paragraphsInRange(range: Range): Paragraph[] {
             : range.startContainer.childNodes[range.startOffset];
 
     const end: Node =
-        range.endContainer instanceof Text ? range.endContainer : range.endContainer.childNodes[range.endOffset - 1];
+        range.endContainer instanceof Text
+            ? range.endContainer
+            : range.endOffset > 0
+            ? range.endContainer.childNodes[range.endOffset - 1]
+            : range.endContainer;
 
     // console.log('start:', start, 'end:', end);
 
