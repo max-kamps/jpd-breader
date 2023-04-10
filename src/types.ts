@@ -20,6 +20,8 @@ export type Config = {
     customPopupCSS: string;
 
     showPopupKey: Keybind;
+    addKey: Keybind;
+    dialogKey: Keybind;
     blacklistKey: Keybind;
     neverForgetKey: Keybind;
     nothingKey: Keybind;

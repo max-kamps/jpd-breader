@@ -1,8 +1,9 @@
 import { Keybind } from '../types.js';
 import { showError } from '../util.js';
-import { config, requestReview, requestSetFlag } from './background_comms.js';
+import { config, requestMine, requestReview, requestSetFlag } from './background_comms.js';
+import { Dialog } from './dialog.js';
 import { Popup } from './popup.js';
-import { JpdbWord } from './word.js';
+import { getSentences, JpdbWord } from './word.js';
 
 export let currentHover: [JpdbWord, number, number] | null = null;
 let popupKeyHeld = false;
@@ -26,6 +27,21 @@ window.addEventListener('keydown', async event => {
             if (!currentHover) {
                 popup.fadeOut();
             }
+        }
+
+        if (currentHover && matchesHotkey(event, config.addKey)) {
+            const word = currentHover[0];
+            await requestMine(
+                word.jpdbData.token.card,
+                config.forqOnMine,
+                getSentences(word.jpdbData, config.contextWidth).trim() || undefined,
+                undefined,
+            );
+        }
+
+        if (currentHover && matchesHotkey(event, config.dialogKey)) {
+            const word = currentHover[0];
+            Dialog.get().showForWord(word.jpdbData);
         }
 
         if (currentHover) {

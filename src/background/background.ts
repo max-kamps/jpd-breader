@@ -39,6 +39,8 @@ const defaultConfig: Config = {
     forqOnMine: true,
 
     showPopupKey: { key: 'Shift', code: 'ShiftLeft', modifiers: [] },
+    addKey: null,
+    dialogKey: null,
     blacklistKey: null,
     neverForgetKey: null,
     nothingKey: null,
