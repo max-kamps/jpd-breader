@@ -48,10 +48,12 @@ const defaultConfig: Config = {
     easyKey: null,
 };
 
-let configVersion = localStorageGet('schemaVersion', 0);
-if (configVersion === 0) {
+const CURRENT_SCHEMA_VERSION = 1;
+let schemaVersion = localStorageGet('schemaVersion', 0);
+
+// schema migrations
+if (schemaVersion === 0) {
     // Keybinds changed from string to object
-    configVersion = 1;
     for (const key of [
         'showPopupKey',
         'blacklistKey',
@@ -64,12 +66,18 @@ if (configVersion === 0) {
     ]) {
         localStorage.removeItem(key);
     }
-    localStorageSet('schemaVersion', 1);
+
+    localStorageSet('schemaVersion', (schemaVersion = 1));
 }
 
-export const config = Object.fromEntries(
-    Object.entries(defaultConfig).map(([key, defaultValue]) => [key, localStorageGet(key, defaultValue)]),
-) as Config;
+// If the schema version is not the current version after applying all migrations, give up and refuse to load the config
+// Use the default as a fallback
+export const config =
+    schemaVersion === CURRENT_SCHEMA_VERSION
+        ? (Object.fromEntries(
+              Object.entries(defaultConfig).map(([key, defaultValue]) => [key, localStorageGet(key, defaultValue)]),
+          ) as Config)
+        : defaultConfig;
 
 // API call queue
 
@@ -234,10 +242,10 @@ const messageHandlers: {
         const oldCSS = config.customWordCSS;
 
         Object.assign(config, request.config);
-
-        for (const [key, value] of Object.entries(request.config)) {
+        for (const [key, value] of Object.entries(config)) {
             localStorageSet(key, value);
         }
+        localStorageSet('schemaVersion', (schemaVersion = CURRENT_SCHEMA_VERSION));
 
         for (const port of ports) {
             if (config.customWordCSS) {
