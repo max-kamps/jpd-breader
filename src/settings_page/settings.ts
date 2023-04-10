@@ -48,6 +48,7 @@ function checkConnectionEstablished(message: BackgroundToContentMessage, port: b
                         rid: 0,
                         spelling: '設定',
                         reading: 'せってい',
+                        pitchAccent: ['LHHHH'],
                         meanings: [
                             'establishment;  creation;  posing (a problem);  setting (movie, novel, etc.);  scene',
                             'options setting;  preference settings;  configuration;  setup',

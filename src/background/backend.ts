@@ -56,13 +56,24 @@ type VocabFields = {
     card_level: number | null;
     card_state: ApiCardState;
     due_at: number;
+    pitch_accent: string[];
 };
 
 type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
 
 // NOTE: If you change these, make sure to change the .map calls in _parse too
 const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'furigana'] as const;
-const VOCAB_FIELDS = ['vid', 'sid', 'rid', 'spelling', 'reading', 'frequency_rank', 'meanings', 'card_state'] as const;
+const VOCAB_FIELDS = [
+    'vid',
+    'sid',
+    'rid',
+    'spelling',
+    'reading',
+    'frequency_rank',
+    'meanings',
+    'card_state',
+    'pitch_accent',
+] as const;
 
 export async function parse(text: string[]): Response<[Token[][], Card[]]> {
     const options = {
@@ -94,8 +105,18 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
 
     const cards: Card[] = data.vocabulary.map(vocab => {
         // NOTE: If you change these, make sure to change VOCAB_FIELDS too
-        const [vid, sid, rid, spelling, reading, frequencyRank, meanings, cardState] = vocab;
-        return { vid, sid, rid, spelling, reading, frequencyRank, meanings, state: cardState ?? ['not-in-deck'] };
+        const [vid, sid, rid, spelling, reading, frequencyRank, meanings, cardState, pitchAccent] = vocab;
+        return {
+            vid,
+            sid,
+            rid,
+            spelling,
+            reading,
+            frequencyRank,
+            meanings,
+            state: cardState ?? ['not-in-deck'],
+            pitchAccent: pitchAccent ?? [], // HACK not documented... in case it can be null, better safe than sorry
+        };
     });
 
     const tokens: Token[][] = data.tokens.map(tokens =>

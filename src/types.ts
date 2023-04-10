@@ -63,5 +63,6 @@ export type Card = {
     spelling: string;
     reading: string;
     frequencyRank: number | null;
+    pitchAccent: string[];
     meanings: string[];
 };

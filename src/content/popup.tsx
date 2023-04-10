@@ -1,4 +1,4 @@
-import { assertNonNull, browser, jsxCreateElement } from '../util.js';
+import { assertNonNull, browser, jsxCreateElement, nonNull } from '../util.js';
 import { config, requestMine, requestReview, requestSetFlag } from './background_comms.js';
 import { Dialog } from './dialog.js';
 import { getSentences, JpdbWord, JpdbWordData } from './word.js';
@@ -71,6 +71,35 @@ function getClosestClientRect(elem: HTMLElement, x: number, y: number): DOMRect 
             distance: Math.max(rect.left - x, 0, x - rect.right) ** 2 + Math.max(rect.top - y, 0, y - rect.bottom) ** 2,
         }))
         .reduce((a, b) => (a.distance <= b.distance ? a : b)).rect;
+}
+
+function renderPitch(reading: string, pitch: string) {
+    if (reading.length != pitch.length - 1) {
+        return <span>Error: invalid pitch</span>;
+    }
+
+    try {
+        const parts: HTMLSpanElement[] = [];
+        let lastBorder = 0;
+        const borders = Array.from(pitch.matchAll(/LH|HL/g), x => nonNull(x.index) + 1);
+        let low = pitch[0] === 'L';
+
+        for (const border of borders) {
+            parts.push(<span class={low ? 'low' : 'high'}>{reading.slice(lastBorder, border)}</span>);
+            lastBorder = border;
+            low = !low;
+        }
+
+        if (lastBorder != reading.length) {
+            // No switch after last part
+            parts.push(<span class={low ? 'low-final' : 'high-final'}>{reading.slice(lastBorder)}</span>);
+        }
+
+        return <span class='pitch'>{parts}</span>;
+    } catch (error) {
+        console.error(error);
+        return <span>Error: invalid pitch</span>;
+    }
 }
 
 export class Popup {
@@ -193,7 +222,7 @@ export class Popup {
 
         this.#vocabSection.replaceChildren(
             <div id='header'>
-                <a href={url} target='_blank'>
+                <a lang='ja' href={url} target='_blank'>
                     <span class='spelling'>{card.spelling}</span>
                     <span class='reading'>{card.spelling !== card.reading ? `(${card.reading})` : ''}</span>
                 </a>
@@ -203,7 +232,10 @@ export class Popup {
                     ))}
                 </div>
             </div>,
-            <span class='freq'>{card.frequencyRank ? `Top ${card.frequencyRank}` : ''}</span>,
+            <div class='metainfo'>
+                <span class='freq'>{card.frequencyRank ? `Top ${card.frequencyRank}` : ''}</span>
+                {card.pitchAccent.map(pitch => renderPitch(card.reading, pitch))}
+            </div>,
             <ol>
                 {card.meanings.map(gloss => (
                     <li>{gloss}</li>
