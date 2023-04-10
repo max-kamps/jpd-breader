@@ -177,7 +177,7 @@ class SettingToken extends SettingElement {
     }
 
     get value(): string | null {
-        return this.input.value || null;
+        return this.input.value ?? '';
     }
 
     set value(newValue: string | null) {
@@ -205,16 +205,12 @@ class SettingDeckId extends SettingElement {
     }
 
     get value(): string | number | null {
-        if (this.input.value) {
-            const n = parseInt(this.input.value);
-            return isNaN(n) ? this.input.value : n;
-        }
-
-        return null;
+        const n = parseInt(this.input.value);
+        return isNaN(n) ? this.input.value || null : n;
     }
 
     set value(newValue: string | number | null) {
-        this.input.value = newValue ? newValue.toString() : '';
+        this.input.value = newValue === null ? '' : newValue.toString();
         this.valueChanged();
     }
 }
