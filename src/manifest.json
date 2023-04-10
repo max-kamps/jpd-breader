@@ -65,6 +65,7 @@
         "content/parse.js",
         "content/popup.js",
         "content/popup.css",
+        "content/word.js",
         "content/word.css",
         "util.js"
     ],
