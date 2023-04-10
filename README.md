@@ -63,6 +63,52 @@ The following pages require special support for technical reasons, and will ther
 ## Can I customize the colors? Can I customize which furigana get shown?
 
 Customization is currently done with custom CSS, because that took the least amount of time to develop :)
+If you need some help, please ask in the [jpdb Discord thread](https://discord.com/channels/799891866924875786/1083527692672057395).
+
+Here are some common customizations you might want. Feel free to use multiple of them, and modify them to your liking.
+
+Don't color words:
+```css
+.jpdb-word { color: inherit; /* inherit color from the website instead of using a custom color */ }
+```
+
+Only color new words:
+```css
+.jpdb-word { color: inherit; }
+.jpdb-word.new { color: rgb(75, 141, 255); }
+.jpdb-word.not-in-deck { color: rgb(126, 173, 255); }
+```
+
+Show an underline rather than changing the text color:
+```css
+.jpdb-word.new {
+    color: inherit;
+    text-decoration: underline 3px rgb(75, 141, 255);
+}
+```
+
+Hide all jpdb furigana:
+```css
+.jpdb-furi { display: none; }
+```
+
+Hide jpdb furigana only for some classes of words:
+```css
+.jpdb-word:is(.never-forget, .known, .due, .failed) .jpdb-furi { display: none; }
+```
+
+Only show jpdb furigana while hovering:
+```css
+.jpdb-word:not(:hover) .jpdb-furi { visibility: hidden; }
+```
+
+Notes if you aren't super familiar with CSS:
+- CSS supports many color formats, like hex `#a2ff0e` or `rgb(126, 230, 17)`. Pick whichever you find most convenient.
+- Selectors with more classes are higher priority. For example, `.jpdb-word.new` will overwrite `.jpdb-word`.
+- For selectors with the same number of classes, *lower/later lines* have higher priority.
+- You can add `!important` after a property (like `color: red !important;`) to overwrite the priority system.
+- You can use `:is(.class, .class)` to select any element that has *at least one* of those classes. For example, `.jpdb-word:is(.due, .failed)` selects all words that are due *or* failed.
+- You can use `:not(.class)` to select any element that does *not* have that class. For example, `.jpdb-word:not(.new)` selects all words that are *not* new.
 
 List of classes:
 - `.jpdb-word` - Any part of the text that was run through the jpdb parser
@@ -80,50 +126,6 @@ List of classes:
 - `.failed` - Failed words
 - `.suspended` - Suspended words (for example, through the "Suspend words outside of a given top most common words" feature)
 - `.blacklisted` - Blacklisted words (either individually, or through settings like "Blacklist particles", "Blacklist katakana loanwords", etc.)
-
-Here are some common customizations you might want. Feel free to take inspiration from multiple of them, merge them together, and create your own.
-Notes if you aren't super familiar with CSS:
-- Selectors with more classes are higher priority. For example, `.jpdb-word.new` will overwrite `.jpdb-word`.
-- For selectors with the same number of classes, *lower/later lines* have higher priority.
-- You can add `!important` after a property (like `color: red !important;`) to overwrite the priority system.
-- CSS supports many color formats, like hex `#a2ff0e` or `rgb(126, 230, 17)`. Pick whichever you find easiest.
-
-Feel free to ask in the [jpdb Discord thread](https://discord.com/channels/799891866924875786/1083527692672057395) if you need some help.
-
-Don't color words:
-```css
-.jpdb-word { color: inherit; }
-```
-
-Only color new words:
-```css
-.jpdb-word { color: inherit; }
-.jpdb-word.not-in-deck { color: rgb(126, 173, 255); }
-.jpdb-word.new { color: rgb(75, 141, 255); }
-```
-
-Show an underline under new words:
-```css
-.jpdb-word.new {
-    color: inherit;
-    text-decoration: underline 3px rgb(75, 141, 255);
-}
-```
-
-Hide jpdb furigana in known and due words:
-```css
-.jpdb-word.known .jpdb-furi, .jpdb-word.due .jpdb-furi { display: none; }
-```
-
-Hide all jpdb furigana:
-```css
-.jpdb-furi { display: none; }
-```
-
-Only show jpdb furigana while hovering:
-```css
-.jpdb-word:not(:hover) .jpdb-furi { visibility: hidden; }
-```
 
 ## Building
 
