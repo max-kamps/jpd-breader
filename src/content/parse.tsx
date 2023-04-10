@@ -103,6 +103,7 @@ export function applyTokens(fragments: Paragraph, tokens: Token[]) {
     let fragmentIndex = 0;
     let curOffset = 0;
     let fragment = fragments[fragmentIndex];
+    const text = fragments.map(x => x.node.data).join('');
 
     for (const token of tokens) {
         if (!fragment) return;
@@ -150,7 +151,7 @@ export function applyTokens(fragments: Paragraph, tokens: Token[]) {
 
             wrapper.jpdbData = {
                 token,
-                context: 'TODO',
+                context: text,
                 contextOffset: curOffset,
             };
 
