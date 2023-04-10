@@ -21,6 +21,10 @@
                 display: flex;
                 flex-direction: column;
                 gap: 0.5em;
+                position: sticky;
+                height: min-content;
+                top: 1em;
+                left: 1em;
             }
 
             nav a {
@@ -82,6 +86,7 @@
                 grid-column: 1 / span 3;
                 margin-bottom: 0.5em;
                 color: #555;
+                font-size: 80%;
             }
 
             .setting::part(reset-button) {
@@ -97,13 +102,29 @@
             <nav>
                 Sections:
                 <a href="#general" class="active">General</a>
+                <a href="#mining">Mining</a>
                 <a href="#keybinds">Keybinds</a>
                 <a href="#appearance">Appearance</a>
             </nav>
             <div id="settings">
                 <section id="general">
                     <h1>General</h1>
+                    <div class="explanation">
+                        To find your API token, visit the <a href="https://jpdb.io/settings">jpdb settings page</a> and
+                        scroll to the very bottom.
+                    </div>
                     <setting-token class="setting" name="apiToken">API Token</setting-token>
+                </section>
+                <section id="general">
+                    <h1>Mining</h1>
+                    <div class="explanation">
+                        To find the deck ID for a specific deck, open that deck's page on jpdb and look at the URL.
+                        <br />
+                        You will see something like <code>https://jpdb.io/deck?id=32</code>. The number at the end is
+                        the deck ID. <br />
+                        The following special deck IDs are also allowed: <code>blacklist</code>,
+                        <code>never-forget</code>, <code>forq</code> (= front of review queue)<br />
+                    </div>
                     <setting-deckid class="setting" name="miningDeckId">Mining deck ID</setting-deckid>
                     <setting-deckid class="setting" name="forqDeckId">FORQ deck ID</setting-deckid>
                     <setting-deckid class="setting" name="blacklistDeckId">Blacklist deck ID</setting-deckid>
