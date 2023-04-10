@@ -103,7 +103,8 @@ ol {
     padding-left: 2em;
 }
 
-button.add {
+button.add,
+button.edit-add-review {
     background-color: rgb(75, 141, 255);
 }
 

@@ -1,6 +1,6 @@
-import { assertNonNull, browser, jsxCreateElement, nonNull } from '../util.js';
-import { requestMine, requestReview } from './background_comms.js';
-import { JpdbWordData } from './types.js';
+import { assertNonNull, browser, jsxCreateElement } from '../util.js';
+import { config, requestMine, requestReview } from './background_comms.js';
+import { getSentences, JpdbWordData } from './word.js';
 
 export class Dialog {
     #element: HTMLElement;
@@ -8,11 +8,8 @@ export class Dialog {
     #sentence: HTMLElement;
 
     #clickStartedOutside: boolean;
-    #data?: JpdbWordData & {
-        contextWidth: number;
-        sentenceBoundaries?: number[];
-        sentenceIndex?: number;
-    };
+    #data: JpdbWordData;
+    #contextWidth: number;
 
     static #dialog: Dialog;
 
@@ -79,8 +76,8 @@ export class Dialog {
                         <button
                             id='add-context'
                             onclick={() => {
-                                this.#data && this.#data.contextWidth++;
-                                this.render();
+                                this.#contextWidth++;
+                                this.#sentence.innerText = getSentences(this.#data, this.#contextWidth);
                             }}>
                             Add surrounding sentences
                         </button>
@@ -92,7 +89,11 @@ export class Dialog {
                     <div>
                         <label>
                             Also add to FORQ:{' '}
-                            {(addToForq = (<input type='checkbox' id='add-to-forq' />) as HTMLInputElement)}
+                            {
+                                (addToForq = (
+                                    <input type='checkbox' id='add-to-forq' checked={config.forqOnMine} />
+                                ) as HTMLInputElement)
+                            }
                         </label>
                     </div>
                     <div>
@@ -129,7 +130,6 @@ export class Dialog {
     render() {
         if (this.#data === undefined) throw Error("Can't render Dialog without data");
 
-        const data = this.#data;
         const card = this.#data.token.card;
 
         const url = `https://jpdb.io/vocabulary/${card.vid}/${encodeURIComponent(card.spelling)}/${encodeURIComponent(
@@ -144,37 +144,7 @@ export class Dialog {
             </a>,
         );
 
-        if (data.sentenceBoundaries === undefined || data.sentenceIndex === undefined) {
-            const boundaries = [
-                -1,
-                ...Array.from(data.context.matchAll(/[。！？]/g), match => nonNull(match.index)),
-                data.context.length,
-            ];
-
-            // Bisect_right to find the array index of the enders to the left and right of our token
-            let left = 0,
-                right = boundaries.length;
-
-            while (left < right) {
-                const middle = (left + right) >> 1;
-                if (boundaries[middle] <= data.contextOffset) {
-                    left = middle + 1;
-                } else {
-                    right = middle;
-                }
-            }
-
-            data.sentenceIndex = left;
-            data.sentenceBoundaries = boundaries;
-        }
-
-        const start = data.sentenceBoundaries[Math.max(data.sentenceIndex - 1 - data.contextWidth, 0)] + 1;
-        const end =
-            data.sentenceBoundaries[
-                Math.min(data.sentenceIndex + data.contextWidth, data.sentenceBoundaries.length - 1)
-            ] + 1;
-
-        this.#sentence.innerText = data.context.slice(start, end).trim();
+        this.#sentence.innerText = getSentences(this.#data, this.#contextWidth);
     }
 
     showModal() {
@@ -186,7 +156,8 @@ export class Dialog {
     }
 
     setData(data: JpdbWordData) {
-        this.#data = { ...data, contextWidth: 0 };
+        this.#data = data;
+        this.#contextWidth = config.contextWidth;
         this.render();
     }
 

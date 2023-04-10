@@ -35,6 +35,9 @@ const defaultConfig: Config = {
     customWordCSS: '',
     customPopupCSS: '',
 
+    contextWidth: 1,
+    forqOnMine: true,
+
     showPopupKey: { key: 'Shift', code: 'ShiftLeft', modifiers: [] },
     blacklistKey: null,
     neverForgetKey: null,

@@ -3,10 +3,19 @@
     <head>
         <meta charset="utf-8" />
         <script type="module" src="settings.js"></script>
+
         <style>
             body {
                 padding: 0;
                 margin: 0;
+                visibility: hidden;
+                opacity: 0;
+            }
+
+            body.ready {
+                visibility: visible;
+                opacity: 1;
+                transition: 0.25s opacity;
             }
 
             article {
@@ -105,6 +114,8 @@
                 <a href="#mining">Mining</a>
                 <a href="#keybinds">Keybinds</a>
                 <a href="#appearance">Appearance</a>
+
+                <input type="submit" value="Save settings" />
             </nav>
             <div id="settings">
                 <section id="general">
@@ -129,6 +140,8 @@
                     <setting-deckid class="setting" name="forqDeckId">FORQ deck ID</setting-deckid>
                     <setting-deckid class="setting" name="blacklistDeckId">Blacklist deck ID</setting-deckid>
                     <setting-deckid class="setting" name="neverForgetDeckId">Never forget deck ID</setting-deckid>
+                    <setting-number class="setting" name="contextWidth">Number of context sentences</setting-number>
+                    <setting-boolean class="setting" name="forqOnMine" min="0">Add to FORQ when mining</setting-boolean>
                 </section>
                 <section id="keybinds">
                     <h1>Keybinds</h1>
@@ -151,7 +164,6 @@
                     <setting-string class="setting" name="customWordCSS">Custom Word CSS</setting-string>
                     <setting-string class="setting" name="customPopupCSS">Custom Popup CSS</setting-string>
                 </section>
-                <input type="submit" value="Save settings" />
             </div>
             <aside id="preview"></aside>
         </article>

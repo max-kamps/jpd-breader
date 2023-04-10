@@ -2,7 +2,7 @@ import { Keybind } from '../types.js';
 import { showError } from '../util.js';
 import { config, requestReview, requestSetFlag } from './background_comms.js';
 import { Popup } from './popup.js';
-import { JpdbWord } from './types.js';
+import { JpdbWord } from './word.js';
 
 export let currentHover: [JpdbWord, number, number] | null = null;
 let popupKeyHeld = false;

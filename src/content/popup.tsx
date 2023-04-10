@@ -1,7 +1,7 @@
 import { assertNonNull, browser, jsxCreateElement } from '../util.js';
-import { config, requestReview, requestSetFlag } from './background_comms.js';
+import { config, requestMine, requestReview, requestSetFlag } from './background_comms.js';
 import { Dialog } from './dialog.js';
-import { JpdbWord, JpdbWordData } from './types.js';
+import { getSentences, JpdbWord, JpdbWordData } from './word.js';
 
 function getClosestClientRect(elem: HTMLElement, x: number, y: number): DOMRect {
     const rects = elem.getClientRects();
@@ -216,8 +216,25 @@ export class Popup {
 
         this.#mineButtons.replaceChildren(
             'Mine:',
-            <button class='add' onclick={this.#demoMode ? undefined : () => Dialog.get().showForWord(this.#data)}>
-                Add to deck...
+            <button
+                class='add'
+                onclick={
+                    this.#demoMode
+                        ? undefined
+                        : () =>
+                              requestMine(
+                                  this.#data.token.card,
+                                  config.forqOnMine,
+                                  getSentences(this.#data, config.contextWidth).trim() || undefined,
+                                  undefined,
+                              )
+                }>
+                Add
+            </button>,
+            <button
+                class='edit-add-review'
+                onclick={this.#demoMode ? undefined : () => Dialog.get().showForWord(this.#data)}>
+                Edit, Add and Review...
             </button>,
             <button
                 class='blacklist'

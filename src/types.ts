@@ -13,6 +13,9 @@ export type Config = {
     blacklistDeckId: DeckId | null;
     neverForgetDeckId: DeckId | null;
 
+    contextWidth: number;
+    forqOnMine: boolean;
+
     customWordCSS: string;
     customPopupCSS: string;
 

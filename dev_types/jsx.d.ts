@@ -58,10 +58,11 @@ type AttributesForTag = {
         disabled?: boolean;
     } & Regular;
     input: {
-        type: 'checkbox' | 'text';
+        type: 'checkbox' | 'text' | 'number';
         name?: string;
         pattern?: string;
         disabled?: boolean;
+        checked?: boolean;
     } & Regular;
     textarea: {
         name?: string;
