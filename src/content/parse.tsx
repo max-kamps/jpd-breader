@@ -135,7 +135,7 @@ export function applyTokens(fragments: Paragraph, tokens: Token[]) {
             // console.log('Part of token:', fragment.node.data);
             const className = `jpdb-word ${token.card.state.join(' ')}`;
             const wrapper = (
-                token.rubies && !fragment.hasRuby ? (
+                token.rubies.length > 0 && !fragment.hasRuby ? (
                     <ruby class={className} onmouseenter={onWordHoverStart} onmouseleave={onWordHoverStop}></ruby>
                 ) : (
                     <span class={className} onmouseenter={onWordHoverStart} onmouseleave={onWordHoverStop}></span>
