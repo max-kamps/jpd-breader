@@ -81,7 +81,7 @@ function renderPitch(reading: string, pitch: string) {
     try {
         const parts: HTMLSpanElement[] = [];
         let lastBorder = 0;
-        const borders = Array.from(pitch.matchAll(/LH|HL/g), x => nonNull(x.index) + 1);
+        const borders = Array.from(pitch.matchAll(/L(?=H)|H(?=L)/g), x => nonNull(x.index) + 1);
         let low = pitch[0] === 'L';
 
         for (const border of borders) {
