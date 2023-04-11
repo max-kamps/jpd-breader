@@ -60,6 +60,11 @@ function checkConnectionEstablished(message: BackgroundToContentMessage, port: b
             });
             popup.fadeIn();
 
+            document.querySelector('[name="customPopupCSS"]')?.addEventListener('input', event => {
+                const newCSS = (event.target as HTMLInputElement).value;
+                popup.updateStyle(newCSS);
+            });
+
             for (const elem of document.querySelectorAll('[name]')) {
                 (elem as any).value = (config as any)[(elem as any).name] ?? null;
             }

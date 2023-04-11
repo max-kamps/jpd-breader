@@ -105,7 +105,8 @@ function renderPitch(reading: string, pitch: string) {
 export class Popup {
     #demoMode: boolean;
     #element: HTMLElement;
-    #style: CSSStyleDeclaration;
+    #customStyle: HTMLElement;
+    #outerStyle: CSSStyleDeclaration;
     #vocabSection: HTMLElement;
     #mineButtons: HTMLElement;
     #data: JpdbWordData;
@@ -144,10 +145,8 @@ export class Popup {
         const shadow = this.#element.attachShadow({ mode: 'closed' });
 
         shadow.append(
-            <style>
-                {`@import url("${browser.runtime.getURL('/content/popup.css')}");
-                ${config.customPopupCSS}`}
-            </style>,
+            <style>{`@import url("${browser.runtime.getURL('/content/popup.css')}");`}</style>,
+            (this.#customStyle = <style>{config.customPopupCSS}</style>),
             <article lang='ja'>
                 {(this.#mineButtons = <section class='mine-buttons'></section>)}
                 <section class='mine-buttons'>
@@ -186,29 +185,29 @@ export class Popup {
             </article>,
         );
 
-        this.#style = this.#element.style;
+        this.#outerStyle = this.#element.style;
     }
 
     fadeIn() {
-        this.#style.transition = 'opacity 60ms ease-in, visibility 60ms';
-        this.#style.opacity = '1';
-        this.#style.visibility = 'visible';
+        this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
+        this.#outerStyle.opacity = '1';
+        this.#outerStyle.visibility = 'visible';
     }
 
     fadeOut() {
-        this.#style.transition = 'opacity 200ms ease-in, visibility 200ms';
-        this.#style.opacity = '0';
-        this.#style.visibility = 'hidden';
+        this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
+        this.#outerStyle.opacity = '0';
+        this.#outerStyle.visibility = 'hidden';
     }
 
     disablePointer() {
-        this.#style.pointerEvents = 'none';
-        this.#style.userSelect = 'none';
+        this.#outerStyle.pointerEvents = 'none';
+        this.#outerStyle.userSelect = 'none';
     }
 
     enablePointer() {
-        this.#style.pointerEvents = '';
-        this.#style.userSelect = '';
+        this.#outerStyle.pointerEvents = '';
+        this.#outerStyle.userSelect = '';
     }
 
     render() {
@@ -330,8 +329,12 @@ export class Popup {
             popupLeft = leftSpace < rightSpace ? wordRight : wordLeft - popupWidth;
         }
 
-        this.#style.transform = `translate(${popupLeft}px,${popupTop}px)`;
+        this.#outerStyle.transform = `translate(${popupLeft}px,${popupTop}px)`;
 
         this.fadeIn();
+    }
+
+    updateStyle(newCSS = config.customPopupCSS) {
+        this.#customStyle.textContent = newCSS;
     }
 }

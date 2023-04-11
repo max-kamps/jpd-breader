@@ -118,6 +118,7 @@ port.onMessage.addListener((message: BackgroundToContentMessage, port) => {
             {
                 config = message.config;
                 defaultConfig = message.defaultConfig;
+                Popup.get().updateStyle();
             }
             break;
 
