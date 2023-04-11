@@ -1,4 +1,5 @@
-import { CardState, Config, Grade, Token } from './types';
+import { CardState, Grade, Token } from './types';
+import { Config } from './config';
 import { Satisfies } from './util';
 
 // NOTE All of these types must be JSON round-trip-able.
@@ -40,7 +41,6 @@ export type CancelCommand = {
 export type UpdateConfigRequest = {
     type: 'updateConfig';
     seq: number;
-    config: Partial<Config>;
 };
 
 export type ParseRequest = {
@@ -103,7 +103,6 @@ export type ParseResponse = ResponseCommon & {
 export type UpdateConfigCommand = {
     type: 'updateConfig';
     config: Config;
-    defaultConfig: Config;
 };
 
 export type UpdateWordStateCommand = {

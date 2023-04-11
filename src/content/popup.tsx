@@ -146,7 +146,7 @@ export class Popup {
 
         shadow.append(
             <style>{`@import url("${browser.runtime.getURL('/content/popup.css')}");`}</style>,
-            (this.#customStyle = <style>{config.customPopupCSS}</style>),
+            (this.#customStyle = <style></style>),
             <article lang='ja'>
                 {(this.#mineButtons = <section class='mine-buttons'></section>)}
                 <section class='mine-buttons'>

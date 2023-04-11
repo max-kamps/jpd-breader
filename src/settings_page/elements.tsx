@@ -1,5 +1,4 @@
-import { defaultConfig } from '../content/background_comms.js';
-import { Keybind } from '../types.js';
+import { defaultConfig, Keybind } from '../config.js';
 import { jsxCreateElement } from '../util.js';
 import { markUnsavedChanges } from './settings.js';
 
@@ -66,8 +65,8 @@ export class SettingElement extends HTMLElement {
     }
 
     valueChanged() {
-        console.log('change', defaultConfig !== undefined, this.value, (defaultConfig as any)[this.name] ?? null);
-        if (defaultConfig === undefined || this.value !== ((defaultConfig as any)[this.name] ?? null)) {
+        console.log('changed', this.name, 'to', this.value, '(default', (defaultConfig as any)[this.name] ?? null, ')');
+        if (this.value !== ((defaultConfig as any)[this.name] ?? null)) {
             this.reset.disabled = false;
             this.reset.innerText = 'Reset';
         } else {

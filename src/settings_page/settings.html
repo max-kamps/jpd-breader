@@ -12,6 +12,15 @@
                 opacity: 0;
             }
 
+            body.has-unsaved-changes {
+                box-shadow: inset 0px 0px 0.4em 0.25em rgba(232, 104, 123);
+            }
+
+            body.has-unsaved-changes input[type='submit'] {
+                color: rgb(199, 58, 79);
+                box-shadow: 0px 0px 0.4em 0.25em rgba(232, 104, 123);
+            }
+
             body.ready {
                 visibility: visible;
                 opacity: 1;
@@ -19,11 +28,11 @@
             }
 
             article {
-                width: 100%;
-                display: grid;
-                grid-template-columns: min-content minmax(min-content, 1fr) 1fr;
                 padding: 1em;
+                display: flex;
+                flex-direction: row;
                 gap: 1em;
+                align-items: flex-start;
             }
 
             nav {
@@ -31,8 +40,6 @@
                 flex-direction: column;
                 gap: 0.5em;
                 position: sticky;
-                width: max-content;
-                height: max-content;
                 top: 1em;
                 left: 1em;
             }
@@ -46,20 +53,15 @@
             }
 
             #preview {
-                width: max-content;
-                height: max-content;
                 position: sticky;
                 top: 1em;
             }
 
             #settings {
+                max-width: 48em;
                 display: flex;
                 flex-direction: column;
                 gap: 1.5em;
-            }
-
-            .has-unsaved-changes {
-                color: red;
             }
 
             section {
@@ -109,6 +111,10 @@
             .setting::part(reset-button) {
                 grid-column: 3;
             }
+
+            #import-file-picker {
+                display: none;
+            }
         </style>
         <title>Reader Settings</title>
         <link rel="icon" href="../icons/logo_32.png" />
@@ -122,6 +128,7 @@
                 <a href="#mining">Mining</a>
                 <a href="#keybinds">Keybinds</a>
                 <a href="#appearance">Appearance</a>
+                <a href="#import-export">Import/Export</a>
 
                 <input type="submit" value="Save settings" />
             </nav>
@@ -129,8 +136,9 @@
                 <section id="general">
                     <h1>General</h1>
                     <div class="explanation">
-                        To find your API token, visit the <a href="https://jpdb.io/settings">jpdb settings page</a> and
-                        scroll to the very bottom.
+                        To find your API token, visit the
+                        <a href="https://jpdb.io/settings" target="_blank">jpdb settings page</a> and scroll to the very
+                        bottom.
                     </div>
                     <setting-token class="setting" name="apiToken">API Token</setting-token>
                 </section>
@@ -175,6 +183,14 @@
                     <h1>Appearance</h1>
                     <setting-string class="setting" name="customWordCSS">Custom Word CSS</setting-string>
                     <setting-string class="setting" name="customPopupCSS">Custom Popup CSS</setting-string>
+                </section>
+                <section id="import-export">
+                    <h1>Import/Export</h1>
+                    <div>
+                        <button id="export">Export Settings</button>
+                        <button id="import">Import Settings</button>
+                        <input type="file" id="import-file-picker" accept="application/json" />
+                    </div>
                 </section>
             </div>
             <aside id="preview"></aside>

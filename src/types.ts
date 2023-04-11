@@ -2,35 +2,6 @@ export type Grade = 'nothing' | 'something' | 'hard' | 'good' | 'easy' | 'pass' 
 
 export type DeckId = number | 'blacklist' | 'never-forget' | 'forq';
 
-export type Keybind = { key: string; code: string; modifiers: string[] } | null;
-
-// Common types shared across both content and background scripts
-export type Config = {
-    apiToken: string | null;
-
-    miningDeckId: DeckId | null;
-    forqDeckId: DeckId | null;
-    blacklistDeckId: DeckId | null;
-    neverForgetDeckId: DeckId | null;
-
-    contextWidth: number;
-    forqOnMine: boolean;
-
-    customWordCSS: string;
-    customPopupCSS: string;
-
-    showPopupKey: Keybind;
-    addKey: Keybind;
-    dialogKey: Keybind;
-    blacklistKey: Keybind;
-    neverForgetKey: Keybind;
-    nothingKey: Keybind;
-    somethingKey: Keybind;
-    hardKey: Keybind;
-    goodKey: Keybind;
-    easyKey: Keybind;
-};
-
 export type Ruby = {
     text: string | null;
     start: number;

@@ -1,4 +1,4 @@
-import { Keybind } from '../types.js';
+import { Keybind } from '../config.js';
 import { showError } from '../util.js';
 import { config, requestMine, requestReview, requestSetFlag } from './background_comms.js';
 import { Dialog } from './dialog.js';

@@ -35,7 +35,7 @@ type WrapCallback<Obj, Return> = (
     obj: Obj,
     resolve: (value: Return | PromiseLike<Return>) => void,
     reject: (reason: any) => void,
-) => Return | PromiseLike<Return>;
+) => void;
 
 /** Convenient wrapper to turn object-with-callbacks APIs like IndexedDB or XMLHttpRequest into promises. */
 export function wrap<Obj, Return>(obj: Obj, func: WrapCallback<Obj, Return>): Promise<Return> {

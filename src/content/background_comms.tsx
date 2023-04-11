@@ -1,5 +1,6 @@
 import { BackgroundToContentMessage, ContentToBackgroundMessage, ResponseTypeMap } from '../message_types.js';
-import { Card, Config, Grade, Token } from '../types.js';
+import { Card, Grade, Token } from '../types.js';
+import { Config } from '../config.js';
 import { browser, CANCELED, CancellablePromise, CancellablePromiseHandle, showError } from '../util.js';
 import { Paragraph, reverseIndex } from './parse.js';
 import { Popup } from './popup.js';
@@ -7,7 +8,6 @@ import { Popup } from './popup.js';
 // Background script communication
 
 export let config: Config;
-export let defaultConfig: Config;
 
 const waitingPromises = new Map<number, CancellablePromiseHandle<unknown>>();
 let nextSeq = 0;
@@ -68,8 +68,8 @@ export function requestReview(card: Card, rating: Grade) {
     return post({ type: 'review', rating, vid: card.vid, sid: card.sid });
 }
 
-export function requestUpdateConfig(changes: Partial<Config>) {
-    return post({ type: 'updateConfig', config: changes });
+export function requestUpdateConfig() {
+    return post({ type: 'updateConfig' });
 }
 
 export const port = browser.runtime.connect();
@@ -117,7 +117,6 @@ port.onMessage.addListener((message: BackgroundToContentMessage, port) => {
         case 'updateConfig':
             {
                 config = message.config;
-                defaultConfig = message.defaultConfig;
                 Popup.get().updateStyle();
             }
             break;

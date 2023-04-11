@@ -1,5 +1,6 @@
 import { BackgroundToContentMessage, ContentToBackgroundMessage, ResponseTypeMap } from '../message_types.js';
-import { Config, DeckId, Grade, Token } from '../types.js';
+import { DeckId, Grade, Token } from '../types.js';
+import { loadConfig } from '../config.js';
 import { browser, isChrome, PromiseHandle, sleep } from '../util.js';
 import * as backend from './backend.js';
 
@@ -9,77 +10,7 @@ if (isChrome) {
     };
 }
 
-// Config management
-
-function localStorageGet(key: string, fallback: any = null): any {
-    const data = localStorage.getItem(key);
-    if (data === null) return fallback;
-
-    try {
-        return JSON.parse(data) ?? fallback;
-    } catch {
-        return fallback;
-    }
-}
-
-function localStorageSet(key: string, value: any) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
-
-const defaultConfig: Config = {
-    apiToken: null,
-    miningDeckId: null,
-    forqDeckId: 'forq',
-    blacklistDeckId: 'blacklist',
-    neverForgetDeckId: 'never-forget',
-    customWordCSS: '',
-    customPopupCSS: '',
-
-    contextWidth: 1,
-    forqOnMine: true,
-
-    showPopupKey: { key: 'Shift', code: 'ShiftLeft', modifiers: [] },
-    addKey: null,
-    dialogKey: null,
-    blacklistKey: null,
-    neverForgetKey: null,
-    nothingKey: null,
-    somethingKey: null,
-    hardKey: null,
-    goodKey: null,
-    easyKey: null,
-};
-
-const CURRENT_SCHEMA_VERSION = 1;
-let schemaVersion = localStorageGet('schemaVersion', 0);
-
-// schema migrations
-if (schemaVersion === 0) {
-    // Keybinds changed from string to object
-    for (const key of [
-        'showPopupKey',
-        'blacklistKey',
-        'neverForgetKey',
-        'nothingKey',
-        'somethingKey',
-        'hardKey',
-        'goodKey',
-        'easyKey',
-    ]) {
-        localStorage.removeItem(key);
-    }
-
-    localStorageSet('schemaVersion', (schemaVersion = 1));
-}
-
-// If the schema version is not the current version after applying all migrations, give up and refuse to load the config
-// Use the default as a fallback
-export const config =
-    schemaVersion === CURRENT_SCHEMA_VERSION
-        ? (Object.fromEntries(
-              Object.entries(defaultConfig).map(([key, defaultValue]) => [key, localStorageGet(key, defaultValue)]),
-          ) as Config)
-        : defaultConfig;
+export let config = loadConfig();
 
 // API call queue
 
@@ -243,24 +174,17 @@ const messageHandlers: {
     async updateConfig(request, port) {
         const oldCSS = config.customWordCSS;
 
-        Object.assign(config, request.config);
-        for (const [key, value] of Object.entries(config)) {
-            localStorageSet(key, value);
-        }
-        localStorageSet('schemaVersion', (schemaVersion = CURRENT_SCHEMA_VERSION));
+        config = loadConfig();
 
-        for (const port of ports) {
-            if (config.customWordCSS) {
+        if (config.customWordCSS !== oldCSS) {
+            for (const port of ports) {
                 browser.tabs.insertCSS(port.sender.tab.id, { code: config.customWordCSS, cssOrigin: 'author' });
-            }
-
-            if (oldCSS) {
                 browser.tabs.removeCSS(port.sender.tab.id, { code: oldCSS });
             }
         }
 
         postResponse(port, request, null);
-        broadcast({ type: 'updateConfig', config, defaultConfig });
+        broadcast({ type: 'updateConfig', config });
     },
 
     async parse(request, port) {
@@ -357,7 +281,7 @@ browser.runtime.onConnect.addListener(port => {
     port.onMessage.addListener(onPortMessage);
 
     // TODO filter to only url-relevant config options
-    post(port, { type: 'updateConfig', config, defaultConfig });
+    post(port, { type: 'updateConfig', config });
     browser.tabs.insertCSS(port.sender.tab.id, { code: config.customWordCSS, cssOrigin: 'author' });
 });
 
