@@ -323,15 +323,15 @@ export class Popup {
 
         if (writingMode.startsWith('horizontal')) {
             popupTop = topSpace < bottomSpace ? wordBottom : wordTop - popupHeight;
-            popupLeft = rightSpace > leftSpace ? wordLeft : wordRight - popupWidth;
+            popupLeft = rightSpace > leftSpace ? wordLeft : Math.max(wordLeft - popupWidth, 0);
+            popupLeft = Math.min(popupLeft, window.innerWidth - popupWidth);
         } else {
             popupTop = topSpace < bottomSpace ? wordTop : wordBottom - popupHeight;
-            popupLeft = leftSpace < rightSpace ? wordRight : wordLeft - popupWidth;
+            popupLeft = leftSpace < rightSpace ? wordRight : Math.max(wordRight - popupWidth, 0);
+            popupLeft = Math.min(popupLeft, window.innerWidth - popupWidth);
         }
 
         this.#outerStyle.transform = `translate(${popupLeft}px,${popupTop}px)`;
-
-        console.log(`(Width: ${window.innerWidth}, Height: ${window.innerHeight}) / (X: ${popupLeft}, Y: ${popupTop})`);
 
         this.fadeIn();
     }
