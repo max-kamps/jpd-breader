@@ -196,6 +196,10 @@ export class Popup {
         this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
         this.#outerStyle.opacity = '1';
         this.#outerStyle.visibility = 'visible';
+
+        setTimeout(() => {
+            this.cooldown = false;
+        }, 200);
     }
 
     fadeOut() {
