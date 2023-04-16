@@ -189,13 +189,19 @@ export class Popup {
     }
 
     fadeIn() {
-        this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
+        // Necessary because in settings page, config is undefined
+        if (config) {
+            if (!config.disableFadeAnimation) this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
+        }
         this.#outerStyle.opacity = '1';
         this.#outerStyle.visibility = 'visible';
     }
 
     fadeOut() {
-        this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
+        // Necessary because in settings page, config is undefined
+        if (config) {
+            if (!config.disableFadeAnimation) this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
+        }
         this.#outerStyle.opacity = '0';
         this.#outerStyle.visibility = 'hidden';
     }

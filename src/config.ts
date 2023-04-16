@@ -23,6 +23,8 @@ export type Config = {
 
     showPopupOnHover: boolean;
     touchscreenSupport: boolean;
+    disableFadeAnimation: boolean;
+
     showPopupKey: Keybind;
     addKey: Keybind;
     dialogKey: Keybind;
@@ -52,6 +54,8 @@ export const defaultConfig: Config = {
 
     showPopupOnHover: false,
     touchscreenSupport: false,
+    disableFadeAnimation: false,
+
     showPopupKey: { key: 'Shift', code: 'ShiftLeft', modifiers: [] },
     addKey: null,
     dialogKey: null,
