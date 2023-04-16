@@ -113,9 +113,12 @@ export class Popup {
 
     static #popup: Popup;
 
+    cooldown: boolean;
+
     static get(): Popup {
         if (!this.#popup) {
             this.#popup = new this();
+            this.#popup.cooldown = false;
             document.body.append(this.#popup.#element);
         }
 
@@ -189,15 +192,22 @@ export class Popup {
     }
 
     fadeIn() {
+        this.cooldown = true;
         this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
         this.#outerStyle.opacity = '1';
         this.#outerStyle.visibility = 'visible';
     }
 
     fadeOut() {
-        this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
-        this.#outerStyle.opacity = '0';
-        this.#outerStyle.visibility = 'hidden';
+        setTimeout(() => {
+            if (!this.cooldown) {
+                this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
+                this.#outerStyle.opacity = '0';
+                this.#outerStyle.visibility = 'hidden';
+            } else {
+                this.cooldown = false;
+            }
+        }, 200);
     }
 
     disablePointer() {
@@ -330,6 +340,8 @@ export class Popup {
         }
 
         this.#outerStyle.transform = `translate(${popupLeft}px,${popupTop}px)`;
+
+        console.log(`(Width: ${window.innerWidth}, Height: ${window.innerHeight}) / (X: ${popupLeft}, Y: ${popupTop})`);
 
         this.fadeIn();
     }

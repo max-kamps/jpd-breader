@@ -17,7 +17,7 @@ function matchesHotkey(
 
 window.addEventListener('keydown', async event => {
     try {
-        if (matchesHotkey(event, config.showPopupKey)) {
+        if (matchesHotkey(event, config.showPopupKey) && !config.showPopupHover) {
             event.preventDefault();
             popupKeyHeld = true;
 
@@ -106,7 +106,7 @@ document.addEventListener('mousedown', () => Popup.get().fadeOut());
 export function onWordHoverStart({ target, x, y }: MouseEvent) {
     if (target === null) return;
     currentHover = [target as JpdbWord, x, y];
-    if (popupKeyHeld) {
+    if (popupKeyHeld || config.showPopupHover) {
         Popup.get().showForWord(target as JpdbWord, x, y);
     }
 }
