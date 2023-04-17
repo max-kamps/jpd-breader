@@ -101,10 +101,11 @@ window.addEventListener('keyup', event => {
     }
 });
 
-document.addEventListener('mousedown', () => {
+document.addEventListener('mousedown', e => {
     if (config.touchscreenSupport) {
-        //  to prevent issues with simultaneous showing and hiding
-        if (currentHover == null) {
+        // to prevent issues with simultaneous showing and hiding
+        // and to allow clicking on the popup without making it disappear.
+        if (currentHover == null && !Popup.get().containsMouse(e)) {
             Popup.get().fadeOut();
         }
     } else {

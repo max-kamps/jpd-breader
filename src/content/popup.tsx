@@ -299,6 +299,16 @@ export class Popup {
         this.render();
     }
 
+    containsMouse(event: MouseEvent): boolean {
+        const targetElement = event.target as HTMLElement;
+
+        if (targetElement) {
+            return this.#element.contains(targetElement);
+        }
+
+        return false;
+    }
+
     showForWord(word: JpdbWord, mouseX = 0, mouseY = 0) {
         const data = (word as JpdbWord).jpdbData;
         assertNonNull(data);
