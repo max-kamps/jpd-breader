@@ -102,7 +102,14 @@ window.addEventListener('keyup', event => {
 });
 
 document.addEventListener('mousedown', () => {
-    if (!config.touchscreenSupport) Popup.get().fadeOut();
+    if (config.touchscreenSupport) {
+        //  to prevent issues with simultaneous showing and hiding
+        if (currentHover == null) {
+            Popup.get().fadeOut();
+        }
+    } else {
+        Popup.get().fadeOut();
+    }
 });
 
 export function onWordHoverStart({ target, x, y }: MouseEvent) {
@@ -115,5 +122,4 @@ export function onWordHoverStart({ target, x, y }: MouseEvent) {
 
 export function onWordHoverStop() {
     currentHover = null;
-    if (config.touchscreenSupport) Popup.get().fadeOut();
 }
