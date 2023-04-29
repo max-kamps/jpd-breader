@@ -50,6 +50,11 @@
             "matches": ["*://ja.wikipedia.org/*", "*://ja.m.wikipedia.org/*"],
             "js": ["integrations/wikipedia.js"],
             "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://www.youtube.com/*", "*://*.youtube.com/*"],
+            "js": ["integrations/youtubesubs.js"],
+            "css": ["content/word.css"]
         }
     ],
     "background": {
@@ -81,6 +86,8 @@
         "file:///*mokuro*.html",
         "*://ja.wikipedia.org/*",
         "*://app.readwok.com/*",
-        "*://ja.m.wikipedia.org/*"
+        "*://ja.m.wikipedia.org/*",
+        "*://youtube.com/*",
+        "*://www.youtube.com/*"
     ]
 }
