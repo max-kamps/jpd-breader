@@ -52,8 +52,8 @@
             "css": ["content/word.css"]
         },
         {
-            "matches": ["*://www.youtube.com/*", "*://*.youtube.com/*"],
-            "js": ["integrations/youtubesubs.js"],
+            "matches": ["*://*.youtube.com/*"],
+            "js": ["integrations/youtube.js"],
             "css": ["content/word.css"]
         }
     ],
@@ -87,7 +87,6 @@
         "*://ja.wikipedia.org/*",
         "*://app.readwok.com/*",
         "*://ja.m.wikipedia.org/*",
-        "*://youtube.com/*",
-        "*://www.youtube.com/*"
+        "*://*.youtube.com/*"
     ]
 }
