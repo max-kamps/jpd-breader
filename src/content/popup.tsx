@@ -189,13 +189,19 @@ export class Popup {
     }
 
     fadeIn() {
-        this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
+        // Necessary because in settings page, config is undefined
+        if (config) {
+            if (!config.disableFadeAnimation) this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
+        }
         this.#outerStyle.opacity = '1';
         this.#outerStyle.visibility = 'visible';
     }
 
     fadeOut() {
-        this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
+        // Necessary because in settings page, config is undefined
+        if (config) {
+            if (!config.disableFadeAnimation) this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
+        }
         this.#outerStyle.opacity = '0';
         this.#outerStyle.visibility = 'hidden';
     }
@@ -293,6 +299,16 @@ export class Popup {
         this.render();
     }
 
+    containsMouse(event: MouseEvent): boolean {
+        const targetElement = event.target as HTMLElement;
+
+        if (targetElement) {
+            return this.#element.contains(targetElement);
+        }
+
+        return false;
+    }
+
     showForWord(word: JpdbWord, mouseX = 0, mouseY = 0) {
         const data = (word as JpdbWord).jpdbData;
         assertNonNull(data);
@@ -323,10 +339,12 @@ export class Popup {
 
         if (writingMode.startsWith('horizontal')) {
             popupTop = topSpace < bottomSpace ? wordBottom : wordTop - popupHeight;
-            popupLeft = rightSpace > leftSpace ? wordLeft : wordRight - popupWidth;
+            popupLeft = rightSpace > leftSpace ? wordLeft : Math.max(wordLeft - popupWidth, 0);
+            popupLeft = Math.min(popupLeft, window.innerWidth - popupWidth);
         } else {
             popupTop = topSpace < bottomSpace ? wordTop : wordBottom - popupHeight;
-            popupLeft = leftSpace < rightSpace ? wordRight : wordLeft - popupWidth;
+            popupLeft = leftSpace < rightSpace ? wordRight : Math.max(wordRight - popupWidth, 0);
+            popupLeft = Math.min(popupLeft, window.innerWidth - popupWidth);
         }
 
         this.#outerStyle.transform = `translate(${popupLeft}px,${popupTop}px)`;

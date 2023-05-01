@@ -17,7 +17,7 @@ function matchesHotkey(
 
 window.addEventListener('keydown', async event => {
     try {
-        if (matchesHotkey(event, config.showPopupKey)) {
+        if (matchesHotkey(event, config.showPopupKey) && !config.showPopupOnHover) {
             event.preventDefault();
             popupKeyHeld = true;
 
@@ -101,12 +101,22 @@ window.addEventListener('keyup', event => {
     }
 });
 
-document.addEventListener('mousedown', () => Popup.get().fadeOut());
+document.addEventListener('mousedown', e => {
+    if (config.touchscreenSupport) {
+        // to prevent issues with simultaneous showing and hiding
+        // and to allow clicking on the popup without making it disappear.
+        if (currentHover == null && !Popup.get().containsMouse(e)) {
+            Popup.get().fadeOut();
+        }
+    } else {
+        Popup.get().fadeOut();
+    }
+});
 
 export function onWordHoverStart({ target, x, y }: MouseEvent) {
     if (target === null) return;
     currentHover = [target as JpdbWord, x, y];
-    if (popupKeyHeld) {
+    if (popupKeyHeld || config.showPopupOnHover) {
         Popup.get().showForWord(target as JpdbWord, x, y);
     }
 }

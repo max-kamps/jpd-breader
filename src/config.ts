@@ -21,6 +21,10 @@ export type Config = {
     customWordCSS: string;
     customPopupCSS: string;
 
+    showPopupOnHover: boolean;
+    touchscreenSupport: boolean;
+    disableFadeAnimation: boolean;
+
     showPopupKey: Keybind;
     addKey: Keybind;
     dialogKey: Keybind;
@@ -47,6 +51,10 @@ export const defaultConfig: Config = {
 
     customWordCSS: '',
     customPopupCSS: '',
+
+    showPopupOnHover: false,
+    touchscreenSupport: false,
+    disableFadeAnimation: false,
 
     showPopupKey: { key: 'Shift', code: 'ShiftLeft', modifiers: [] },
     addKey: null,
