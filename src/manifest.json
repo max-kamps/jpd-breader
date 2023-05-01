@@ -55,6 +55,11 @@
             "matches": ["*://ja.wikipedia.org/*", "*://ja.m.wikipedia.org/*"],
             "js": ["integrations/wikipedia.js"],
             "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://*.youtube.com/*"],
+            "js": ["integrations/youtube.js"],
+            "css": ["content/word.css"]
         }
     ],
     "background": {
@@ -83,11 +88,12 @@
         "*://ttu-ebook.web.app/*",
         "*://anacreondjt.gitlab.io/texthooker.html",
         "*://learnjapanese.moe/texthooker.html",
-        "file:///*mokuro*.html",
-        "*://ja.wikipedia.org/*",
-        "*://app.readwok.com/*",
         "*://kamwithk.github.io/exSTATic/tracker.html",
         "*://renji-xd.github.io/texthooker-ui/",
-        "*://ja.m.wikipedia.org/*"
+        "file:///*mokuro*.html",
+        "*://ja.wikipedia.org/*",
+        "*://ja.m.wikipedia.org/*",
+        "*://app.readwok.com/*",
+        "*://*.youtube.com/*"
     ]
 }
