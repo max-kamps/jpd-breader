@@ -103,9 +103,60 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
         vocabulary: MapFieldTuple<typeof VOCAB_FIELDS, VocabFields>[];
     } = await response.json();
 
+    const ankiCards = [];
+    const query = data.vocabulary.map(vocab => `Expression:${vocab[3]} `).join(' OR ');
+    const ankiResp = await invokeAnki('findCards', 6, {
+        query,
+    });
+
+    const cardsInfo = (await invokeAnki('cardsInfo', 6, {
+        cards: ankiResp,
+    })) as any[];
+
+    console.log(ankiResp, cardsInfo);
+
     const cards: Card[] = data.vocabulary.map(vocab => {
         // NOTE: If you change these, make sure to change VOCAB_FIELDS too
         const [vid, sid, rid, spelling, reading, frequencyRank, meanings, cardState, pitchAccent] = vocab;
+        const cardInfo = cardsInfo.find(c => c.fields.Expression.value === spelling);
+        // 0=new, 1=learning, 2=review, 3=relearning
+        let ankiCardType: CardState = ['not-in-deck'];
+        if (cardInfo) {
+            switch (cardInfo.type) {
+                case 0:
+                    ankiCardType = ['new'];
+                    break;
+                case 1:
+                case 3:
+                    ankiCardType = ['learning'];
+                    break;
+                case 2:
+                    // mark cards as known that are due in x days
+                    if (cardInfo.interval > 180) {
+                        ankiCardType = ['known'];
+                    } else {
+                        ankiCardType = ['due'];
+                    }
+                    break;
+            }
+        }
+
+        // todo: add some kind of blocklist
+        if (frequencyRank && frequencyRank < 100) {
+            ankiCardType = ['blacklisted'];
+        }
+
+        const cs: CardState = cardState ?? ['not-in-deck'];
+        if (cardState) {
+            if (cs.indexOf('blacklisted') > -1) {
+                ankiCardType = ['blacklisted'];
+            }
+
+            if (cs.indexOf('never-forget') > -1) {
+                ankiCardType = ['never-forget'];
+            }
+        }
+
         return {
             vid,
             sid,
@@ -114,7 +165,7 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
             reading,
             frequencyRank,
             meanings,
-            state: cardState ?? ['not-in-deck'],
+            state: ankiCardType,
             pitchAccent: pitchAccent ?? [], // HACK not documented... in case it can be null, better safe than sorry
         };
     });
@@ -380,8 +431,54 @@ export async function getCardState(vid: number, sid: number): Response<CardState
     type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
     const data: { vocabulary_info: [MapFieldTuple<['card_state'], VocabFields> | null] } = await response.json();
 
+    console.log('data', data);
+
+    const ankiResp = (await invokeAnki('findCards', 6, {
+        query: 'Expression:愛情',
+    })) as any;
+
+    console.log('anki', ankiResp);
+
+    if (ankiResp && ankiResp.result) {
+        if (ankiResp.result.length > 0) {
+            return [['learning'], API_RATELIMIT];
+        } else {
+            return [['not-in-deck'], API_RATELIMIT];
+        }
+    }
+
     const vocabInfo = data.vocabulary_info[0];
     if (vocabInfo === null) throw Error(`Can't get state for word ${vid}/${sid}, word does not exist`);
 
     return [vocabInfo[0] ?? ['not-in-deck'], API_RATELIMIT];
+}
+
+function invokeAnki(action: any, version: any, params: any = {}) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.addEventListener('error', () => reject('failed to issue request'));
+        xhr.addEventListener('load', () => {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (Object.getOwnPropertyNames(response).length != 2) {
+                    throw 'response has an unexpected number of fields';
+                }
+                if (!response.hasOwnProperty('error')) {
+                    throw 'response is missing required error field';
+                }
+                if (!response.hasOwnProperty('result')) {
+                    throw 'response is missing required result field';
+                }
+                if (response.error) {
+                    throw response.error;
+                }
+                resolve(response.result);
+            } catch (e) {
+                reject(e);
+            }
+        });
+
+        xhr.open('POST', 'http://127.0.0.1:8765');
+        xhr.send(JSON.stringify({ action, version, params }));
+    });
 }
