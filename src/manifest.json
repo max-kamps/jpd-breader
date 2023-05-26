@@ -60,6 +60,11 @@
             "matches": ["*://*.youtube.com/*"],
             "js": ["integrations/youtube.js"],
             "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://itazuraneko.neocities.org/shousetu/*"],
+            "js": ["integrations/itazuraneko.js"],
+            "css": ["content/word.css"]
         }
     ],
     "background": {
