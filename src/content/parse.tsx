@@ -18,18 +18,18 @@ export type Fragment = {
  */
 export type Paragraph = Fragment[];
 
-export function displayCategory(element: Node): 'text' | 'ruby' | 'ruby-text' | 'inline' | 'block' | 'none' {
-    if (element instanceof Text) {
+export function displayCategory(node: Node): 'text' | 'ruby' | 'ruby-text' | 'inline' | 'block' | 'none' {
+    if (node instanceof Text || node instanceof CDATASection) {
         return 'text';
-    } else if (element instanceof Element) {
-        const display = getComputedStyle(element).display.split(/\s/g);
+    } else if (node instanceof Element) {
+        const display = getComputedStyle(node).display.split(/\s/g);
         if (display[0] === 'none') return 'none';
 
         // NOTE Workaround for Chrome not supporting multi-value display and display: ruby
-        if (element.tagName === 'RUBY') return 'ruby';
-        if (element.tagName === 'RP') return 'none';
-        if (element.tagName === 'RT') return 'ruby-text';
-        if (element.tagName === 'RB') return 'inline';
+        if (node.tagName === 'RUBY') return 'ruby';
+        if (node.tagName === 'RP') return 'none';
+        if (node.tagName === 'RT') return 'ruby-text';
+        if (node.tagName === 'RB') return 'inline';
 
         // Not sure how `inline list-item` or `list-item inline` should behave
         // These are roughly ordered by the frequency I expect them to show up
