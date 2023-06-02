@@ -127,6 +127,13 @@ button:active {
     border-width: 2px 0 0 0;
 }
 
+h2 {
+    font-size: 0.75em;
+    color: rgb(176, 176, 176);
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
 ol {
     margin: 0;
     padding: 0;

@@ -39,8 +39,14 @@ type AttributesForTag = {
     article: Regular;
     section: Regular;
     dialog: Regular;
+    h1: Regular;
+    h2: Regular;
+    h3: Regular;
+    h4: Regular;
+    h5: Regular;
+    h6: Regular;
 
-    ol: Regular;
+    ol: Regular & { start: number };
     li: Regular;
 
     template: Regular;

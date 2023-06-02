@@ -25,8 +25,20 @@ const POPUP_EXAMPLE_DATA: JpdbWordData = {
             reading: 'せってい',
             pitchAccent: ['LHHHH'],
             meanings: [
-                'establishment;  creation;  posing (a problem);  setting (movie, novel, etc.);  scene',
-                'options setting;  preference settings;  configuration;  setup',
+                {
+                    partOfSpeech: ['n', 'vs'],
+                    glosses: [
+                        'establishment',
+                        'creation',
+                        'posing (a problem)',
+                        'setting (movie, novel, etc.)',
+                        'scene',
+                    ],
+                },
+                {
+                    partOfSpeech: ['n', 'vs'],
+                    glosses: ['options setting', 'preference settings', 'configuration', 'setup'],
+                },
             ],
             state: ['locked', 'new'],
             frequencyRank: 2400,

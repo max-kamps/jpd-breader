@@ -3,6 +3,124 @@ import { config, requestMine, requestReview, requestSetFlag } from './background
 import { Dialog } from './dialog.js';
 import { getSentences, JpdbWord, JpdbWordData } from './word.js';
 
+const PARTS_OF_SPEECH: { [k: string]: string } = {
+    n: 'Noun', // JMDict: "noun (common) (futsuumeishi)"
+    // 'n-adv': '', // Not used in jpdb: n and adv separately. JMDict: "adverbial noun (fukushitekimeishi)"
+    // 'n-suf': '', // Not used in jpdb: n and suf separately. JMDict: "noun, used as a suffix"
+    // 'n-pref': '', // Not used in jpdb: n and pref separately. JMDict: "noun, used as a prefix"
+    // 'n-t': '', // Not used in jpdb. JMDict: "noun (temporal) (jisoumeishi)"
+    pn: 'Pronoun', // JMDict: "pronoun"
+
+    // 'n-pr': '', // JMDict: "proper noun"
+    name: 'Name', // Not from JMDict
+    'name-fem': 'Name (Feminine)', // Not from JMDict
+    'name-male': 'Name (Masculine)', // Not from JMDict
+    'name-surname': 'Surname', // Not from JMDict
+    'name-place': 'Place Name', // Not from JMDict
+
+    'adj-i': 'Adjective', // JMDict: "adjective (keiyoushi)"
+    // 'adj-ix': '', // Not used in jpdb: Only adj-i. JMDict: "adjective (keiyoushi) - yoi/ii class"
+    'adj-na': 'な-Adjective', // JMDict: "adjectival nouns or quasi-adjectives (keiyodoshi)"
+    'adj-no': 'の-Adjective', // JMDict: "nouns which may take the genitive case particle `no'"
+    'adj-pn': 'Adjectival', // JMDict: "pre-noun adjectival (rentaishi)"
+    // 'adj-t': '', // Not used in jpdb. JMDict: "`taru' adjective"
+    // 'adj-f': '', // Not used in jpdb. JMDict: "noun or verb acting prenominally"
+    // 'adj-kari': '', // JMDict: "`kari' adjective (archaic)"
+    // 'adj-ku': '', // JMDict: "`ku' adjective (archaic)"
+    // 'adj-shiku': '', // JMDict: "`shiku' adjective (archaic)"
+    // 'adj-nari': '', // JMDict: "archaic/formal form of na-adjective"
+
+    adv: 'Adverb', // JMDict: "adverb (fukushi)"
+    // 'adv-to': '', // Not used in jpdb. JMDict: "adverb taking the `to' particle"
+
+    aux: 'Auxiliary', // JMDict: "auxiliary"
+    'aux-v': 'Auxiliary Verb', // JMDict: "auxiliary verb"
+    'aux-adj': 'Auxiliary Adjective', // JMDict: "auxiliary adjective"
+    conj: 'Conjunction', // JMDict: "conjunction"
+    // 'cop-da': '',  // Not used in jpdb: cop instead. JMDict: "copula"
+    cop: 'Copula', // Not from JMDict.
+    ctr: 'Counter', // JMDict: "counter"
+    exp: 'Expression', // JMDict: "expressions (phrases, clauses, etc.)"
+    int: 'Interjection', // JMDict: "interjection (kandoushi)"
+    num: 'Numeric', // JMDict: "numeric'"
+    prt: 'Particle', // JMDict: "particle'"
+    pref: 'Prefix', // JMDict: "prefix'"
+    suf: 'Suffix', // JMDict: "suffix'"
+
+    vt: 'Transitive Verb', // JMDict: "transitive verb"
+    vi: 'Intransitive Verb', // JMDict: "intransitive verb"
+
+    v1: 'Ichidan Verb', // JMDict: "Ichidan verb"
+    'v1-s': 'Ichidan Verb (くれる Irregular)', // JMDict: "Ichidan verb - kureru special class"
+
+    v5: 'Godan Verb', // Not from JMDict
+    v5u: 'う Godan Verb', // JMDict: "Godan verb with `u' ending"
+    'v5u-s': 'う Godan Verb (Irregular)', // JMDict: "Godan verb with `u' ending (special class)"
+    v5k: 'く Godan Verb', // JMDict: "Godan verb with `ku' ending"
+    'v5k-s': 'く Godan Verb (いく/ゆく Irregular)', // JMDict: "Godan verb - Iku/Yuku special class"
+    v5g: 'ぐ Godan Verb', // JMDict: "Godan verb with `gu' ending"
+    v5s: 'す Godan Verb', // JMDict: "Godan verb with `su' ending"
+    v5t: 'つ Godan Verb', // JMDict: "Godan verb with `tsu' ending"
+    v5n: 'ぬ Godan Verb', // JMDict: "Godan verb with `nu' ending"
+    v5b: 'ぶ Godan Verb', // JMDict: "Godan verb with `bu' ending"
+    v5m: 'む Godan Verb', // JMDict: "Godan verb with `mu' ending"
+    v5r: 'る Godan Verb', // JMDict: "Godan verb with `ru' ending"
+    'v5r-i': 'る Godan Verb (Irregular)', // JMDict: "Godan verb with `ru' ending (irregular verb)"
+    v5aru: 'る Godan Verb (-ある Irregular)', // JMDict: "Godan verb - -aru special class"
+    // 'v5uru': '', // JMDict: "Godan verb - Uru old class verb (old form of Eru)"
+
+    vk: 'Irregular Verb (くる)', // JMDict: "Kuru verb - special class"
+    // vn: '', // Not used in jpdb. JMDict: "irregular nu verb"
+    // vr: '', // Not used in jpdb. JMDict: "irregular ru verb, plain form ends with -ri"
+    // va: '', // Not from JMDict?
+
+    vs: 'する Verb', // JMDict: "noun or participle which takes the aux. verb suru"
+    // 'vs-c': // JMDict: "su verb - precursor to the modern suru"
+    // 'vz': // JMDict: "Ichidan verb - zuru verb (alternative form of -jiru verbs)"
+    // 'vs-s': // Not used in jpdb. JMDict: "suru verb - special class"
+    // 'vs-i': // JMDict: "suru verb - irregular"
+
+    // 'iv': '',  // Not used in jpdb. JMDict: "irregular verb"
+    // 'v-unspec': 'verb unspecified',
+
+    v2: 'Nidan Verb (Archaic)', // Not from JMDict?
+    // 'v2a-s': '', // Not used in jpdb. JMDict: "Nidan verb with 'u' ending (archaic)"
+    // 'v2k-k': '', // JMDict: "Nidan verb (upper class) with `ku' ending (archaic)"
+    // 'v2g-k': '', // JMDict: "Nidan verb (upper class) with `gu' ending (archaic)"
+    // 'v2t-k': '', // JMDict: "Nidan verb (upper class) with `tsu' ending (archaic)"
+    // 'v2d-k': '', // JMDict: "Nidan verb (upper class) with `dzu' ending (archaic)"
+    // 'v2h-k': '', // JMDict: "Nidan verb (upper class) with `hu/fu' ending (archaic)"
+    // 'v2b-k': '', // JMDict: "Nidan verb (upper class) with `bu' ending (archaic)"
+    // 'v2m-k': '', // JMDict: "Nidan verb (upper class) with `mu' ending (archaic)"
+    // 'v2y-k': '', // JMDict: "Nidan verb (upper class) with `yu' ending (archaic)"
+    // 'v2r-k': '', // JMDict: "Nidan verb (upper class) with `ru' ending (archaic)"
+    // 'v2k-s': '', // JMDict: "Nidan verb (lower class) with `ku' ending (archaic)"
+    // 'v2g-s': '', // JMDict: "Nidan verb (lower class) with `gu' ending (archaic)"
+    // 'v2s-s': '', // JMDict: "Nidan verb (lower class) with `su' ending (archaic)"
+    // 'v2z-s': '', // JMDict: "Nidan verb (lower class) with `zu' ending (archaic)"
+    // 'v2t-s': '', // JMDict: "Nidan verb (lower class) with `tsu' ending (archaic)"
+    // 'v2d-s': '', // JMDict: "Nidan verb (lower class) with `dzu' ending (archaic)"
+    // 'v2n-s': '', // JMDict: "Nidan verb (lower class) with `nu' ending (archaic)"
+    // 'v2h-s': '', // JMDict: "Nidan verb (lower class) with `hu/fu' ending (archaic)"
+    // 'v2b-s': '', // JMDict: "Nidan verb (lower class) with `bu' ending (archaic)"
+    // 'v2m-s': '', // JMDict: "Nidan verb (lower class) with `mu' ending (archaic)"
+    // 'v2y-s': '', // JMDict: "Nidan verb (lower class) with `yu' ending (archaic)"
+    // 'v2r-s': '', // JMDict: "Nidan verb (lower class) with `ru' ending (archaic)"
+    // 'v2w-s': '', // JMDict: "Nidan verb (lower class) with `u' ending and `we' conjugation (archaic)"
+
+    v4h: 'ふ Yodan Verb (Archaic)', // JMDict: "Yodan verb with `hu/fu' ending (archaic)"
+    // v4r: '', // JMDict: "Yodan verb with `ru' ending (archaic)"
+    // v4k: '', // JMDict: "Yodan verb with `ku' ending (archaic)"
+    // v4g: '', // JMDict: "Yodan verb with `gu' ending (archaic)"
+    // v4s: '', // JMDict: "Yodan verb with `su' ending (archaic)"
+    // v4t: '', // JMDict: "Yodan verb with `tsu' ending (archaic)"
+    // v4n: '', // JMDict: "Yodan verb with `nu' ending (archaic)"
+    // v4b: '', // JMDict: "Yodan verb with `bu' ending (archaic)"
+    // v4m: '', // JMDict: "Yodan verb with `mu' ending (archaic)"
+
+    // 'unc': '', // Not used in jpdb: empty list instead. JMDict: "unclassified"
+};
+
 function getClosestClientRect(elem: HTMLElement, x: number, y: number): DOMRect {
     const rects = elem.getClientRects();
 
@@ -225,6 +343,28 @@ export class Popup {
             card.reading,
         )}`;
 
+        // Group meanings by part of speech
+        const groupedMeanings: { partOfSpeech: string[]; glosses: string[][]; startIndex: number }[] = [];
+        let lastPOS: string[] = [];
+        for (const [index, meaning] of card.meanings.entries()) {
+            if (
+                // Same part of speech as previous meaning?
+                meaning.partOfSpeech.length == lastPOS.length &&
+                meaning.partOfSpeech.every((p, i) => p === lastPOS[i])
+            ) {
+                // Append to previous meaning group
+                groupedMeanings[groupedMeanings.length - 1].glosses.push(meaning.glosses);
+            } else {
+                // Create a new meaning group
+                groupedMeanings.push({
+                    partOfSpeech: meaning.partOfSpeech,
+                    glosses: [meaning.glosses],
+                    startIndex: index,
+                });
+                lastPOS = meaning.partOfSpeech;
+            }
+        }
+
         this.#vocabSection.replaceChildren(
             <div id='header'>
                 <a lang='ja' href={url} target='_blank'>
@@ -241,11 +381,18 @@ export class Popup {
                 <span class='freq'>{card.frequencyRank ? `Top ${card.frequencyRank}` : ''}</span>
                 {card.pitchAccent.map(pitch => renderPitch(card.reading, pitch))}
             </div>,
-            <ol>
-                {card.meanings.map(gloss => (
-                    <li>{gloss}</li>
-                ))}
-            </ol>,
+            ...groupedMeanings.flatMap(meanings => [
+                <h2>
+                    {meanings.partOfSpeech
+                        .map(pos => PARTS_OF_SPEECH[pos] ?? `(Unknown part of speech #${pos}, please report)`)
+                        .join(', ')}
+                </h2>,
+                <ol start={meanings.startIndex + 1}>
+                    {meanings.glosses.map(glosses => (
+                        <li>{glosses.join('; ')}</li>
+                    ))}
+                </ol>,
+            ]),
         );
 
         const blacklisted = card.state.includes('blacklisted');

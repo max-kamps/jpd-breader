@@ -52,12 +52,12 @@ type VocabFields = {
     card_level: number | null;
     card_state: ApiCardState;
     due_at: number;
-    alt_sids: any;
-    alt_spellings: any;
-    part_of_speech: any;
-    meanings_part_of_speech: any;
-    meanings_chunks: any;
-    pitch_accent: string[];
+    alt_sids: number[];
+    alt_spellings: string[];
+    part_of_speech: string[];
+    meanings_part_of_speech: string[][];
+    meanings_chunks: string[][];
+    pitch_accent: string[] | null; // Whether this can be null or not is undocumented
 };
 
 type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
@@ -71,7 +71,9 @@ const VOCAB_FIELDS = [
     'spelling',
     'reading',
     'frequency_rank',
-    'meanings',
+    'part_of_speech',
+    'meanings_chunks',
+    'meanings_part_of_speech',
     'card_state',
     'pitch_accent',
 ] as const;
@@ -107,7 +109,20 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
 
     const cards: Card[] = data.vocabulary.map(vocab => {
         // NOTE: If you change these, make sure to change VOCAB_FIELDS too
-        const [vid, sid, rid, spelling, reading, frequencyRank, meanings, cardState, pitchAccent] = vocab;
+        const [
+            vid,
+            sid,
+            rid,
+            spelling,
+            reading,
+            frequencyRank,
+            partOfSpeech,
+            meaningsChunks,
+            meaningsPartOfSpeech,
+            cardState,
+            pitchAccent,
+        ] = vocab;
+
         return {
             vid,
             sid,
@@ -115,7 +130,8 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
             spelling,
             reading,
             frequencyRank,
-            meanings,
+            partOfSpeech,
+            meanings: meaningsChunks.map((glosses, i) => ({ glosses, partOfSpeech: meaningsPartOfSpeech[i] })),
             state: cardState ?? ['not-in-deck'],
             pitchAccent: pitchAccent ?? [], // HACK not documented... in case it can be null, better safe than sorry
         };
