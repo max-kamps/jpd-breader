@@ -29,12 +29,8 @@ type JpdbError = {
 
 type TokenFields = {
     vocabulary_index: number;
-    position_utf8: number;
-    position_utf16: number;
-    position_utf32: number;
-    length_utf8: number;
-    length_utf16: number;
-    length_utf32: number;
+    position: number;
+    length: number;
     furigana: null | (string | [string, string])[];
 };
 
@@ -56,13 +52,18 @@ type VocabFields = {
     card_level: number | null;
     card_state: ApiCardState;
     due_at: number;
+    alt_sids: any;
+    alt_spellings: any;
+    part_of_speech: any;
+    meanings_part_of_speech: any;
+    meanings_chunks: any;
     pitch_accent: string[];
 };
 
 type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
 
-// NOTE: If you change these, make sure to change the .map calls in _parse too
-const TOKEN_FIELDS = ['vocabulary_index', 'position_utf16', 'length_utf16', 'furigana'] as const;
+// NOTE: If you change these, make sure to change the .map calls down below in the parse function too
+const TOKEN_FIELDS = ['vocabulary_index', 'position', 'length', 'furigana'] as const;
 const VOCAB_FIELDS = [
     'vid',
     'sid',
@@ -84,8 +85,9 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
             Accept: 'application/json',
         },
         body: JSON.stringify({
-            // HACK work around jpdb API bug
-            text: text.map(string => string + ' ○○'),
+            text,
+            // furigana: [[position, length reading], ...] // TODO pass furigana to parse endpoint
+            position_length_encoding: 'utf16',
             token_fields: TOKEN_FIELDS,
             vocabulary_fields: VOCAB_FIELDS,
         }),
@@ -120,15 +122,14 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
     });
 
     const tokens: Token[][] = data.tokens.map(tokens =>
-        // HACK remove the ○○ we added earlier to avoid jpdb bugs
-        tokens.slice(0, -1).map(token => {
+        tokens.map(token => {
             // This is type-safe, but not... variable name safe :/
             // NOTE: If you change these, make sure to change TOKEN_FIELDS too
-            const [vocabularyIndex, positionUtf16, lengthUtf16, furigana] = token;
+            const [vocabularyIndex, position, length, furigana] = token;
 
             const card = cards[vocabularyIndex];
 
-            let offset = positionUtf16;
+            let offset = position;
             const rubies =
                 furigana === null
                     ? []
@@ -147,9 +148,9 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
 
             return {
                 card,
-                start: positionUtf16,
-                end: positionUtf16 + lengthUtf16,
-                length: lengthUtf16,
+                start: position,
+                end: position + length,
+                length: length,
                 rubies,
             };
         }),
