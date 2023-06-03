@@ -239,7 +239,8 @@ class SettingString extends SettingElement {
     }
 }
 
-const modifiers = ['Control', 'Alt', 'AltGraph', 'Meta', 'Shift'];
+const MODIFIERS = ['Control', 'Alt', 'AltGraph', 'Meta', 'Shift'];
+const MOUSE_BUTTONS = ['Left Mouse Button', 'Middle Mouse Button', 'Right Mouse Button'];
 function keybindToString(bind: Keybind) {
     return bind === null ? 'None' : `${bind.key} (${[...bind.modifiers, bind.code].join('+')})`;
 }
@@ -251,7 +252,14 @@ class SettingKeybind extends SettingElement {
 
     renderInputElem(name: string): HTMLButtonElement {
         return (
-            <button part='input' name={name} onclick={this.chooseKey.bind(this)}>
+            <button
+                part='input'
+                name={name}
+                onmousedown={event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.chooseKey();
+                }}>
                 Loading...
             </button>
         ) as HTMLButtonElement;
@@ -259,9 +267,12 @@ class SettingKeybind extends SettingElement {
 
     chooseKey() {
         if (SettingKeybind.active) {
+            // If there's currently another SettingKeybind waiting for input, stop it
             const [other, listener] = SettingKeybind.active;
             other.input.innerText = keybindToString(other.#value);
             document.removeEventListener('keydown', listener);
+            document.removeEventListener('keyup', listener);
+            document.removeEventListener('mousedown', listener);
 
             if (other === this) {
                 SettingKeybind.active = undefined;
@@ -269,47 +280,39 @@ class SettingKeybind extends SettingElement {
             }
         }
 
-        const keydownListener = (event: KeyboardEvent) => {
-            if (!modifiers.includes(event.key)) {
-                SettingKeybind.active = undefined;
+        const keyListener = (event: KeyboardEvent | MouseEvent) => {
+            event.preventDefault();
+            event.stopPropagation();
 
-                this.#value =
-                    event.code === 'Escape'
-                        ? null
-                        : {
-                              key: event.key,
-                              code: event.code,
-                              modifiers: modifiers.filter(name => event.getModifierState(name)),
-                          };
-
-                this.input.innerText = keybindToString(this.#value);
-                markUnsavedChanges();
-                this.valueChanged();
-                event.preventDefault();
-                document.removeEventListener('keydown', keydownListener);
-                document.removeEventListener('keyup', keyupListener);
+            // We ignore the keydown event for modifiers, and only register them on keyup.
+            // This allows pressing and holding modifiers before pressing the main hotkey.
+            if (event.type === 'keydown' && MODIFIERS.includes((event as KeyboardEvent).key)) {
+                return;
             }
-        };
 
-        const keyupListener = (event: KeyboardEvent) => {
-            SettingKeybind.active = undefined;
-            this.#value = {
-                key: event.key,
-                code: event.code,
-                modifiers: modifiers.filter(name => event.key !== name && event.getModifierState(name)),
-            };
+            // .code: Layout-independent key identifier (usually equal to whatever that key means in qwerty)
+            // .key: Key character in the current layout (respecting modifiers like shift or altgr)
+            // .button: Mouse button number
+            const code = event instanceof KeyboardEvent ? event.code : `Mouse${event.button}`;
+            const key = event instanceof KeyboardEvent ? event.key : MOUSE_BUTTONS[event.button] ?? code;
+            const modifiers = MODIFIERS.filter(name => event.getModifierState(name));
+
+            this.#value = code === 'Escape' ? null : { key, code, modifiers };
             this.input.innerText = keybindToString(this.#value);
             markUnsavedChanges();
             this.valueChanged();
-            event.preventDefault();
-            document.removeEventListener('keydown', keydownListener);
-            document.removeEventListener('keyup', keyupListener);
+            SettingKeybind.active = undefined;
+
+            document.removeEventListener('keydown', keyListener);
+            document.removeEventListener('keyup', keyListener);
+            document.removeEventListener('mousedown', keyListener);
         };
 
         this.input.innerText = 'Press a key, click to cancel';
-        document.addEventListener('keydown', keydownListener);
-        document.addEventListener('keyup', keyupListener);
-        SettingKeybind.active = [this, keydownListener];
+        document.addEventListener('keydown', keyListener);
+        document.addEventListener('keyup', keyListener);
+        document.addEventListener('mousedown', keyListener);
+        SettingKeybind.active = [this, keyListener];
     }
 
     get value(): Keybind {

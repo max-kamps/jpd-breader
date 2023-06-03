@@ -2,12 +2,13 @@
 
 -   Change to a more useful version numbering scheme
 -   Rename plugin to jpd-breader to avoid confusing people on the Discord
+-   Show new part of speech information in the word popup
 -   Add support for showing popup without hotkey (thanks @xyaman)
+-   Allow mouse buttons to be chosen as hotkeys
 -   Add experimental mobile support, not yet documented (thanks @xyaman)
 -   Add exSTATIc integration (thanks @asayake-b5)
 -   Add renji-xd integration (thanks @asayake-b5)
 -   Add YouTube subtitle integration (thanks @xyaman)
--   Show new part of speech information in the word popup
 -   Bugfixes:
     -   Fix errors with selection parsing on certain webpages
 
