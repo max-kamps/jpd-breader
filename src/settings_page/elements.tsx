@@ -330,20 +330,9 @@ export function defineCustomElements() {
     customElements.define('setting-number', SettingNumber);
     customElements.define('setting-boolean', SettingBoolean);
     customElements.define('setting-token', SettingToken);
-    customElements.define('setting-deckid', SettingDeckId);
+    customElements.define('setting-deck-id', SettingDeckId);
     customElements.define('setting-string', SettingString);
     customElements.define('setting-keybind', SettingKeybind);
-
-    // await Promise.allSettled(
-    //     [
-    //         'setting-number',
-    //         'setting-boolean',
-    //         'setting-token',
-    //         'setting-deckid',
-    //         'setting-string',
-    //         'setting-keybind',
-    //     ].map(name => customElements.whenDefined(name)),
-    // );
 
     document.body.classList.add('ready');
 }

@@ -10,6 +10,24 @@
 		"files.trimFinalNewlines": true,
 		"files.insertFinalNewline": true,
 		"files.trimTrailingWhitespace": true,
-		"typescript.tsserver.experimental.enableProjectDiagnostics": true
+		"typescript.tsserver.experimental.enableProjectDiagnostics": true,
+    	"typescript.experimental.tsserver.web.enableProjectWideIntellisense": true,
+		"cSpell.words": [
+			// Jpdb names
+        	"Jpdb", "breader", "jpdbreader",
+			// Contributor names
+			"nico", "sdbversini", "xyaman", "asayake",
+			// Integration names
+			"texthooker", "texthookers", "epubs",
+			"ttsu", "renji", "Readwok", "Mokuro", "anacreondjt", "learnjapanese", "kamwithk",
+			// Technical terms
+			"ratelimit", "keybind", "keybinds", "AltGr",
+			"comms", "forq",
+			"LHHHH", // Settei pitch accent
+        	// Japanese terms
+			"furigana", "godan", "ichidan",
+			// Misc vocabulary
+			"unmark",
+		],
 	}
 }
