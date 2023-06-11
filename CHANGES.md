@@ -9,17 +9,15 @@
 -   Add exSTATIc integration (thanks @asayake-b5)
 -   Add renji-xd integration (thanks @asayake-b5)
 -   Add YouTube subtitle integration (thanks @xyaman)
+-   Add exprimental mobile support
+-   Add a button to parse the whole page in the reader menu
+-   Add a button to select text when parsing wesites through the reader menu (useful on mobile)
 -   Bugfixes:
     -   Fix errors with selection parsing on certain webpages
 
 ## Note
 
 This version adds support for the new jpdb API position encoding system. If you do not update to this version, your extension will stop working.
-
-# Version 0.0.11
-
--   Add exprimental mobile support
--   Add a button to parse the whole page in the reader menu
 
 # Version 0.0.10
 
