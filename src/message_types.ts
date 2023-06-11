@@ -11,7 +11,8 @@ export type ContentToBackgroundMessage =
     | ParseRequest
     | SetFlagRequest
     | ReviewRequest
-    | MineRequest;
+    | MineRequest
+    | ParseSelectionRequest;
 
 export type BackgroundToContentMessage =
     | UpdateConfigCommand
@@ -29,6 +30,7 @@ export type ResponseTypeMap = Satisfies<
         review: NullResponse;
         mine: NullResponse;
         cancel: never;
+        parseSelection: NullResponse;
     },
     Record<ContentToBackgroundMessage['type'], BackgroundToContentMessage | never>
 >;
@@ -74,6 +76,11 @@ export type MineRequest = {
     sentence: string | null;
     translation: string | null;
     review: Grade;
+};
+
+export type ParseSelectionRequest = {
+    type: 'parseSelection';
+    seq: number;
 };
 
 type ResponseCommon = {

@@ -254,6 +254,12 @@ const messageHandlers: {
         postResponse(port, request, null);
         await broadcastNewWordState(request.vid, request.sid);
     },
+
+    async parseSelection(request, port) {
+        await insertCSSNoTab();
+        await browser.tabs.executeScript({ file: '/integrations/contextmenu.js' });
+        postResponse(port, request, null);
+    },
 };
 
 async function onPortMessage(message: ContentToBackgroundMessage, port: browser.runtime.Port) {
@@ -304,6 +310,13 @@ async function insertCSS(tabId: number) {
     // The custom styles should load after the default styles, so they can overwrite them
     await browser.tabs.insertCSS(tabId, { file: '/content/word.css', cssOrigin: 'author' });
     if (config.customWordCSS) await browser.tabs.insertCSS(tabId, { code: config.customWordCSS, cssOrigin: 'author' });
+}
+
+async function insertCSSNoTab() {
+    // We need to await here, because ordering is significant.
+    // The custom styles should load after the default styles, so they can overwrite them
+    await browser.tabs.insertCSS({ file: '/content/word.css', cssOrigin: 'author' });
+    if (config.customWordCSS) await browser.tabs.insertCSS({ code: config.customWordCSS, cssOrigin: 'author' });
 }
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {

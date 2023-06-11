@@ -138,6 +138,10 @@ declare namespace browser.tabs {
 
     function removeCSS(tabId: number, details: _RemoveStyleDetails): Promise<void>;
     function removeCSS(details: _RemoveStyleDetails): Promise<void>;
+    function query(
+        queryInfo: { active?: boolean; currentWindow?: boolean },
+        callback: (tabs: Tab[]) => void,
+    ): Promise<Tab[]>;
 }
 
 declare namespace browser.contextMenus {
