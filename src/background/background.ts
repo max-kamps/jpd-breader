@@ -299,7 +299,7 @@ const parseSelection = browser.contextMenus.create({
     contexts: ['selection'],
 });
 
-async function insertCSS(tabId: number) {
+async function insertCSS(tabId?: number) {
     // We need to await here, because ordering is significant.
     // The custom styles should load after the default styles, so they can overwrite them
     await browser.tabs.insertCSS(tabId, { file: '/content/word.css', cssOrigin: 'author' });

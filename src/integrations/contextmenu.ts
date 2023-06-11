@@ -1,8 +1,9 @@
 // @reader content-script
 
-import { createParseBatch, requestParse } from '../content/background_comms.js';
-import { applyTokens, displayCategory, Fragment, Paragraph } from '../content/parse.js';
-import { CANCELED, showError } from '../util.js';
+import { requestParse } from '../content/background_comms.js';
+import { displayCategory, Fragment, Paragraph } from '../content/parse.js';
+import { showError } from '../util.js';
+import { parseParagraphs } from './common.js';
 
 // Abandon hope all ye who enter here. This function has taken the life of many a coder.
 // If there is a(nother) bug in this, consider contacting the author directly ~hmry
@@ -216,19 +217,7 @@ try {
     }
 
     if (paragraphs.length > 0) {
-        const batch = createParseBatch(paragraphs);
-        const applied = batch.entries.map(({ paragraph, promise }) =>
-            promise
-                .then(tokens => {
-                    applyTokens(paragraph, tokens);
-                })
-                .catch(error => {
-                    if (error !== CANCELED) {
-                        showError(error);
-                    }
-                    throw error;
-                }),
-        );
+        const [batch, applied] = parseParagraphs(paragraphs);
 
         requestParse([batch]);
         await Promise.allSettled(applied);
