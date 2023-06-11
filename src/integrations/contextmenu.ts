@@ -1,8 +1,8 @@
 // @reader content-script
 
-import { createParseBatch, requestParse } from '../content/background_comms.js';
-import { applyTokens, displayCategory, Fragment, Paragraph } from '../content/parse.js';
-import { CANCELED, showError } from '../util.js';
+import { requestParse } from '../content/background_comms.js';
+import { displayCategory, Fragment, Paragraph } from '../content/parse.js';
+import { showError } from '../util.js';
 import { parseParagraphs } from './common.js';
 
 // Abandon hope all ye who enter here. This function has taken the life of many a coder.
