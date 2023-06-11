@@ -11,7 +11,7 @@
 -   Add YouTube subtitle integration (thanks @xyaman)
 -   Add exprimental mobile support
 -   Add a button to parse the whole page in the reader menu
--   Add a button to select text when parsing wesites through the reader menu (useful on mobile)
+-   Add a button to select text when parsing websites through the reader menu (useful on mobile)
 -   Bugfixes:
     -   Fix errors with selection parsing on certain webpages
 
