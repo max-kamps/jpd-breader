@@ -1,8 +1,8 @@
 // @reader content-script
 
-import { createParseBatch, ParseBatch, requestParse } from '../content/background_comms.js';
-import { applyTokens, Fragment } from '../content/parse.js';
-import { CANCELED, showError } from '../util.js';
+import { ParseBatch, requestParse } from '../content/background_comms.js';
+import { Fragment } from '../content/parse.js';
+import { showError } from '../util.js';
 import { parseParagraphs, visibleObserver } from './common.js';
 
 try {
