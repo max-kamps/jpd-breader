@@ -133,7 +133,7 @@ declare namespace browser.tabs {
     function executeScript(tabId: number, details: _ExecuteScriptDetails): Promise<any[]>;
     function executeScript(details: _ExecuteScriptDetails): Promise<any[]>;
 
-    function insertCSS(tabId: number, details: _InsertStyleDetails): Promise<void>;
+    function insertCSS(tabId: number | undefined, details: _InsertStyleDetails): Promise<void>;
     function insertCSS(details: _InsertStyleDetails): Promise<void>;
 
     function removeCSS(tabId: number, details: _RemoveStyleDetails): Promise<void>;

@@ -256,7 +256,7 @@ const messageHandlers: {
     },
 
     async parseSelection(request, port) {
-        await insertCSSNoTab();
+        await insertCSS();
         await browser.tabs.executeScript({ file: '/integrations/contextmenu.js' });
         postResponse(port, request, null);
     },
@@ -305,18 +305,11 @@ const parseSelection = browser.contextMenus.create({
     contexts: ['selection'],
 });
 
-async function insertCSS(tabId: number) {
+async function insertCSS(tabId?: number) {
     // We need to await here, because ordering is significant.
     // The custom styles should load after the default styles, so they can overwrite them
     await browser.tabs.insertCSS(tabId, { file: '/content/word.css', cssOrigin: 'author' });
     if (config.customWordCSS) await browser.tabs.insertCSS(tabId, { code: config.customWordCSS, cssOrigin: 'author' });
-}
-
-async function insertCSSNoTab() {
-    // We need to await here, because ordering is significant.
-    // The custom styles should load after the default styles, so they can overwrite them
-    await browser.tabs.insertCSS({ file: '/content/word.css', cssOrigin: 'author' });
-    if (config.customWordCSS) await browser.tabs.insertCSS({ code: config.customWordCSS, cssOrigin: 'author' });
 }
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
