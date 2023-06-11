@@ -254,12 +254,6 @@ const messageHandlers: {
         postResponse(port, request, null);
         await broadcastNewWordState(request.vid, request.sid);
     },
-
-    async parseSelection(request, port) {
-        await insertCSS();
-        await browser.tabs.executeScript({ file: '/integrations/contextmenu.js' });
-        postResponse(port, request, null);
-    },
 };
 
 async function onPortMessage(message: ContentToBackgroundMessage, port: browser.runtime.Port) {

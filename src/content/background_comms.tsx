@@ -72,10 +72,6 @@ export function requestUpdateConfig() {
     return post({ type: 'updateConfig' });
 }
 
-export function requestParseSelection() {
-    return post({ type: 'parseSelection' });
-}
-
 export const port = browser.runtime.connect();
 port.onDisconnect.addListener(() => {
     console.error('disconnect:', port);
