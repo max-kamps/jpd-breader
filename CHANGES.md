@@ -16,6 +16,11 @@
 
 This version adds support for the new jpdb API position encoding system. If you do not update to this version, your extension will stop working.
 
+# Version 0.0.11
+
+-   Add exprimental mobile support
+-   Add a button to parse the whole page in the reader menu
+
 # Version 0.0.10
 
 -   Added functionality to import and export settings
