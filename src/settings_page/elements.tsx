@@ -33,7 +33,7 @@ export class SettingElement extends HTMLElement {
         ) as HTMLButtonElement;
 
         const shadow = this.attachShadow({ mode: 'open' });
-        shadow.append(label, this.input, this.reset);
+        shadow.append(<link rel='stylesheet' href='../common.css' />, label, this.input, this.reset);
     }
 
     renderInputElem(_name: string): HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement {

@@ -1,0 +1,100 @@
+:root {
+    --border-radius: 5px;
+}
+
+/* TODO allow users to force a color theme
+
+JS code for forcing dark:  [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.deleteMedium('(prefers-color-scheme: dark)')
+JS code for forcing light: [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.addMedium('never')
+*/
+
+:root {
+    --color-input-background: #e4e4e4;
+    --color-input-border: #3c3d3d;
+    --color-button-border: #0a9994;
+    --color-link: var(--color-button-border);
+    --color-background: #f0f0f0;
+    --color-text: #000;
+    --filter-more-contrast: brightness(85%) saturate(140%);
+    --filter-brighter: brightness(105%) saturate(90%);
+    --filter-darker: brightness(85%) saturate(115%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-input-background: #333;
+        --color-input-border: #cedadc;
+        --color-button-border: #1fbab5;
+        --color-link: var(--color-button-border);
+        --color-background: #222;
+        --color-text: #fff;
+        --filter-more-contrast: brightness(120%) saturate(80%);
+        --filter-brighter: brightness(115%) saturate(85%);
+        --filter-darker: brightness(85%) saturate(115%);
+    }
+}
+
+body {
+    font-family: 'Noto Sans CJK JP', 'Noto Sans CJK', 'Noto Sans', sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+a {
+    color: var(--color-link);
+}
+
+a:visited {
+    color: var(--color-link);
+}
+
+a.button {
+    text-align: center;
+}
+
+a.button::after {
+    content: ' ↗';
+}
+
+input[type='text'],
+input[type='number'],
+textarea {
+    color: var(--color-text);
+    background-color: var(--color-input-background);
+    border: 2px solid var(--color-input-border);
+    border-radius: var(--border-radius);
+    padding: 4px 8px;
+}
+
+input[type='checkbox'] {
+    accent-color: var(--color-button-border);
+    height: 1.25rem;
+}
+
+button,
+a.button,
+input[type='submit'] {
+    color: var(--color-text);
+    background-color: var(--color-input-background);
+    border: 2px solid var(--color-button-border);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+
+button:disabled {
+    filter: saturate(20%);
+    opacity: 45%;
+}
+
+button:enabled:hover,
+a.button:hover,
+input[type='submit']:hover {
+    filter: var(--filter-brighter);
+}
+
+button:enabled:active,
+a.button:active,
+input[type='submit']:active {
+    filter: var(--filter-darker);
+}

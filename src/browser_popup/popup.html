@@ -2,17 +2,26 @@
 <html>
     <head>
         <meta charset="utf-8" />
+        <link rel="stylesheet" href="../common.css" />
         <style>
             body {
+                min-width: min-content;
+            }
+            article {
                 display: flex;
                 flex-direction: column;
+                gap: 0.5em;
+                min-width: 20em;
+                max-width: 100%;
+                align-items: stretch;
             }
         </style>
     </head>
-
     <body>
-        <a id="settings-link" target="_blank" href="../settings_page/settings.html">Settings</a>
-        <br />
+        <article>
+            <a id="settings-link" class="button" target="_blank" href="../settings_page/settings.html">Settings</a>
+            <span>Parse currently open tabs:</span>
+        </article>
         <script type="module" src="popup.js"></script>
     </body>
 </html>

@@ -27,6 +27,11 @@ type AnyChildren = {
 type Regular = CommonAttributes & AnyChildren;
 
 type AttributesForTag = {
+    link: {
+        rel: string;
+        href: string;
+    };
+
     style: { [k: string]: never };
 
     span: Regular;
