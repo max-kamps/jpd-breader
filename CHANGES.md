@@ -1,6 +1,7 @@
 # Version 11.0
 
 -   Show new part of speech information in the word popup
+-   Limit popup height, make it scrollable
 -   Allow mouse buttons to be chosen as hotkeys
 -   Add support for showing popup without hotkey (thanks @xyaman)
 -   Add experimental mobile support (thanks @xyaman and @Calonca)
