@@ -73,6 +73,8 @@ type AttributesForTag = {
     textarea: {
         name?: string;
         disabled?: boolean;
+        rows?: number | string;
+        cols?: number | string;
     } & Regular;
 
     slot: {

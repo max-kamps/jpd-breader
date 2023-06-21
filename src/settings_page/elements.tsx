@@ -222,6 +222,7 @@ class SettingString extends SettingElement {
             <textarea
                 part='input'
                 name={name}
+                rows={8}
                 oninput={() => {
                     this.valueChanged();
                     markUnsavedChanges();
@@ -236,6 +237,13 @@ class SettingString extends SettingElement {
     set value(newValue: string) {
         this.input.value = newValue;
         this.valueChanged();
+    }
+
+    valueChanged(): void {
+        super.valueChanged();
+
+        // Resize to fit all rows
+        this.input.rows = this.input.value.split(/\n/g).length;
     }
 }
 
