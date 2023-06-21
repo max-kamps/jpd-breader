@@ -266,8 +266,8 @@ export class Popup {
             <style>{`@import url("${browser.runtime.getURL('/content/popup.css')}");`}</style>,
             (this.#customStyle = <style></style>),
             <article lang='ja'>
-                {(this.#mineButtons = <section class='mine-buttons'></section>)}
-                <section class='mine-buttons'>
+                {(this.#mineButtons = <section id='mine-buttons'></section>)}
+                <section id='review-buttons'>
                     Review:
                     <button
                         class='nothing'
