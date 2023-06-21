@@ -268,7 +268,6 @@ export class Popup {
             <article lang='ja'>
                 {(this.#mineButtons = <section id='mine-buttons'></section>)}
                 <section id='review-buttons'>
-                    Review:
                     <button
                         class='nothing'
                         onclick={
@@ -399,7 +398,6 @@ export class Popup {
         const neverForget = card.state.includes('never-forget');
 
         this.#mineButtons.replaceChildren(
-            'Mine:',
             <button
                 class='add'
                 onclick={

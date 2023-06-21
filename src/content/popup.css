@@ -1,12 +1,37 @@
-#modal-wrapper {
-    position: fixed;
-    inset: 0;
-    z-index: 2147483647;
+article {
+    --border-radius: 5px;
+}
 
-    background-color: rgba(127, 127, 127, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* TODO allow users to force a color theme
+
+JS code for forcing dark:  [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.deleteMedium('(prefers-color-scheme: dark)')
+JS code for forcing light: [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.addMedium('never')
+*/
+
+article {
+    --color-input-background: #e4e4e4;
+    --color-input-border: #3c3d3d;
+    --color-button-border: #0a9994;
+    --color-link: var(--color-button-border);
+    --color-background: #f0f0f0e0;
+    --color-text: #000;
+    --filter-more-contrast: brightness(85%) saturate(140%);
+    --filter-brighter: brightness(105%) saturate(90%);
+    --filter-darker: brightness(85%) saturate(115%);
+}
+
+@media (prefers-color-scheme: dark) {
+    article {
+        --color-input-background: #33333399;
+        --color-input-border: #cedadc;
+        --color-button-border: #1fbab5;
+        --color-link: var(--color-button-border);
+        --color-background: #222222e0;
+        --color-text: #fff;
+        --filter-more-contrast: brightness(120%) saturate(80%);
+        --filter-brighter: brightness(115%) saturate(85%);
+        --filter-darker: brightness(85%) saturate(115%);
+    }
 }
 
 article {
@@ -14,17 +39,20 @@ article {
     flex-direction: column;
     gap: 0.25em;
 
-    max-width: 24em;
     margin: 0;
     padding: 1em;
+    max-width: 24em;
+    max-height: 40vh;
+    overflow-y: auto;
 
-    font-size: 16px;
-    color: white;
-    background-color: rgba(36, 36, 36, 0.9);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+    background-color: var(--color-background);
+    border-radius: var(--border-radius);
+    color: var(--color-text);
+    font-family: 'Noto Sans CJK JP', 'Noto Sans CJK', 'Noto Sans', sans-serif;
 }
 
-.mine-buttons {
+#mine-buttons,
+#review-buttons {
     display: flex;
     flex-direction: row;
     gap: 0.25em;
@@ -38,8 +66,8 @@ button {
     margin: 0;
     border: none;
 
-    font-size: 10px;
-    border-radius: 5px;
+    font-size: 85%;
+    border-radius: var(--border-radius);
     color: white;
     text-align: center;
     text-decoration: none;
@@ -71,7 +99,7 @@ button:active {
 }
 
 #header a {
-    color: white;
+    color: var(--color-text);
 }
 
 #header a::after {
