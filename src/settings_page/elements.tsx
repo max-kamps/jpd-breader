@@ -295,7 +295,7 @@ class SettingKeybind extends SettingElement {
             // .button: Mouse button number
             const code = event instanceof KeyboardEvent ? event.code : `Mouse${event.button}`;
             const key = event instanceof KeyboardEvent ? event.key : MOUSE_BUTTONS[event.button] ?? code;
-            const modifiers = MODIFIERS.filter(name => event.getModifierState(name));
+            const modifiers = MODIFIERS.filter(name => name !== key && event.getModifierState(name));
 
             this.#value = code === 'Escape' ? null : { key, code, modifiers };
             this.input.innerText = keybindToString(this.#value);
