@@ -1,18 +1,20 @@
 # Version 11.0
 
--   Add support for showing popup without hotkey (thanks @xyaman)
+-   Show new part of speech information in the word popup
 -   Allow mouse buttons to be chosen as hotkeys
+-   Add support for showing popup without hotkey (thanks @xyaman)
 -   Add experimental mobile support (thanks @xyaman and @Calonca)
 -   Add a button to parse the whole page in the reader menu (thanks @Calonca)
 -   Add a button to select text when parsing websites through the reader menu (useful on mobile) (thanks @Calonca)
--   Show new part of speech information in the word popup
 -   Add exSTATIc integration (thanks @asayake-b5)
 -   Add renji-xd integration (thanks @asayake-b5)
 -   Add YouTube subtitle integration (thanks @xyaman)
+-   Completely redone visual design
 -   Change to a more useful version numbering scheme
 -   Rename plugin to jpd-breader to avoid confusing people on the Discord
 -   Bugfixes:
-    -   Fix errors with selection parsing on certain webpages
+    -   Fixed selection parsing not working on certain webpages due to "Reached end of document" errors
+    -   Fixed parsing not working on certain webpages due to "Unknown display value -webkit-box" errors
 
 ## Breaking changes
 
