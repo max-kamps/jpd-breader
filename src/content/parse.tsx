@@ -37,6 +37,7 @@ export function displayCategory(node: Node): 'text' | 'ruby' | 'ruby-text' | 'in
         if (display.some(x => x.startsWith('inline'))) return 'inline';
 
         if (display[0] === 'flex') return 'block';
+        if (display[0] === '-webkit-box') return 'block'; // Old name of flex? Still used on Google Search for some reason.
         if (display[0] === 'grid') return 'block';
         if (display[0].startsWith('table')) return 'block';
         if (display[0].startsWith('flow')) return 'block';
@@ -50,7 +51,9 @@ export function displayCategory(node: Node): 'text' | 'ruby' | 'ruby-text' | 'in
         if (display[0] === 'contents') return 'inline';
         if (display[0] === 'run-in') return 'block';
 
-        throw new Error(`Unknown display value ${display.join(' ')}`);
+        alert(`Warning: Unknown display value ${display.join(' ')}, please report this!`);
+
+        return 'none';
     } else {
         return 'none';
     }
