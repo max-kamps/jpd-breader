@@ -1,19 +1,22 @@
 # Version 11.0
 
--   Change to a more useful version numbering scheme
--   Rename plugin to jpd-breader to avoid confusing people on the Discord
--   Show new part of speech information in the word popup
 -   Add support for showing popup without hotkey (thanks @xyaman)
 -   Allow mouse buttons to be chosen as hotkeys
--   Add experimental mobile support, not yet documented (thanks @xyaman)
+-   Add experimental mobile support (thanks @xyaman and @Calonca)
+-   Add a button to parse the whole page in the reader menu (thanks @Calonca)
+-   Add a button to select text when parsing websites through the reader menu (useful on mobile) (thanks @Calonca)
+-   Show new part of speech information in the word popup
 -   Add exSTATIc integration (thanks @asayake-b5)
 -   Add renji-xd integration (thanks @asayake-b5)
 -   Add YouTube subtitle integration (thanks @xyaman)
--   Add exprimental mobile support
--   Add a button to parse the whole page in the reader menu
--   Add a button to select text when parsing websites through the reader menu (useful on mobile)
+-   Change to a more useful version numbering scheme
+-   Rename plugin to jpd-breader to avoid confusing people on the Discord
 -   Bugfixes:
     -   Fix errors with selection parsing on certain webpages
+
+## Breaking changes
+
+Popup CSS: `.mine-buttons` has now been split into `#mine-buttons` and `#review-buttons`
 
 ## Note
 
