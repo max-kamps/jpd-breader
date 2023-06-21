@@ -1,37 +1,15 @@
-article {
-    --border-radius: 5px;
+::-webkit-scrollbar {
+    width: 8px;
 }
 
-/* TODO allow users to force a color theme
-
-JS code for forcing dark:  [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.deleteMedium('(prefers-color-scheme: dark)')
-JS code for forcing light: [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.addMedium('never')
-*/
-
-article {
-    --color-input-background: #e4e4e4;
-    --color-input-border: #3c3d3d;
-    --color-button-border: #0a9994;
-    --color-link: var(--color-button-border);
-    --color-background: #f0f0f0e0;
-    --color-text: #000;
-    --filter-more-contrast: brightness(85%) saturate(140%);
-    --filter-brighter: brightness(105%) saturate(90%);
-    --filter-darker: brightness(85%) saturate(115%);
+::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-    article {
-        --color-input-background: #33333399;
-        --color-input-border: #cedadc;
-        --color-button-border: #1fbab5;
-        --color-link: var(--color-button-border);
-        --color-background: #222222e0;
-        --color-text: #fff;
-        --filter-more-contrast: brightness(120%) saturate(80%);
-        --filter-brighter: brightness(115%) saturate(85%);
-        --filter-darker: brightness(85%) saturate(115%);
-    }
+::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5);
+    border-radius: 4px;
+    border: transparent;
 }
 
 article {
@@ -48,7 +26,9 @@ article {
     background-color: var(--color-background);
     border-radius: var(--border-radius);
     color: var(--color-text);
-    font-family: 'Noto Sans CJK JP', 'Noto Sans CJK', 'Noto Sans', sans-serif;
+    font-family: var(--font-family);
+
+    box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5);
 }
 
 #mine-buttons,
@@ -157,7 +137,7 @@ button:active {
 
 h2 {
     font-size: 0.75em;
-    color: rgb(176, 176, 176);
+    filter: var(--less-contrast-filter);
     margin-top: 1em;
     margin-bottom: 0.5em;
 }

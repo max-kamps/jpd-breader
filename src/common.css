@@ -1,41 +1,5 @@
-:root {
-    --border-radius: 5px;
-}
-
-/* TODO allow users to force a color theme
-
-JS code for forcing dark:  [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.deleteMedium('(prefers-color-scheme: dark)')
-JS code for forcing light: [...[...document.styleSheets].find(m => m.href.endsWith('/common.css')).rules].find(r => r.media && [...r.media].includes('(prefers-color-scheme: dark)')).media.addMedium('never')
-*/
-
-:root {
-    --color-input-background: #e4e4e4;
-    --color-input-border: #3c3d3d;
-    --color-button-border: #0a9994;
-    --color-link: var(--color-button-border);
-    --color-background: #f0f0f0;
-    --color-text: #000;
-    --filter-more-contrast: brightness(85%) saturate(140%);
-    --filter-brighter: brightness(105%) saturate(90%);
-    --filter-darker: brightness(85%) saturate(115%);
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --color-input-background: #333;
-        --color-input-border: #cedadc;
-        --color-button-border: #1fbab5;
-        --color-link: var(--color-button-border);
-        --color-background: #222;
-        --color-text: #fff;
-        --filter-more-contrast: brightness(120%) saturate(80%);
-        --filter-brighter: brightness(115%) saturate(85%);
-        --filter-darker: brightness(85%) saturate(115%);
-    }
-}
-
 body {
-    font-family: 'Noto Sans CJK JP', 'Noto Sans CJK', 'Noto Sans', sans-serif;
+    font-family: var(--font-family);
     background-color: var(--color-background);
     color: var(--color-text);
 }

@@ -77,7 +77,8 @@
         "content/popup.css",
         "content/word.js",
         "content/word.css",
-        "util.js"
+        "util.js",
+        "themes.css"
     ],
     "permissions": [
         "tabs",
