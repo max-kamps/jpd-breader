@@ -1,4 +1,4 @@
-import { assertNonNull, browser, jsxCreateElement, nonNull } from '../util.js';
+import { browser, clamp, jsxCreateElement, nonNull } from '../util.js';
 import { config, requestMine, requestReview, requestSetFlag } from './background_comms.js';
 import { Dialog } from './dialog.js';
 import { getSentences, JpdbWord, JpdbWordData } from './word.js';
@@ -457,8 +457,7 @@ export class Popup {
     }
 
     showForWord(word: JpdbWord, mouseX = 0, mouseY = 0) {
-        const data = (word as JpdbWord).jpdbData;
-        assertNonNull(data);
+        const data = word.jpdbData;
 
         this.setData(data); // Because we need the dimensions of the popup with the new data
 
@@ -469,8 +468,8 @@ export class Popup {
         const wordRight = window.scrollX + bbox.right;
         const wordBottom = window.scrollY + bbox.bottom;
 
-        // window.inner... technically contains the scrollbar, so it's not 100% accurate
-        // Good enough though
+        // window.innerWidth/Height technically contains the scrollbar, so it's not 100% accurate
+        // Good enough for this though
         const leftSpace = bbox.left;
         const topSpace = bbox.top;
         const rightSpace = window.innerWidth - bbox.right;
@@ -479,19 +478,22 @@ export class Popup {
         const popupHeight = this.#element.offsetHeight;
         const popupWidth = this.#element.offsetWidth;
 
+        const minLeft = window.scrollX;
+        const maxLeft = window.scrollX + window.innerWidth - popupWidth;
+        const minTop = window.scrollY;
+        const maxTop = window.scrollY + window.innerHeight - popupHeight;
+
         let popupLeft: number;
         let popupTop: number;
 
         const { writingMode } = getComputedStyle(word);
 
         if (writingMode.startsWith('horizontal')) {
-            popupTop = topSpace < bottomSpace ? wordBottom : wordTop - popupHeight;
-            popupLeft = rightSpace > leftSpace ? wordLeft : Math.max(wordLeft - popupWidth, 0);
-            popupLeft = Math.min(popupLeft, window.innerWidth - popupWidth);
+            popupTop = clamp(bottomSpace > topSpace ? wordBottom : wordTop - popupHeight, minTop, maxTop);
+            popupLeft = clamp(rightSpace > leftSpace ? wordLeft : wordRight - popupWidth, minLeft, maxLeft);
         } else {
-            popupTop = topSpace < bottomSpace ? wordTop : wordBottom - popupHeight;
-            popupLeft = leftSpace < rightSpace ? wordRight : Math.max(wordRight - popupWidth, 0);
-            popupLeft = Math.min(popupLeft, window.innerWidth - popupWidth);
+            popupTop = clamp(bottomSpace > topSpace ? wordTop : wordBottom - popupHeight, minTop, maxTop);
+            popupLeft = clamp(rightSpace > leftSpace ? wordRight : wordLeft - popupWidth, minLeft, maxLeft);
         }
 
         this.#outerStyle.transform = `translate(${popupLeft}px,${popupTop}px)`;
