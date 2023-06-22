@@ -1,3 +1,9 @@
+# Version 12.0
+
+-   Add Bunpro integration (thanks @7w1)
+-   Bugfixes:
+    -   Fixed popups being positioned incorrectly, especially on pages with vertical text
+
 # Version 11.0
 
 -   Show new part of speech information in the word popup

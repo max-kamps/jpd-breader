@@ -62,10 +62,12 @@ Words will be colored according to their state (known, new, etc.) Hover over wor
 
 The following pages require special support for technical reasons, and will therefore start parsing immediately:
 -  [ッツ Reader](https://github.com/ttu-ttu/ebook-reader): [reader.ttsu.app](https://reader.ttsu.app), [ttu-ebook.web.app](https://ttu-ebook.web.app)
--  Texthooker pages: [anacreondjt.gitlab.io/texthooker.html](https://anacreondjt.gitlab.io/texthooker.html), [learnjapanese.moe/texthooker.html](https://learnjapanese.moe/texthooker.html)
--  [Mokuro](https://github.com/kha-white/mokuro): File path must contain `mokuro`, and file name must end in `.html`
--  Wikipedia: [ja.wikipedia.org](https://ja.wikipedia.org/)
+-  Texthooker pages: [anacreondjt texthooker](https://anacreondjt.gitlab.io/texthooker.html), [learnjapanese.moe texthooker](https://learnjapanese.moe/texthooker.html), [exSTATic tracker](https://kamwithk.github.io/exSTATic/tracker.html), [renji-xd texthooker](https://renji-xd.github.io/texthooker-ui/)
+-  [Mokuro](https://github.com/kha-white/mokuro): **IMPORTANT**: File path must contain `mokuro`, and file name must end in `.html`. I would suggest putting all your mokuro files in a folder named `mokuro`.
 -  Readwok: [app.readwok.com](https://app.readwok.com/)
+-  [Wikipedia](https://ja.wikipedia.org/)
+-  [YouTube subtitles](https://youtube.com/)
+-  [Bunpro](https://bunpro.jp)
 
 
 ## Can I customize the colors? Can I customize which furigana get shown?
