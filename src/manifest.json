@@ -60,6 +60,11 @@
             "matches": ["*://*.youtube.com/*"],
             "js": ["integrations/youtube.js"],
             "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://bunpro.jp/*"],
+            "js": ["integrations/bunpro.js"],
+            "css": ["content/word.css"]
         }
     ],
     "background": {
@@ -95,6 +100,7 @@
         "*://ja.wikipedia.org/*",
         "*://ja.m.wikipedia.org/*",
         "*://app.readwok.com/*",
-        "*://*.youtube.com/*"
+        "*://*.youtube.com/*",
+        "*://bunpro.jp/*"
     ]
 }
