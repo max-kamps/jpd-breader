@@ -85,11 +85,8 @@
         "util.js",
         "themes.css"
     ],
-    "permissions": [
-        "tabs",
-        "activeTab",
-        "contextMenus",
-        "*://jpdb.io/*",
+    "permissions": ["tabs", "activeTab", "contextMenus", "https://jpdb.io/*"],
+    "optional_permissions": [
         "*://reader.ttsu.app/*",
         "*://ttu-ebook.web.app/*",
         "*://anacreondjt.gitlab.io/texthooker.html",
