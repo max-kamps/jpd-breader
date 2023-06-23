@@ -1,3 +1,8 @@
+# Version 12.1
+
+-   Bugfixes:
+    -   Fix permission-related bugs that stop custom CSS from working in Chrome, among other things
+
 # Version 12.0
 
 -   Add Bunpro integration (thanks @7w1)
