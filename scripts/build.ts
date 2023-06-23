@@ -1,17 +1,15 @@
-import console from 'node:console';
-import process from 'node:process';
 import { createWriteStream } from 'node:fs';
-import fs from 'node:fs/promises';
+import * as fs from 'node:fs/promises';
 import archiver from 'archiver';
-import * as eslint from './common/eslint.mjs';
-import * as typescript from './common/typescript.mjs';
-import * as prettier from './common/prettier.mjs';
-import * as resources from './common/resources.mjs';
+import * as eslint from './common/eslint.js';
+import * as typescript from './common/typescript.js';
+import * as prettier from './common/prettier.js';
+import * as resources from './common/resources.js';
 
-const packageJson = JSON.parse(await fs.readFile('package.json'));
+const packageJson = JSON.parse(await fs.readFile('package.json', 'utf-8'));
 const packageName = packageJson.name;
 const packageVersion = packageJson.version;
-const manifestVersion = JSON.parse(await fs.readFile('src/manifest.json')).version;
+const manifestVersion = JSON.parse(await fs.readFile('src/manifest.json', 'utf-8')).version;
 
 if (packageVersion !== manifestVersion) {
     console.log(`Versions in package.json (${packageVersion}) and src/manifest.json (${manifestVersion}) don't match!`);
@@ -56,12 +54,12 @@ console.log('Creating source zip...');
 const sourceArchiveStream = createWriteStream(`dist/source_${packageVersion}.zip`);
 const sourceArchive = archiver('zip', { zlib: { level: 9 } });
 sourceArchive.pipe(sourceArchiveStream);
-sourceArchive.directory('dev_types');
-sourceArchive.directory('scripts');
-sourceArchive.directory('src');
+sourceArchive.directory('dev_types', 'dev_types');
+sourceArchive.directory('scripts', 'scripts');
+sourceArchive.directory('src', 'src');
 sourceArchive.glob('*.md');
 sourceArchive.glob('package*.json');
 sourceArchive.glob('.*ignore');
 sourceArchive.glob('.*rc.json');
-sourceArchive.file('tsconfig.json');
+sourceArchive.file('tsconfig.json', { name: 'tsconfig.json' });
 sourceArchive.finalize();

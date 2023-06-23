@@ -1,4 +1,4 @@
-import console from 'node:console';
+import * as console from 'console';
 import { ESLint } from 'eslint';
 
 export async function lint() {

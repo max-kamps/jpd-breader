@@ -1,8 +1,6 @@
-import console from 'node:console';
-import process from 'node:process';
-import * as eslint from './common/eslint.mjs';
-import * as typescript from './common/typescript.mjs';
-import * as prettier from './common/prettier.mjs';
+import * as eslint from './common/eslint.js';
+import * as typescript from './common/typescript.js';
+import * as prettier from './common/prettier.js';
 
 console.log('Checking types...');
 const typeErrors = await typescript.typecheck();

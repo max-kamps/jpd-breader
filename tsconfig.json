@@ -1,5 +1,4 @@
 {
-    "exclude": ["transformers/**/*"],
     "compilerOptions": {
         "strictNullChecks": true,
         "noImplicitReturns": true,
@@ -13,9 +12,8 @@
         "jsx": "react",
         "jsxFactory": "jsxCreateElement",
         "jsxFragmentFactory": "NOT_IMPLEMENTED",
-        "typeRoots": ["dev_types"],
+        "typeRoots": ["dev_types", "./node_modules/@types"],
         "outDir": "build",
-        "rootDir": "src",
-        "plugins": [{ "transform": "./transformers/module_to_content_script.ts", "after": true, "raw": true }]
+        "rootDirs": ["src", "scripts"]
     }
 }

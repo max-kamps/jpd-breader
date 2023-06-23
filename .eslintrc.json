@@ -2,14 +2,17 @@
     "root": true,
     "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
     "parser": "@typescript-eslint/parser",
-    "parserOptions": { "project": ["./tsconfig.json"] },
+    "parserOptions": {
+        "project": ["./tsconfig.json"]
+    },
     "plugins": ["@typescript-eslint"],
     "rules": {
         "no-debugger": "off",
         "@typescript-eslint/no-unused-vars": [
             "warn",
             {
-                "argsIgnorePattern": "^_"
+                "argsIgnorePattern": "^_",
+                "destructuredArrayIgnorePattern": "^_"
             }
         ],
         "@typescript-eslint/no-explicit-any": "off",
