@@ -1,4 +1,5 @@
 {
+    "include": ["src/**/*", "dev_types/**/*"],
     "compilerOptions": {
         "strictNullChecks": true,
         "noImplicitReturns": true,
@@ -6,7 +7,6 @@
         "noImplicitAny": true,
         "target": "es2022",
         "module": "es2022",
-        "types": ["node"],
         "moduleResolution": "node16",
         "resolveJsonModule": true,
         "jsx": "react",
@@ -14,6 +14,6 @@
         "jsxFragmentFactory": "NOT_IMPLEMENTED",
         "typeRoots": ["dev_types", "./node_modules/@types"],
         "outDir": "build",
-        "rootDirs": ["src", "scripts"]
+        "rootDir": "src"
     }
 }

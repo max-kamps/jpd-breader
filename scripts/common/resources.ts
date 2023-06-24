@@ -15,7 +15,7 @@ async function* walkDirectory(directory: string): AsyncGenerator<string, undefin
 }
 
 function getDestPath(source: string) {
-    return path.join('build', path.relative('.', source));
+    return path.join('build', path.relative('src', source));
 }
 
 async function copyFile(source: string) {

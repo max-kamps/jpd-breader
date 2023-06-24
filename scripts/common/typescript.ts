@@ -49,9 +49,9 @@ function readConfig(configPath: string): [number, ts.ParsedCommandLine | null] {
     return [configResult.errors.length, configResult];
 }
 
-export async function typecheck(): Promise<number> {
+export async function typecheckConfig(configPath: string): Promise<number> {
     try {
-        const [configErrors, config] = readConfig('tsconfig.json');
+        const [configErrors, config] = readConfig(configPath);
         if (!config) {
             return configErrors;
         }
@@ -67,6 +67,10 @@ export async function typecheck(): Promise<number> {
         console.error(error);
         return 1;
     }
+}
+
+export async function typecheck(): Promise<number> {
+    return (await typecheckConfig('scripts/tsconfig.json')) + (await typecheckConfig('tsconfig.json'));
 }
 
 export async function compile(): Promise<boolean> {
