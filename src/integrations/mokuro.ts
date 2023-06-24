@@ -71,6 +71,33 @@ try {
     for (const page of document.querySelectorAll('#pagesContainer > div')) {
         visible.observe(page);
     }
+
+    let isCursorInsidePopup = false;
+
+    window.addEventListener(
+        'wheel',
+        e => {
+            if (isCursorInsidePopup) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        },
+        { capture: true },
+    );
+
+    document.addEventListener('mouseover', e => {
+        const popup = (e.target as HTMLElement)?.closest('#jpdb-popup');
+        if (popup) {
+            isCursorInsidePopup = true;
+        }
+    });
+
+    document.addEventListener('mouseout', e => {
+        const popup = (e.target as HTMLElement)?.closest('#jpdb-popup');
+        if (!popup) {
+            isCursorInsidePopup = false;
+        }
+    });
 } catch (error) {
     showError(error);
 }
