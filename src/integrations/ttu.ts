@@ -5,7 +5,7 @@ import { addedObserver, parseVisibleObserver } from './common.js';
 
 function shouldParse(node: Node): boolean {
     if (node instanceof HTMLElement) {
-        return !node.matches(`[data-ttu-spoiler-img]`);
+        return !node.matches('[data-ttu-spoiler-img]');
     } else {
         return true;
     }
@@ -23,6 +23,33 @@ try {
     added.observe(document.body, {
         subtree: true,
         childList: true,
+    });
+
+    let isCursorInsidePopup = false;
+
+    window.addEventListener(
+        'wheel',
+        e => {
+            if (isCursorInsidePopup) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        },
+        { capture: true },
+    );
+
+    document.addEventListener('mouseover', e => {
+        const popup = (e.target as HTMLElement)?.closest('#jpdb-popup');
+        if (popup) {
+            isCursorInsidePopup = true;
+        }
+    });
+
+    document.addEventListener('mouseout', e => {
+        const popup = (e.target as HTMLElement)?.closest('#jpdb-popup');
+        if (!popup) {
+            isCursorInsidePopup = false;
+        }
     });
 } catch (error) {
     showError(error);
