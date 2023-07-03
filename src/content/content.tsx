@@ -8,14 +8,12 @@ import { getSentences, JpdbWord } from './word.js';
 export let currentHover: [JpdbWord, number, number] | null = null;
 let popupKeyHeld = false;
 
-function matchesHotkey(
-    keyEvent: { key: string; code: string; getModifierState(key: string): boolean },
-    hotkey: Keybind,
-) {
-    return hotkey && keyEvent.code === hotkey.code && hotkey.modifiers.every(name => keyEvent.getModifierState(name));
+function matchesHotkey(event: KeyboardEvent | MouseEvent, hotkey: Keybind) {
+    const code = event instanceof KeyboardEvent ? event.code : `Mouse${event.button}`;
+    return hotkey && code === hotkey.code && hotkey.modifiers.every(name => event.getModifierState(name));
 }
 
-window.addEventListener('keydown', async event => {
+async function hotkeyListener(event: KeyboardEvent | MouseEvent) {
     try {
         if (matchesHotkey(event, config.showPopupKey) && !config.showPopupOnHover) {
             event.preventDefault();
@@ -29,24 +27,22 @@ window.addEventListener('keydown', async event => {
             }
         }
 
-        if (currentHover && matchesHotkey(event, config.addKey)) {
-            const word = currentHover[0];
-            await requestMine(
-                word.jpdbData.token.card,
-                config.forqOnMine,
-                getSentences(word.jpdbData, config.contextWidth).trim() || undefined,
-                undefined,
-            );
-        }
-
-        if (currentHover && matchesHotkey(event, config.dialogKey)) {
-            const word = currentHover[0];
-            Dialog.get().showForWord(word.jpdbData);
-        }
-
         if (currentHover) {
             const [word, x, y] = currentHover;
             const card = word.jpdbData.token.card;
+
+            if (matchesHotkey(event, config.addKey)) {
+                await requestMine(
+                    word.jpdbData.token.card,
+                    config.forqOnMine,
+                    getSentences(word.jpdbData, config.contextWidth).trim() || undefined,
+                    undefined,
+                );
+            }
+
+            if (matchesHotkey(event, config.dialogKey)) {
+                Dialog.get().showForWord(word.jpdbData);
+            }
 
             if (matchesHotkey(event, config.showPopupKey)) {
                 event.preventDefault();
@@ -91,15 +87,21 @@ window.addEventListener('keydown', async event => {
     } catch (error) {
         showError(error);
     }
-});
+}
 
-window.addEventListener('keyup', event => {
+window.addEventListener('keydown', hotkeyListener);
+window.addEventListener('mousedown', hotkeyListener);
+
+function hidePopupHotkeyListener(event: KeyboardEvent | MouseEvent) {
     if (matchesHotkey(event, config.showPopupKey)) {
         event.preventDefault();
         popupKeyHeld = false;
         Popup.get().enablePointer();
     }
-});
+}
+
+window.addEventListener('keyup', hidePopupHotkeyListener);
+window.addEventListener('mouseup', hidePopupHotkeyListener);
 
 document.addEventListener('mousedown', e => {
     if (config.touchscreenSupport) {

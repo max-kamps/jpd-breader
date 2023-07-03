@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
-    "name": "JPDB Browser Reader",
-    "version": "0.0.11",
+    "name": "JPDBreader",
+    "version": "12.1",
     "description": "JPDB parsing and mining in your browser",
     "icons": {
         "16": "icons/logo_16.png",
@@ -22,7 +22,7 @@
             "96": "icons/logo_96.png",
             "128": "icons/logo_128.png"
         },
-        "default_title": "JPDB Browser Reader",
+        "default_title": "JPDBreader",
         "default_popup": "browser_popup/popup.html"
     },
     "content_scripts": [
@@ -60,6 +60,11 @@
             "matches": ["*://*.youtube.com/*"],
             "js": ["integrations/youtube.js"],
             "css": ["content/word.css"]
+        },
+        {
+            "matches": ["*://bunpro.jp/*"],
+            "js": ["integrations/bunpro.js"],
+            "css": ["content/word.css"]
         }
     ],
     "background": {
@@ -77,13 +82,14 @@
         "content/popup.css",
         "content/word.js",
         "content/word.css",
-        "util.js"
+        "util.js",
+        "themes.css"
     ],
     "permissions": [
         "tabs",
         "activeTab",
         "contextMenus",
-        "*://jpdb.io/*",
+        "https://jpdb.io/*",
         "*://reader.ttsu.app/*",
         "*://ttu-ebook.web.app/*",
         "*://anacreondjt.gitlab.io/texthooker.html",
@@ -94,6 +100,7 @@
         "*://ja.wikipedia.org/*",
         "*://ja.m.wikipedia.org/*",
         "*://app.readwok.com/*",
-        "*://*.youtube.com/*"
+        "*://*.youtube.com/*",
+        "*://bunpro.jp/*"
     ]
 }

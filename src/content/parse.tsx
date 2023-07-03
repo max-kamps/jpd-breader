@@ -18,18 +18,18 @@ export type Fragment = {
  */
 export type Paragraph = Fragment[];
 
-export function displayCategory(element: Node): 'text' | 'ruby' | 'ruby-text' | 'inline' | 'block' | 'none' {
-    if (element instanceof Text) {
+export function displayCategory(node: Node): 'text' | 'ruby' | 'ruby-text' | 'inline' | 'block' | 'none' {
+    if (node instanceof Text || node instanceof CDATASection) {
         return 'text';
-    } else if (element instanceof Element) {
-        const display = getComputedStyle(element).display.split(/\s/g);
+    } else if (node instanceof Element) {
+        const display = getComputedStyle(node).display.split(/\s/g);
         if (display[0] === 'none') return 'none';
 
         // NOTE Workaround for Chrome not supporting multi-value display and display: ruby
-        if (element.tagName === 'RUBY') return 'ruby';
-        if (element.tagName === 'RP') return 'none';
-        if (element.tagName === 'RT') return 'ruby-text';
-        if (element.tagName === 'RB') return 'inline';
+        if (node.tagName === 'RUBY') return 'ruby';
+        if (node.tagName === 'RP') return 'none';
+        if (node.tagName === 'RT') return 'ruby-text';
+        if (node.tagName === 'RB') return 'inline';
 
         // Not sure how `inline list-item` or `list-item inline` should behave
         // These are roughly ordered by the frequency I expect them to show up
@@ -37,6 +37,7 @@ export function displayCategory(element: Node): 'text' | 'ruby' | 'ruby-text' | 
         if (display.some(x => x.startsWith('inline'))) return 'inline';
 
         if (display[0] === 'flex') return 'block';
+        if (display[0] === '-webkit-box') return 'block'; // Old name of flex? Still used on Google Search for some reason.
         if (display[0] === 'grid') return 'block';
         if (display[0].startsWith('table')) return 'block';
         if (display[0].startsWith('flow')) return 'block';
@@ -50,7 +51,9 @@ export function displayCategory(element: Node): 'text' | 'ruby' | 'ruby-text' | 
         if (display[0] === 'contents') return 'inline';
         if (display[0] === 'run-in') return 'block';
 
-        throw new Error(`Unknown display value ${display.join(' ')}`);
+        alert(`Warning: Unknown display value ${display.join(' ')}, please report this!`);
+
+        return 'none';
     } else {
         return 'none';
     }

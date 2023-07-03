@@ -51,6 +51,10 @@ export function sleep(timeMillis: number): Promise<void> {
     });
 }
 
+export function clamp(num: number, min: number, max: number) {
+    return Math.min(Math.max(num, min), max);
+}
+
 /** Read from an extension-relative file */
 export async function readExtFile(path: string): Promise<string> {
     try {

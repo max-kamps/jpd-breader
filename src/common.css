@@ -1,0 +1,64 @@
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+a {
+    color: var(--color-link);
+}
+
+a:visited {
+    color: var(--color-link);
+}
+
+a.button {
+    text-align: center;
+}
+
+a.button::after {
+    content: ' ↗';
+}
+
+input[type='text'],
+input[type='number'],
+textarea {
+    color: var(--color-text);
+    background-color: var(--color-input-background);
+    border: 2px solid var(--color-input-border);
+    border-radius: var(--border-radius);
+    padding: 4px 8px;
+}
+
+input[type='checkbox'] {
+    accent-color: var(--color-button-border);
+    height: 1.25rem;
+}
+
+button,
+a.button,
+input[type='submit'] {
+    color: var(--color-text);
+    background-color: var(--color-input-background);
+    border: 2px solid var(--color-button-border);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+}
+
+button:disabled {
+    filter: saturate(20%);
+    opacity: 45%;
+}
+
+button:enabled:hover,
+a.button:hover,
+input[type='submit']:hover {
+    filter: var(--filter-brighter);
+}
+
+button:enabled:active,
+a.button:active,
+input[type='submit']:active {
+    filter: var(--filter-darker);
+}

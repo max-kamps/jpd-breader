@@ -38,9 +38,17 @@ That's it, you are done. If this method does not work for you, you can try this 
 5.  In the file picker dialog, select the `.xpi` file
 6.  Continue with the [Initial Setup](#initial-setup) section
 
-### Mobile browsers (Firefox for Android, Kiwi Browser)
-Currently not supported. If you're feeling adventurous and want to try installing them on your own anyway, please report any issues you encounter here on GitHub.
-Your contributions will prove invaluable to supporting mobile browsers in the future.
+### Mobile browsers (Kiwi Browser)
+Experimental Support:
+Although the UI is not yet optimized for mobile usage, you can still make use of it.
+
+To Parse a Page:
+1. Click on the three dots located at the top right corner.
+2. From the menu that appears, select the extension to display the reader menu.
+3. Choose the option "Parse page" to initiate the parsing process.
+
+To show the popup on tap activate the "Show the popup on hover" and "Touchscreen support" settings.
+
 
 ## Initial Setup
 Open the settings page. You can find it by clicking on the reader icon (読) in the browser menu bar. It might be hidden behind the extension overflow menu, which looks like a little puzzle piece (🧩)
@@ -54,10 +62,12 @@ Words will be colored according to their state (known, new, etc.) Hover over wor
 
 The following pages require special support for technical reasons, and will therefore start parsing immediately:
 -  [ッツ Reader](https://github.com/ttu-ttu/ebook-reader): [reader.ttsu.app](https://reader.ttsu.app), [ttu-ebook.web.app](https://ttu-ebook.web.app)
--  Texthooker pages: [anacreondjt.gitlab.io/texthooker.html](https://anacreondjt.gitlab.io/texthooker.html), [learnjapanese.moe/texthooker.html](https://learnjapanese.moe/texthooker.html)
--  [Mokuro](https://github.com/kha-white/mokuro): File path must contain `mokuro`, and file name must end in `.html`
--  Wikipedia: [ja.wikipedia.org](https://ja.wikipedia.org/)
+-  Texthooker pages: [anacreondjt texthooker](https://anacreondjt.gitlab.io/texthooker.html), [learnjapanese.moe texthooker](https://learnjapanese.moe/texthooker.html), [exSTATic tracker](https://kamwithk.github.io/exSTATic/tracker.html), [renji-xd texthooker](https://renji-xd.github.io/texthooker-ui/)
+-  [Mokuro](https://github.com/kha-white/mokuro): **IMPORTANT**: File path must contain `mokuro`, and file name must end in `.html`. I would suggest putting all your mokuro files in a folder named `mokuro`.
 -  Readwok: [app.readwok.com](https://app.readwok.com/)
+-  [Wikipedia](https://ja.wikipedia.org/)
+-  [YouTube subtitles](https://youtube.com/)
+-  [Bunpro](https://bunpro.jp)
 
 
 ## Can I customize the colors? Can I customize which furigana get shown?

@@ -1,9 +1,9 @@
 // @reader content-script
 
-import { createParseBatch, ParseBatch, requestParse } from '../content/background_comms.js';
-import { applyTokens, Fragment } from '../content/parse.js';
-import { CANCELED, showError } from '../util.js';
-import { visibleObserver } from './common.js';
+import { ParseBatch, requestParse } from '../content/background_comms.js';
+import { Fragment } from '../content/parse.js';
+import { showError } from '../util.js';
+import { parseParagraphs, visibleObserver } from './common.js';
 
 try {
     const pendingBatches = new Map<HTMLElement, ParseBatch>();
@@ -40,19 +40,7 @@ try {
                     continue;
                 }
 
-                const batch = createParseBatch(paragraphs);
-                const applied = batch.entries.map(({ paragraph, promise }) =>
-                    promise
-                        .then(tokens => {
-                            applyTokens(paragraph, tokens);
-                        })
-                        .catch(error => {
-                            if (error !== CANCELED) {
-                                showError(error);
-                            }
-                            throw error;
-                        }),
-                );
+                const [batch, applied] = parseParagraphs(paragraphs);
 
                 Promise.all(applied)
                     .then(_ => visible.unobserve(page))

@@ -1,12 +1,15 @@
-#modal-wrapper {
-    position: fixed;
-    inset: 0;
-    z-index: 2147483647;
+::-webkit-scrollbar {
+    width: 8px;
+}
 
-    background-color: rgba(127, 127, 127, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5);
+    border-radius: 4px;
+    border: transparent;
 }
 
 article {
@@ -14,17 +17,22 @@ article {
     flex-direction: column;
     gap: 0.25em;
 
-    max-width: 24em;
     margin: 0;
     padding: 1em;
+    max-width: 24em;
+    max-height: 40vh;
+    overflow-y: auto;
 
-    font-size: 16px;
-    color: white;
-    background-color: rgba(36, 36, 36, 0.9);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+    background-color: var(--color-background);
+    border-radius: var(--border-radius);
+    color: var(--color-text);
+    font-family: var(--font-family);
+
+    box-shadow: 5px 5px 15px 0px rgba(0, 0, 0, 0.5);
 }
 
-.mine-buttons {
+#mine-buttons,
+#review-buttons {
     display: flex;
     flex-direction: row;
     gap: 0.25em;
@@ -38,8 +46,8 @@ button {
     margin: 0;
     border: none;
 
-    font-size: 10px;
-    border-radius: 5px;
+    font-size: 85%;
+    border-radius: var(--border-radius);
     color: white;
     text-align: center;
     text-decoration: none;
@@ -71,7 +79,7 @@ button:active {
 }
 
 #header a {
-    color: white;
+    color: var(--color-text);
 }
 
 #header a::after {
@@ -125,6 +133,13 @@ button:active {
 }
 .pitch .high-final {
     border-width: 2px 0 0 0;
+}
+
+h2 {
+    font-size: 0.75em;
+    filter: var(--less-contrast-filter);
+    margin-top: 1em;
+    margin-bottom: 0.5em;
 }
 
 ol {

@@ -140,19 +140,7 @@ export function parseVisibleObserver(filter: (node: Node) => boolean = () => tru
                     continue;
                 }
 
-                const batch = createParseBatch(paragraphs);
-                const applied = batch.entries.map(({ paragraph, promise }) =>
-                    promise
-                        .then(tokens => {
-                            applyTokens(paragraph, tokens);
-                        })
-                        .catch(error => {
-                            if (error !== CANCELED) {
-                                showError(error);
-                            }
-                            throw error;
-                        }),
-                );
+                const [batch, applied] = parseParagraphs(paragraphs);
 
                 Promise.all(applied)
                     .then(_ => visible.unobserve(element))
@@ -176,4 +164,22 @@ export function parseVisibleObserver(filter: (node: Node) => boolean = () => tru
     );
 
     return visible;
+}
+
+export function parseParagraphs(paragraphs: Paragraph[]): [ParseBatch, Promise<void>[]] {
+    const batch = createParseBatch(paragraphs);
+    const applied = batch.entries.map(({ paragraph, promise }) =>
+        promise
+            .then(tokens => {
+                applyTokens(paragraph, tokens);
+            })
+            .catch(error => {
+                if (error !== CANCELED) {
+                    showError(error);
+                }
+                throw error;
+            }),
+    );
+
+    return [batch, applied];
 }

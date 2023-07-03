@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import ts from 'typescript';
 import * as path from 'path';
 
 const printer = ts.createPrinter({
@@ -172,30 +172,29 @@ function createWrapper(sourceFile: ts.SourceFile, factory: ts.NodeFactory) {
     return factory.updateSourceFile(sourceFile, [asyncIife]);
 }
 
-export default function (_program: ts.Program, _pluginOptions: Record<string, never>) {
-    return (ctx: ts.TransformationContext) => {
-        return (sourceFile: ts.SourceFile) => {
-            const factory = ctx.factory;
+function isContentScript(sourceFile: ts.SourceFile) {
+    const fullText = sourceFile.getFullText();
+    const commentRanges = ts.getLeadingCommentRanges(fullText, sourceFile.pos);
 
-            function visitor(node: ts.Node): ts.Node {
+    const comments =
+        commentRanges?.map(r =>
+            fullText.slice(r.pos + 2, r.end - (r.kind === ts.SyntaxKind.SingleLineCommentTrivia ? 0 : 2)).trim(),
+        ) ?? [];
+
+    return comments.some(text => text === '@reader content-script');
+}
+
+export function rewriteImportsTransform(ctx: ts.TransformationContext) {
+    return (sourceFile: ts.SourceFile) => {
+        if (isContentScript(sourceFile)) {
+            function visitor(node: ts.Node) {
                 if (ts.isImportDeclaration(node)) {
-                    console.log('  Rewriting', printer.printNode(ts.EmitHint.Unspecified, node, sourceFile));
+                    console.log('  Rewrote', printer.printNode(ts.EmitHint.Unspecified, node, sourceFile));
 
-                    const importData = parseEsImport(sourceFile, factory, node);
+                    const importData = parseEsImport(sourceFile, ctx.factory, node);
 
-                    // console.log('    Module path:', importData.modulePath);
-                    // console.log('    Namespace name:', importData.namespace?.escapedText);
-                    // console.log(
-                    //     '    Property bindings:',
-                    //     importData.bindings
-                    //         .map(([name, prop]) =>
-                    //             prop ? `${prop.escapedText} as ${name.escapedText}` : name.escapedText,
-                    //         )
-                    //         .join(', '),
-                    // );
-
-                    const contentImport = createContentScriptImport(sourceFile, factory, importData);
-                    console.log('    ->', printer.printNode(ts.EmitHint.Unspecified, contentImport, sourceFile));
+                    const contentImport = createContentScriptImport(sourceFile, ctx.factory, importData);
+                    console.log('       to', printer.printNode(ts.EmitHint.Unspecified, contentImport, sourceFile));
 
                     return contentImport;
                 }
@@ -203,24 +202,29 @@ export default function (_program: ts.Program, _pluginOptions: Record<string, ne
                 return ts.visitEachChild(node, visitor, ctx);
             }
 
-            const fullText = sourceFile.getFullText();
-            const commentRanges = ts.getLeadingCommentRanges(fullText, sourceFile.pos);
+            console.log('[typescript] Transforming content script', sourceFile.fileName);
+            return createWrapper(ts.visitEachChild(sourceFile, visitor, ctx), ctx.factory);
+        }
 
-            const comments =
-                commentRanges?.map(r =>
-                    fullText
-                        .slice(r.pos + 2, r.end - (r.kind === ts.SyntaxKind.SingleLineCommentTrivia ? 0 : 2))
-                        .trim(),
-                ) ?? [];
+        return sourceFile;
+    };
+}
 
-            const isContentScript = comments.some(text => text === '@reader content-script');
+export function removeAnnoyingDefaultExportTransform(ctx: ts.TransformationContext) {
+    return (sourceFile: ts.SourceFile) => {
+        if (isContentScript(sourceFile)) {
+            function visitor(node: ts.Node) {
+                if (ts.isExportDeclaration(node)) {
+                    return;
+                }
 
-            if (isContentScript) {
-                console.log('Transforming content script', sourceFile.fileName);
-                return createWrapper(ts.visitEachChild(sourceFile, visitor, ctx), ctx.factory);
+                return ts.visitEachChild(node, visitor, ctx);
             }
 
-            return sourceFile;
-        };
+            console.log('[typescript] Transforming content script', sourceFile.fileName);
+            return ts.visitEachChild(sourceFile, visitor, ctx);
+        }
+
+        return sourceFile;
     };
 }

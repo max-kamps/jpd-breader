@@ -1,6 +1,6 @@
-import { CardState, Grade, Token } from './types';
-import { Config } from './config';
-import { Satisfies } from './util';
+import { CardState, Grade, Token } from './types.js';
+import { Config } from './config.js';
+import { Satisfies } from './util.js';
 
 // NOTE All of these types must be JSON round-trip-able.
 // That also means you cannot use undefined or ? optional fields

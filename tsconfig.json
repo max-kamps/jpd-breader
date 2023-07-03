@@ -1,5 +1,5 @@
 {
-    "exclude": ["transformers/**/*"],
+    "include": ["src/**/*", "dev_types/**/*"],
     "compilerOptions": {
         "strictNullChecks": true,
         "noImplicitReturns": true,
@@ -7,15 +7,13 @@
         "noImplicitAny": true,
         "target": "es2022",
         "module": "es2022",
-        "types": ["node"],
         "moduleResolution": "node16",
         "resolveJsonModule": true,
         "jsx": "react",
         "jsxFactory": "jsxCreateElement",
         "jsxFragmentFactory": "NOT_IMPLEMENTED",
-        "typeRoots": ["dev_types"],
+        "typeRoots": ["dev_types", "./node_modules/@types"],
         "outDir": "build",
-        "rootDir": "src",
-        "plugins": [{ "transform": "./transformers/module_to_content_script.ts", "after": true, "raw": true }]
+        "rootDir": "src"
     }
 }
