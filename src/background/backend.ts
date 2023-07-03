@@ -158,6 +158,7 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
     };
 
     try {
+        throw '';
         ankiResp = await invokeAnki('findCards', 6, {
             query: batchedQuery,
         });
@@ -166,22 +167,26 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
         })) as any[];
     } catch {
         source = 'notes';
-        const notesResp = await Promise.all(
+        const notesResp = await Promise.all<[string, boolean]>(
             data.vocabulary.map(vocab => {
-                return new Promise(async res => {
-                    const resp = await invokeAnki('findNotes', 6, {
+                return new Promise<[string, boolean]>(res => {
+                    invokeAnki('findNotes', 6, {
                         query: `Expression:${vocab[3]} `,
+                    }).then((resp: unknown[]) => {
+                        res([vocab[3], resp.length > 0]);
                     });
-
-                    res([vocab[3], resp]);
                 });
             }),
         );
-        console.log(notesResp);
+        notesResp.forEach(([term, isPresent]) => {
+            if (isPresent) {
+                notes = notes.add(term);
+            }
+        });
+        console.log(notes);
     }
 
     const cards: Card[] = data.vocabulary.map(vocab => {
-        const ankiCardType = getCardInfo(vocab);
         // NOTE: If you change these, make sure to change VOCAB_FIELDS too
         const [
             vid,
@@ -196,6 +201,8 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
             cardState,
             pitchAccent,
         ] = vocab;
+
+        const ankiCardType = getCardInfo({ spelling, frequencyRank, cardState });
 
         return {
             vid,
