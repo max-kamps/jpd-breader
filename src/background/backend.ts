@@ -103,60 +103,83 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
         vocabulary: MapFieldTuple<typeof VOCAB_FIELDS, VocabFields>[];
     } = await response.json();
 
-    const ankiCards = [];
-    const query = data.vocabulary.map(vocab => `Expression:${vocab[3]} `).join(' OR ');
-    const ankiResp = await invokeAnki('findCards', 6, {
-        query,
-    });
-
-    const cardsInfo = (await invokeAnki('cardsInfo', 6, {
-        cards: ankiResp,
-    })) as any[];
-
-    console.log(ankiResp, cardsInfo);
-
-    const cards: Card[] = data.vocabulary.map(vocab => {
-        // NOTE: If you change these, make sure to change VOCAB_FIELDS too
-        const [vid, sid, rid, spelling, reading, frequencyRank, meanings, cardState, pitchAccent] = vocab;
-        const cardInfo = cardsInfo.find(c => c.fields.Expression.value === spelling);
-        // 0=new, 1=learning, 2=review, 3=relearning
-        let ankiCardType: CardState = ['not-in-deck'];
-        if (cardInfo) {
-            switch (cardInfo.type) {
-                case 0:
-                    ankiCardType = ['new'];
-                    break;
-                case 1:
-                case 3:
-                    ankiCardType = ['learning'];
-                    break;
-                case 2:
-                    // mark cards as known that are due in x days
-                    if (cardInfo.interval > 180) {
-                        ankiCardType = ['known'];
-                    } else {
-                        ankiCardType = ['due'];
-                    }
-                    break;
-            }
-        }
-
+    const rawQuery = data.vocabulary.map(vocab => `Expression:${vocab[3]} `);
+    const batchedQuery = rawQuery.join(' OR ');
+    let ankiResp;
+    let cardsInfo: any[] = [];
+    let notes = new Set();
+    let source: 'cards' | 'notes' = 'cards';
+    let getCardInfo = ({ spelling, frequencyRank, cardState }: any): CardState => {
         // todo: add some kind of blocklist
         if (frequencyRank && frequencyRank < 100) {
-            ankiCardType = ['blacklisted'];
+            return ['blacklisted'];
         }
 
         const cs: CardState = cardState ?? ['not-in-deck'];
         if (cardState) {
             if (cs.indexOf('blacklisted') > -1) {
-                ankiCardType = ['blacklisted'];
+                return ['blacklisted'];
             }
 
             if (cs.indexOf('never-forget') > -1) {
-                ankiCardType = ['never-forget'];
+                return ['never-forget'];
             }
         }
 
+        if (source === 'notes') {
+            if (notes.has(spelling)) {
+                return ['known'];
+            }
+        }
+
+        const cardInfo = cardsInfo.find(c => c.fields.Expression.value === spelling);
+        // 0=new, 1=learning, 2=review, 3=relearning
+        if (cardInfo) {
+            switch (cardInfo.type) {
+                case 0:
+                    return ['new'];
+                case 1:
+                case 3:
+                    return ['learning'];
+                case 2:
+                    // mark cards as known that are due in x days
+                    if (cardInfo.interval > 180) {
+                        return ['known'];
+                    }
+                    return ['due'];
+            }
+        }
+
+        return ['not-in-deck'];
+    };
+
+    try {
+        ankiResp = await invokeAnki('findCards', 6, {
+            query: batchedQuery,
+        });
+        cardsInfo = (await invokeAnki('cardsInfo', 6, {
+            cards: ankiResp,
+        })) as any[];
+    } catch {
+        source = 'notes';
+        const notesResp = await Promise.all(
+            data.vocabulary.map(vocab => {
+                return new Promise(async res => {
+                    const resp = await invokeAnki('findNotes', 6, {
+                        query: `Expression:${vocab[3]} `,
+                    });
+
+                    res([vocab[3], resp]);
+                });
+            }),
+        );
+        console.log(notesResp);
+    }
+
+    const cards: Card[] = data.vocabulary.map(vocab => {
+        // NOTE: If you change these, make sure to change VOCAB_FIELDS too
+        const [vid, sid, rid, spelling, reading, frequencyRank, meanings, cardState, pitchAccent] = vocab;
+        const ankiCardType = getCardInfo(vocab);
         return {
             vid,
             sid,
