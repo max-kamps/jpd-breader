@@ -204,14 +204,14 @@ class Subs {
 
     toggle() {
         if (this.isActive) {
-            this.clean();
+            this.clean(false);
         } else {
             this.activate(this.transcript);
         }
         this.isActive = !this.isActive;
     }
 
-    clean() {
+    clean(removeTranscript: boolean) {
         if (this.isActive) {
             const originalSubs = this.captionsParent?.querySelector('div:not(#jpdb-subs)') as HTMLElement;
             if (originalSubs) {
@@ -223,6 +223,7 @@ class Subs {
             }
         }
 
+        if (removeTranscript) this.transcript = undefined;
         this.isAsr = false;
     }
 
@@ -264,7 +265,7 @@ new MutationObserver(() => {
 }).observe(document.body, { attributes: false, childList: true, subtree: true });
 
 function observerCallback() {
-    subs.clean();
+    subs.clean(true);
     getTranscriptFromURL(currentUrl).then(transcript => {
         try {
             if (transcript) {
