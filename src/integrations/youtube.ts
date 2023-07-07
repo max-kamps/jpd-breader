@@ -37,8 +37,6 @@ async function getTranscriptFromURL(url: string): Promise<Transcript | null> {
         return null;
     }
 
-    console.log(subSource);
-
     if (subSource.kind === 'asr') {
         // TODO: Handle errors
         const response = await fetch(subSource.baseUrl);
@@ -67,8 +65,6 @@ async function getTranscriptFromURL(url: string): Promise<Transcript | null> {
                     text: htmlText,
                 };
             });
-
-        console.log('raw', subs);
 
         // Youtube gives the subtitles in chunks, and to avoid multiple calls to the jpdb api
         // we join the subtitles that are close to each other.
@@ -117,8 +113,8 @@ async function getTranscriptFromURL(url: string): Promise<Transcript | null> {
 class Subs {
     captionsParent: HTMLElement | null;
     jpdbCaptions: HTMLElement | null;
+    jpdbButton: HTMLElement | null;
 
-    videoHasJPSubs = false;
     videoID: string | null;
     transcript: Transcript | null;
 
@@ -135,29 +131,25 @@ class Subs {
     activate(transcript: Transcript, videoID: string) {
         this.isAsr = transcript.isAsr;
         this.transcript = transcript;
-        // this.isActive = true; // Don't activate if transcripts are not asr
 
-        if (!this.isAsr || this.captionsParent || this.jpdbCaptions) {
-            return;
-        }
+        if (!this.jpdbButton) {
+            // add small button next to settings
+            const settingsButton = document.querySelector('.ytp-settings-button') as HTMLElement;
+            this.jpdbButton = document.createElement('button');
+            this.jpdbButton.setAttribute('id', 'jpdb-button');
+            this.jpdbButton.setAttribute('class', 'ytp-button');
+            this.jpdbButton.setAttribute('aria-pressed', 'false');
+            this.jpdbButton.setAttribute('aria-label', 'JPDB');
+            this.jpdbButton.setAttribute('title', 'JPDB');
 
-        // add small button next to settings
-        const settingsButton = document.querySelector('.ytp-settings-button') as HTMLElement;
-        const jpdbButton = document.createElement('button');
-        jpdbButton.setAttribute('id', 'jpdb-button');
-        jpdbButton.setAttribute('class', 'ytp-button');
-        jpdbButton.setAttribute('aria-pressed', 'false');
-        jpdbButton.setAttribute('aria-label', 'JPDB');
-        jpdbButton.setAttribute('title', 'JPDB');
+            // change this to attribute
+            this.jpdbButton.setAttribute('data-title-no-tooltip', 'JPDB');
+            this.jpdbButton.setAttribute('aria-label', 'JPDB');
+            this.jpdbButton.setAttribute('title', 'JPDB');
 
-        // change this to attribute
-        jpdbButton.setAttribute('data-title-no-tooltip', 'JPDB');
-        jpdbButton.setAttribute('aria-label', 'JPDB');
-        jpdbButton.setAttribute('title', 'JPDB');
-
-        // adjust style
-        // center content (image) inside button
-        jpdbButton.innerHTML = `
+            // adjust style
+            // center content (image) inside button
+            this.jpdbButton.innerHTML = `
         <svg version="1.1" width="100%" height="100%" fill-opacity="1" viewBox="-36 72 180 1">
             <path fill="#fff" d="M84.5 10.5v13c1.915.285 3.581-.049 5-1a173.26 173.26 0 0 0 17.5-2c4.206 1.093 5.539 3.76 4 8-1.826 1.574-3.993 2.407-6.5 2.5a152.177 152.177 0 0 1-19 1.5 40.936 40.936 0 0 0 .5 9 62.459 62.459 0 0 1 19.5-1.5c2.667 2.667 2.667 5.333 0 8A3021.482 3021.482 0 0 1 59 53.5c-1.71.06-3.044-.606-4-2-.758-2.27-.591-4.436.5-6.5a68.679 68.679 0 0 1 19-2.5v-8c-7.327.705-14.66.872-22 .5-3.013-4.274-2.013-7.274 3-9a228.001 228.001 0 0 1 19-1.5c-.166-5.011 0-10.011.5-15 3.74-2.94 6.906-2.607 9.5 1z" />
             <path fill="#fff" d="M17.5 9.5c9.752.377 17.752 4.21 24 11.5-1.084 5.023-4.084 6.69-9 5l-15-9.5c-1.214-2.359-1.214-4.692 0-7z" />
@@ -173,28 +165,44 @@ class Subs {
         </svg>
     `;
 
-        jpdbButton.addEventListener('click', () => {
-            const simulateToggle = () => {
-                // simulate cc button press only if is not pressed
-                const ccButton = document.querySelector('.ytp-subtitles-button') as HTMLElement;
-                if (jpdbButton.getAttribute('aria-pressed') === 'false') {
-                    if (ccButton.getAttribute('aria-pressed') === 'false') ccButton.click();
-                    jpdbButton.setAttribute('aria-pressed', 'true');
-                } else {
-                    jpdbButton.setAttribute('aria-pressed', 'false');
-                }
-            };
+            this.jpdbButton.addEventListener('click', () => {
+                const simulateToggle = () => {
+                    // simulate cc button press only if is not pressed
+                    const ccButton = document.querySelector('.ytp-subtitles-button') as HTMLElement;
+                    if (this.jpdbButton?.getAttribute('aria-pressed') === 'false') {
+                        if (ccButton.getAttribute('aria-pressed') === 'false') ccButton.click();
+                        this.jpdbButton.setAttribute('aria-pressed', 'true');
+                    } else {
+                        this.jpdbButton?.setAttribute('aria-pressed', 'false');
+                    }
+                };
 
-            subs.toggle();
-            simulateToggle();
-        });
+                subs.toggle();
+                simulateToggle();
+            });
 
-        settingsButton.parentElement!.insertBefore(jpdbButton, settingsButton);
+            settingsButton.parentElement!.insertBefore(this.jpdbButton, settingsButton);
+        }
+
+        if (this.jpdbButton?.getAttribute('aria-pressed') === 'true') {
+            this.isActive = true;
+            const ccButton = document.querySelector('.ytp-subtitles-button') as HTMLElement;
+            if (ccButton.getAttribute('aria-pressed') === 'false') {
+                ccButton.click();
+            }
+        }
+
+        // remove previous instances, if any
+        this.jpdbCaptions?.remove();
 
         // Get captions parent element
         this.captionsParent = document.getElementById('ytp-caption-window-container') as HTMLElement;
 
-        // display: none
+        this.addJpdbCaptions();
+        // }
+    }
+
+    addJpdbCaptions() {
         const captionWindowContainerHTML = `
             <div class="caption-window ytp-caption-window-bottom ytp-caption-window-rollup" id="jpdb-subs" dir="ltr" tabindex="0" lang="ja" draggable="true" style="touch-action: none; text-align: center; left: 50%; width: 299px; margin-left: -149.5px; bottom: 2%; display: none;">
                 <span class="captions-text" style="overflow-wrap: normal; display: block;">
@@ -210,13 +218,7 @@ class Subs {
 
         // Create custom subs and place it
         this.jpdbCaptions = doc.querySelector('div')!;
-        this.captionsParent.appendChild(this.jpdbCaptions);
-
-        // Hide original subs
-        // const originalSubs = this.captionsParent.querySelector('div:not(#jpdb-subs)') as HTMLElement;
-        // if (originalSubs) {
-        //     originalSubs.style.display = 'none';
-        // }
+        this.captionsParent?.appendChild(this.jpdbCaptions);
     }
 
     toggle() {
@@ -229,6 +231,7 @@ class Subs {
     }
 
     clean() {
+        console.log('cleaning, active:', this.isActive);
         if (this.isActive) {
             const originalSubs = this.captionsParent?.querySelector('div:not(#jpdb-subs)') as HTMLElement;
             if (originalSubs) {
@@ -244,7 +247,6 @@ class Subs {
     // Hide original captions and readjust jpdb captions style
     readjustStyle() {
         if (!this.isActive) return;
-        // if (!this.videoHasJPSubs) return;
 
         // Find original subs, anyone except id = jpdb-subs
         const originalSubs = this.captionsParent?.querySelector('div:not(#jpdb-subs)') as HTMLElement;
@@ -284,22 +286,28 @@ new MutationObserver(() => {
 function observerCallback() {
     subs.clean();
     getTranscriptFromURL(currentUrl).then(transcript => {
-        if (transcript) {
-            subs.activate(transcript, '');
-            console.log('subs active');
-        } else {
-            console.log('cant get subs');
+        try {
+            if (transcript) {
+                subs.activate(transcript, '');
+                console.log('subs loaded');
+            } else {
+                console.log('cant get subs');
+            }
+        } catch (e) {
+            console.log('youtube subs error: ' + e);
         }
     });
 
     // Get current video player
-    const playerElementArr = document.getElementsByTagName('video');
-    if (playerElementArr.length <= 0) {
-        throw new Error('No player element found');
-    }
+    if (!playerElement) {
+        const playerElementArr = document.getElementsByTagName('video');
+        if (playerElementArr.length <= 0) {
+            // throw new Error('No player element found');
+            return;
+        }
 
-    // replace current one
-    playerElement = playerElementArr[0];
+        playerElement = playerElementArr[0];
+    }
 }
 
 // Video subtitles
@@ -308,7 +316,12 @@ try {
 
     const updateCaptions = () => {
         const captionsegment = document.querySelector('#jpdb-subs span.ytp-caption-segment') as HTMLElement;
+        // if (!captionsegment) {
+        //     subs.addJpdbCaptions();
+        //     captionsegment = document.querySelector('#jpdb-subs span.ytp-caption-segment') as HTMLElement;
+        // }
         if (captionsegment && playerElement) {
+            // if (playerElement) {
             const currentTime: number = playerElement.currentTime;
 
             const curr = subs.transcript?.content.find(caption => {
@@ -330,6 +343,8 @@ try {
 
     const videosubs = addedObserver(':not(#jpdb-subs) span.ytp-caption-segment', originalspan => {
         if (!subs.isActive) return;
+
+        console.log('isasr', subs);
 
         if (subs.isAsr) {
             updateCaptions();
