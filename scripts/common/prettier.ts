@@ -1,6 +1,6 @@
 import { promisify } from 'node:util';
+import * as console from 'node:console';
 import * as childProcess from 'child_process';
-import * as console from 'console';
 const exec = promisify(childProcess.exec);
 
 // prettier API is very lacking, we'll just call the CLI directly
