@@ -5,47 +5,50 @@ import { getSentences, JpdbWord, JpdbWordData } from './word.js';
 
 const PARTS_OF_SPEECH: { [k: string]: string } = {
     n: 'Noun', // JMDict: "noun (common) (futsuumeishi)"
-    // 'n-adv': '', // Not used in jpdb: n and adv separately. JMDict: "adverbial noun (fukushitekimeishi)"
-    // 'n-suf': '', // Not used in jpdb: n and suf separately. JMDict: "noun, used as a suffix"
-    // 'n-pref': '', // Not used in jpdb: n and pref separately. JMDict: "noun, used as a prefix"
-    // 'n-t': '', // Not used in jpdb. JMDict: "noun (temporal) (jisoumeishi)"
     pn: 'Pronoun', // JMDict: "pronoun"
+    pref: 'Prefix', // JMDict: "prefix"
+    suf: 'Suffix', // JMDict: "suffix"
+    // 'n-adv': '', // Not used in jpdb: n + adv instead. JMDict: "adverbial noun (fukushitekimeishi)"
+    // 'n-pr': '', // Not used in jpdb: name instead. JMDict: "proper noun"
+    // 'n-pref': '', // Not used in jpdb: n + pref instead. JMDict: "noun, used as a prefix"
+    // 'n-suf': '', // Not used in jpdb: n + suf instead. JMDict: "noun, used as a suffix"
+    // 'n-t': '', // Not used in jpdb: n instead. JMDict: "noun (temporal) (jisoumeishi)"
 
     // 'n-pr': '', // JMDict: "proper noun"
     name: 'Name', // Not from JMDict
     'name-fem': 'Name (Feminine)', // Not from JMDict
     'name-male': 'Name (Masculine)', // Not from JMDict
     'name-surname': 'Surname', // Not from JMDict
+    'name-person': 'Personal Name', // Not from JMDict
     'name-place': 'Place Name', // Not from JMDict
+    'name-product': 'Product Name', // Not from JMDict
 
     'adj-i': 'Adjective', // JMDict: "adjective (keiyoushi)"
-    // 'adj-ix': '', // Not used in jpdb: Only adj-i. JMDict: "adjective (keiyoushi) - yoi/ii class"
     'adj-na': 'な-Adjective', // JMDict: "adjectival nouns or quasi-adjectives (keiyodoshi)"
-    'adj-no': 'の-Adjective', // JMDict: "nouns which may take the genitive case particle `no'"
+    'adj-no': 'の-Adjective', // JMDict: "nouns which may take the genitive case particle 'no'"
     'adj-pn': 'Adjectival', // JMDict: "pre-noun adjectival (rentaishi)"
-    // 'adj-t': '', // Not used in jpdb. JMDict: "`taru' adjective"
+    'adj-nari': 'なり-Adjective (Archaic/Formal)', // JMDict: "archaic/formal form of na-adjective"
+    'adj-ku': 'く-Adjective (Archaic)', // JMDict: "'ku' adjective (archaic)"
+    'adj-shiku': 'しく-Adjective (Archaic)', // JMDict: "'shiku' adjective (archaic)"
+    // 'adj-ix': 'Adjective (いい/よい irregular)', // Not used in jpdb, adj-i instead. JMDict: "adjective (keiyoushi) - yoi/ii class"
     // 'adj-f': '', // Not used in jpdb. JMDict: "noun or verb acting prenominally"
-    // 'adj-kari': '', // JMDict: "`kari' adjective (archaic)"
-    // 'adj-ku': '', // JMDict: "`ku' adjective (archaic)"
-    // 'adj-shiku': '', // JMDict: "`shiku' adjective (archaic)"
-    // 'adj-nari': '', // JMDict: "archaic/formal form of na-adjective"
+    // 'adj-t': '', // Not used in jpdb. JMDict: "'taru' adjective"
+    // 'adj-kari': '', // Not used in jpdb. JMDict: "'kari' adjective (archaic)"
 
     adv: 'Adverb', // JMDict: "adverb (fukushi)"
-    // 'adv-to': '', // Not used in jpdb. JMDict: "adverb taking the `to' particle"
+    // 'adv-to': '', // Not used in jpdb: adv instead. JMDict: "adverb taking the `to' particle"
 
     aux: 'Auxiliary', // JMDict: "auxiliary"
     'aux-v': 'Auxiliary Verb', // JMDict: "auxiliary verb"
     'aux-adj': 'Auxiliary Adjective', // JMDict: "auxiliary adjective"
     conj: 'Conjunction', // JMDict: "conjunction"
-    // 'cop-da': '',  // Not used in jpdb: cop instead. JMDict: "copula"
-    cop: 'Copula', // Not from JMDict.
+    cop: 'Copula', // JMDict: "copula"
     ctr: 'Counter', // JMDict: "counter"
     exp: 'Expression', // JMDict: "expressions (phrases, clauses, etc.)"
     int: 'Interjection', // JMDict: "interjection (kandoushi)"
-    num: 'Numeric', // JMDict: "numeric'"
-    prt: 'Particle', // JMDict: "particle'"
-    pref: 'Prefix', // JMDict: "prefix'"
-    suf: 'Suffix', // JMDict: "suffix'"
+    num: 'Numeric', // JMDict: "numeric"
+    prt: 'Particle', // JMDict: "particle"
+    // 'cop-da': '',  // Not used in jpdb: cop instead. JMDict: "copula"
 
     vt: 'Transitive Verb', // JMDict: "transitive verb"
     vi: 'Intransitive Verb', // JMDict: "intransitive verb"
@@ -72,51 +75,53 @@ const PARTS_OF_SPEECH: { [k: string]: string } = {
     vk: 'Irregular Verb (くる)', // JMDict: "Kuru verb - special class"
     // vn: '', // Not used in jpdb. JMDict: "irregular nu verb"
     // vr: '', // Not used in jpdb. JMDict: "irregular ru verb, plain form ends with -ri"
-    // va: '', // Not from JMDict?
 
     vs: 'する Verb', // JMDict: "noun or participle which takes the aux. verb suru"
-    // 'vs-c': // JMDict: "su verb - precursor to the modern suru"
-    // 'vz': // JMDict: "Ichidan verb - zuru verb (alternative form of -jiru verbs)"
-    // 'vs-s': // Not used in jpdb. JMDict: "suru verb - special class"
-    // 'vs-i': // JMDict: "suru verb - irregular"
+    vz: 'ずる Verb', // JMDict: "Ichidan verb - zuru verb (alternative form of -jiru verbs)"
+    'vs-c': 'す Verb (Archaic)', // JMDict: "su verb - precursor to the modern suru"
+    // 'vs-s': '', // Not used in jpdb. JMDict: "suru verb - special class"
+    // 'vs-i': '', // JMDict: "suru verb - included"
 
-    // 'iv': '',  // Not used in jpdb. JMDict: "irregular verb"
-    // 'v-unspec': 'verb unspecified',
+    // iv: '',  // Not used in jpdb. JMDict: "irregular verb"
+    // 'v-unspec': '', // Not used in jpdb. JMDIct: "verb unspecified"
 
-    v2: 'Nidan Verb (Archaic)', // Not from JMDict?
-    // 'v2a-s': '', // Not used in jpdb. JMDict: "Nidan verb with 'u' ending (archaic)"
-    // 'v2k-k': '', // JMDict: "Nidan verb (upper class) with `ku' ending (archaic)"
-    // 'v2g-k': '', // JMDict: "Nidan verb (upper class) with `gu' ending (archaic)"
-    // 'v2t-k': '', // JMDict: "Nidan verb (upper class) with `tsu' ending (archaic)"
-    // 'v2d-k': '', // JMDict: "Nidan verb (upper class) with `dzu' ending (archaic)"
-    // 'v2h-k': '', // JMDict: "Nidan verb (upper class) with `hu/fu' ending (archaic)"
-    // 'v2b-k': '', // JMDict: "Nidan verb (upper class) with `bu' ending (archaic)"
-    // 'v2m-k': '', // JMDict: "Nidan verb (upper class) with `mu' ending (archaic)"
-    // 'v2y-k': '', // JMDict: "Nidan verb (upper class) with `yu' ending (archaic)"
-    // 'v2r-k': '', // JMDict: "Nidan verb (upper class) with `ru' ending (archaic)"
-    // 'v2k-s': '', // JMDict: "Nidan verb (lower class) with `ku' ending (archaic)"
-    // 'v2g-s': '', // JMDict: "Nidan verb (lower class) with `gu' ending (archaic)"
-    // 'v2s-s': '', // JMDict: "Nidan verb (lower class) with `su' ending (archaic)"
-    // 'v2z-s': '', // JMDict: "Nidan verb (lower class) with `zu' ending (archaic)"
-    // 'v2t-s': '', // JMDict: "Nidan verb (lower class) with `tsu' ending (archaic)"
-    // 'v2d-s': '', // JMDict: "Nidan verb (lower class) with `dzu' ending (archaic)"
-    // 'v2n-s': '', // JMDict: "Nidan verb (lower class) with `nu' ending (archaic)"
-    // 'v2h-s': '', // JMDict: "Nidan verb (lower class) with `hu/fu' ending (archaic)"
-    // 'v2b-s': '', // JMDict: "Nidan verb (lower class) with `bu' ending (archaic)"
-    // 'v2m-s': '', // JMDict: "Nidan verb (lower class) with `mu' ending (archaic)"
-    // 'v2y-s': '', // JMDict: "Nidan verb (lower class) with `yu' ending (archaic)"
-    // 'v2r-s': '', // JMDict: "Nidan verb (lower class) with `ru' ending (archaic)"
-    // 'v2w-s': '', // JMDict: "Nidan verb (lower class) with `u' ending and `we' conjugation (archaic)"
+    v2: 'Nidan Verb (Archaic)', // Not from JMDict
+    // 'v2a-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb with 'u' ending (archaic)"
+    // 'v2b-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'bu' ending (archaic)"
+    // 'v2b-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'bu' ending (archaic)"
+    // 'v2d-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'dzu' ending (archaic)"
+    // 'v2d-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'dzu' ending (archaic)"
+    // 'v2g-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'gu' ending (archaic)"
+    // 'v2g-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'gu' ending (archaic)"
+    // 'v2h-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'hu/fu' ending (archaic)"
+    // 'v2h-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'hu/fu' ending (archaic)"
+    // 'v2k-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'ku' ending (archaic)"
+    // 'v2k-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'ku' ending (archaic)"
+    // 'v2m-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'mu' ending (archaic)"
+    // 'v2m-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'mu' ending (archaic)"
+    // 'v2n-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'nu' ending (archaic)"
+    // 'v2r-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'ru' ending (archaic)"
+    // 'v2r-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'ru' ending (archaic)"
+    // 'v2s-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'su' ending (archaic)"
+    // 'v2t-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'tsu' ending (archaic)"
+    // 'v2t-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'tsu' ending (archaic)"
+    // 'v2w-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'u' ending and 'we' conjugation (archaic)"
+    // 'v2y-k': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (upper class) with 'yu' ending (archaic)"
+    // 'v2y-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'yu' ending (archaic)"
+    // 'v2z-s': '', // Not used in jpdb: v2 instead. JMDict: "Nidan verb (lower class) with 'zu' ending (archaic)"
 
-    v4h: 'ふ Yodan Verb (Archaic)', // JMDict: "Yodan verb with `hu/fu' ending (archaic)"
-    // v4r: '', // JMDict: "Yodan verb with `ru' ending (archaic)"
-    // v4k: '', // JMDict: "Yodan verb with `ku' ending (archaic)"
-    // v4g: '', // JMDict: "Yodan verb with `gu' ending (archaic)"
-    // v4s: '', // JMDict: "Yodan verb with `su' ending (archaic)"
-    // v4t: '', // JMDict: "Yodan verb with `tsu' ending (archaic)"
-    // v4n: '', // JMDict: "Yodan verb with `nu' ending (archaic)"
-    // v4b: '', // JMDict: "Yodan verb with `bu' ending (archaic)"
-    // v4m: '', // JMDict: "Yodan verb with `mu' ending (archaic)"
+    v4: 'Yodan Verb (Archaic)', // Not from JMDict
+    v4k: '', // JMDict: "Yodan verb with 'ku' ending (archaic)"
+    v4g: '', // JMDict: "Yodan verb with 'gu' ending (archaic)"
+    v4s: '', // JMDict: "Yodan verb with 'su' ending (archaic)"
+    v4t: '', // JMDict: "Yodan verb with 'tsu' ending (archaic)"
+    v4h: '', // JMDict: "Yodan verb with `hu/fu' ending (archaic)"
+    v4b: '', // JMDict: "Yodan verb with 'bu' ending (archaic)"
+    v4m: '', // JMDict: "Yodan verb with 'mu' ending (archaic)"
+    v4r: '', // JMDict: "Yodan verb with 'ru' ending (archaic)"
+    // v4n: '', // Not used in jpdb. JMDict: "Yodan verb with 'nu' ending (archaic)"
+
+    va: 'Archaic', // Not from JMDict? TODO Don't understand this one, seems identical to #v4n ?
 
     // 'unc': '', // Not used in jpdb: empty list instead. JMDict: "unclassified"
 };
@@ -385,6 +390,7 @@ export class Popup {
                 <h2>
                     {meanings.partOfSpeech
                         .map(pos => PARTS_OF_SPEECH[pos] ?? `(Unknown part of speech #${pos}, please report)`)
+                        .filter(x => x.length > 0)
                         .join(', ')}
                 </h2>,
                 <ol start={meanings.startIndex + 1}>
