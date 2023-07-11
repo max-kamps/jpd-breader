@@ -83,6 +83,7 @@
         "content/word.js",
         "content/word.css",
         "util.js",
+        "common.css",
         "themes.css"
     ],
     "permissions": [

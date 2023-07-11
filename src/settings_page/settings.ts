@@ -1,8 +1,9 @@
-import { loadConfig, migrateSchema, saveConfig } from '../config.js';
+import { loadConfig, migrateSchema, saveConfig } from '../background/config.js';
 import { requestUpdateConfig } from '../content/background_comms.js';
 import { Popup } from '../content/popup.js';
+import { showError } from '../content/toast.js';
 import { JpdbWordData } from '../content/word.js';
-import { assert, nonNull, showError, wrap } from '../util.js';
+import { assert, nonNull, wrap } from '../util.js';
 import { defineCustomElements, SettingElement } from './elements.js';
 
 // Custom element definitions

@@ -263,9 +263,8 @@ export class Popup {
         const shadow = this.#element.attachShadow({ mode: 'closed' });
 
         shadow.append(
-            <style>{`@import url("${browser.runtime.getURL(
-                '/content/popup.css',
-            )}");\n@import url(${browser.runtime.getURL('/themes.css')});`}</style>,
+            <link rel='stylesheet' href={browser.runtime.getURL('/themes.css')} />,
+            <link rel='stylesheet' href={browser.runtime.getURL('/content/popup.css')} />,
             (this.#customStyle = <style></style>),
             <article lang='ja'>
                 {(this.#mineButtons = <section id='mine-buttons'></section>)}

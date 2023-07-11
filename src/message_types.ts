@@ -1,5 +1,5 @@
 import { CardState, Grade, Token } from './types.js';
-import { Config } from './config.js';
+import { Config } from './background/config.js';
 import { Satisfies } from './util.js';
 
 // NOTE All of these types must be JSON round-trip-able.
@@ -83,7 +83,7 @@ type ResponseCommon = {
 
 export type ErrorResponse = ResponseCommon & {
     type: 'error';
-    error: { message: string };
+    error: Error | { message: string; stack: string | undefined };
 };
 
 export type CanceledResponse = ResponseCommon & {

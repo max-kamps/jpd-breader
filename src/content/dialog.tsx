@@ -54,7 +54,7 @@ export class Dialog {
         let addToForq: HTMLInputElement;
         let translation: HTMLElement;
         shadow.append(
-            <style>{`@import url("${browser.runtime.getURL('/content/dialog.css')}");`}</style>,
+            <link rel='stylesheet' href={browser.runtime.getURL('/content/dialog.css')} />,
             <div
                 id='modal-wrapper'
                 // We can't use click because then mousedown inside the content and mouseup outside would count as a click

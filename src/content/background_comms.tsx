@@ -1,76 +1,91 @@
 import { BackgroundToContentMessage, ContentToBackgroundMessage, ResponseTypeMap } from '../message_types.js';
 import { Card, Grade, Token } from '../types.js';
-import { Config } from '../config.js';
-import { browser, CANCELED, CancellablePromise, CancellablePromiseHandle, showError } from '../util.js';
+import { Config } from '../background/config.js';
+import { browser, Canceled, isChrome, PromiseHandle } from '../util.js';
 import { Paragraph, reverseIndex } from './parse.js';
 import { Popup } from './popup.js';
+import { showError } from './toast.js';
 
 // Background script communication
 
 export let config: Config;
 
-const waitingPromises = new Map<number, CancellablePromiseHandle<unknown>>();
+const waitingPromises = new Map<number, PromiseHandle<unknown>>();
 let nextSeq = 0;
-function registerRequest<T>(): [number, CancellablePromise<T>] {
+
+function preregisterUnabortableRequest<T>(): [number, Promise<T>] {
     const seq = nextSeq++;
     const promise: any = new Promise((resolve, reject) => {
         waitingPromises.set(seq, { resolve, reject });
     });
 
-    promise.cancel = () => {
-        port.postMessage({ type: 'cancel', seq });
-    };
-
     return [seq, promise];
 }
 
-function post<T extends Omit<ContentToBackgroundMessage, 'seq'>>(message: T) {
-    const [seq, promise] = registerRequest<ResponseTypeMap[T['type']]['result']>();
+function preregisterAbortableRequest<T>(): [number, Promise<T>, AbortController] {
+    const seq = nextSeq++;
+    const abort = new AbortController();
+    const promise: any = new Promise((resolve, reject) => {
+        waitingPromises.set(seq, { resolve, reject });
+        abort.signal.addEventListener('abort', () => {
+            port.postMessage({ type: 'cancel', seq });
+        });
+    });
+
+    return [seq, promise, abort];
+}
+
+// Avoid repetition for most common use case
+function requestUnabortable<T extends Omit<ContentToBackgroundMessage, 'seq'>>(message: T) {
+    const [seq, promise] = preregisterUnabortableRequest<ResponseTypeMap[T['type']]['result']>();
     port.postMessage({ ...message, seq });
     return promise;
 }
 
-export type ParseBatch = {
-    entries: {
-        paragraph: Paragraph;
-        promise: CancellablePromise<Token[]>;
-    }[];
-    texts: [number, string][];
-};
-
-export function createParseBatch(paragraphs: Paragraph[]): ParseBatch {
-    const texts: [number, string][] = [];
-    const entries: ParseBatch['entries'] = [];
-
-    for (const paragraph of paragraphs) {
-        const text = paragraph.map(fragment => fragment.node.data).join('');
-        const [seq, promise] = registerRequest<Token[]>();
-        texts.push([seq, text]);
-        entries.push({ paragraph, promise });
-    }
-
-    return { entries, texts };
-}
-
-export function requestParse(batches: ParseBatch[]) {
-    post({ type: 'parse', texts: batches.flatMap(batch => batch.texts) });
-}
-
 export function requestSetFlag(card: Card, flag: 'blacklist' | 'never-forget' | 'forq', state: boolean) {
-    return post({ type: 'setFlag', vid: card.vid, sid: card.sid, flag, state });
+    return requestUnabortable({ type: 'setFlag', vid: card.vid, sid: card.sid, flag, state });
 }
 
 export function requestMine(card: Card, forq: boolean, sentence?: string, translation?: string) {
-    return post({ type: 'mine', forq, vid: card.vid, sid: card.sid, sentence, translation });
+    return requestUnabortable({ type: 'mine', forq, vid: card.vid, sid: card.sid, sentence, translation });
 }
 
 export function requestReview(card: Card, rating: Grade) {
-    return post({ type: 'review', rating, vid: card.vid, sid: card.sid });
+    return requestUnabortable({ type: 'review', rating, vid: card.vid, sid: card.sid });
 }
 
 export function requestUpdateConfig() {
-    return post({ type: 'updateConfig' });
+    return requestUnabortable({ type: 'updateConfig' });
 }
+
+// A ParseBatch represents a single paragraph waiting to be parsed
+export type ParseBatch = {
+    paragraph: Paragraph;
+    promise: Promise<Token[]>;
+    abort: AbortController;
+    seq: number;
+};
+
+export function createParseBatch(paragraph: Paragraph): ParseBatch {
+    const [seq, promise, abort] = preregisterAbortableRequest<Token[]>();
+    return { paragraph, promise, abort, seq };
+}
+
+// Takes multiple ParseBatches to save on communications overhead between content script and background page
+export function requestParse(batches: ParseBatch[]) {
+    const texts = batches.map(batch => [batch.seq, batch.paragraph.map(fragment => fragment.node.data).join('')]);
+    return requestUnabortable({ type: 'parse', texts });
+}
+
+// Chrome can't send Error objects over background ports, so we have to serialize and deserialize them...
+// (To be specific, Firefox can send any structuredClone-able object, while Chrome can only send JSON-stringify-able objects)
+const deserializeError = isChrome
+    ? (err: { message: string; stack: string }) => {
+          const e = new Error(err.message);
+          e.stack = err.stack;
+          return e;
+      }
+    : (err: Error) => err;
 
 export const port = browser.runtime.connect();
 port.onDisconnect.addListener(() => {
@@ -97,7 +112,7 @@ port.onMessage.addListener((message: BackgroundToContentMessage, port) => {
                 const promise = waitingPromises.get(message.seq);
                 waitingPromises.delete(message.seq);
                 if (promise) {
-                    promise.reject(message.error);
+                    promise.reject(deserializeError(message.error as any));
                 } else {
                     showError(message.error);
                 }
@@ -109,7 +124,7 @@ port.onMessage.addListener((message: BackgroundToContentMessage, port) => {
                 const promise = waitingPromises.get(message.seq);
                 waitingPromises.delete(message.seq);
                 if (promise) {
-                    promise.reject(CANCELED);
+                    promise.reject(new Canceled('Canceled'));
                 }
             }
             break;

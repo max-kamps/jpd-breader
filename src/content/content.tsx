@@ -1,8 +1,8 @@
-import { Keybind } from '../config.js';
-import { showError } from '../util.js';
+import { Keybind } from '../background/config.js';
 import { config, requestMine, requestReview, requestSetFlag } from './background_comms.js';
 import { Dialog } from './dialog.js';
 import { Popup } from './popup.js';
+import { showError } from './toast.js';
 import { getSentences, JpdbWord } from './word.js';
 
 export let currentHover: [JpdbWord, number, number] | null = null;

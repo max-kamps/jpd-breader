@@ -2,7 +2,7 @@
 
 import { requestParse } from '../content/background_comms.js';
 import { displayCategory, Fragment, Paragraph } from '../content/parse.js';
-import { showError } from '../util.js';
+import { showError } from '../content/toast.js';
 import { parseParagraphs } from './common.js';
 
 // Abandon hope all ye who enter here. This function has taken the life of many a coder.
@@ -217,9 +217,9 @@ try {
     }
 
     if (paragraphs.length > 0) {
-        const [batch, applied] = parseParagraphs(paragraphs);
+        const [batches, applied] = parseParagraphs(paragraphs);
 
-        requestParse([batch]);
+        requestParse(batches);
         await Promise.allSettled(applied);
     }
 

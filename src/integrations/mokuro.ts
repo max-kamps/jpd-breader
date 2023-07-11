@@ -2,11 +2,11 @@
 
 import { ParseBatch, requestParse } from '../content/background_comms.js';
 import { Fragment } from '../content/parse.js';
-import { showError } from '../util.js';
+import { showError } from '../content/toast.js';
 import { parseParagraphs, visibleObserver } from './common.js';
 
 try {
-    const pendingBatches = new Map<HTMLElement, ParseBatch>();
+    const pendingBatches = new Map<HTMLElement, ParseBatch[]>();
 
     const visible = visibleObserver(
         elements => {
@@ -40,7 +40,7 @@ try {
                     continue;
                 }
 
-                const [batch, applied] = parseParagraphs(paragraphs);
+                const [pageBatches, applied] = parseParagraphs(paragraphs);
 
                 Promise.all(applied)
                     .then(_ => visible.unobserve(page))
@@ -49,18 +49,18 @@ try {
                         page.style.backgroundColor = '';
                     });
 
-                pendingBatches.set(page, batch);
-                batches.push(batch);
+                pendingBatches.set(page, pageBatches);
+                batches.push(...pageBatches);
                 page.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
             }
             requestParse(batches);
         },
         elements => {
             for (const element of elements) {
-                const batch = pendingBatches.get(element);
-                if (batch) {
-                    for (const { promise } of batch.entries) {
-                        promise.cancel();
+                const batches = pendingBatches.get(element);
+                if (batches) {
+                    for (const { abort } of batches) {
+                        abort.abort();
                     }
                     element.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
                 }

@@ -1,8 +1,9 @@
 // @reader content-script
 
-import { browser, showError } from '../util.js';
+import { browser } from '../util.js';
 import { paragraphsInNode, parseParagraphs } from './common.js';
 import { requestParse } from '../content/background_comms.js';
+import { showError } from '../content/toast.js';
 
 // Create the button element
 const parse_page = document.createElement('button');
@@ -18,8 +19,8 @@ try {
     const paragraphs = paragraphsInNode(document.body);
 
     if (paragraphs.length > 0) {
-        const [batch, applied] = parseParagraphs(paragraphs);
-        requestParse([batch]);
+        const [batches, applied] = parseParagraphs(paragraphs);
+        requestParse(batches);
         Promise.allSettled(applied);
     }
 } catch (error) {
