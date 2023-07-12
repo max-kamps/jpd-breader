@@ -21,6 +21,7 @@ const PARTS_OF_SPEECH: { [k: string]: string } = {
     'name-surname': 'Surname', // Not from JMDict
     'name-person': 'Personal Name', // Not from JMDict
     'name-place': 'Place Name', // Not from JMDict
+    'name-company': 'Company Name', // Not from JMDict
     'name-product': 'Product Name', // Not from JMDict
 
     'adj-i': 'Adjective', // JMDict: "adjective (keiyoushi)"
