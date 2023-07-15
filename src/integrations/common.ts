@@ -1,6 +1,7 @@
 import { createParseBatch, ParseBatch, requestParse } from '../content/background_comms.js';
 import { applyTokens, displayCategory, Fragment, Paragraph } from '../content/parse.js';
-import { CANCELED, showError } from '../util.js';
+import { showError } from '../content/toast.js';
+import { Canceled } from '../util.js';
 
 export function paragraphsInNode(node: Node, filter: (node: Node) => boolean = () => true): Paragraph[] {
     let offset = 0;
@@ -126,7 +127,7 @@ export function addedObserver(selector: string, callback: (elements: HTMLElement
 }
 
 export function parseVisibleObserver(filter: (node: Node) => boolean = () => true) {
-    const pendingBatches = new Map<HTMLElement, ParseBatch>();
+    const pendingBatches = new Map<HTMLElement, ParseBatch[]>();
 
     const visible = visibleObserver(
         elements => {
@@ -140,7 +141,7 @@ export function parseVisibleObserver(filter: (node: Node) => boolean = () => tru
                     continue;
                 }
 
-                const [batch, applied] = parseParagraphs(paragraphs);
+                const [elemBatches, applied] = parseParagraphs(paragraphs);
 
                 Promise.all(applied)
                     .then(_ => visible.unobserve(element))
@@ -148,16 +149,16 @@ export function parseVisibleObserver(filter: (node: Node) => boolean = () => tru
                         pendingBatches.delete(element);
                     });
 
-                pendingBatches.set(element, batch);
-                batches.push(batch);
+                pendingBatches.set(element, elemBatches);
+                batches.push(...elemBatches);
             }
             requestParse(batches);
         },
         elements => {
             for (const element of elements) {
-                const batch = pendingBatches.get(element);
-                if (batch) {
-                    for (const { promise } of batch.entries) promise.cancel();
+                const batches = pendingBatches.get(element);
+                if (batches) {
+                    for (const { abort } of batches) abort.abort();
                 }
             }
         },
@@ -166,20 +167,20 @@ export function parseVisibleObserver(filter: (node: Node) => boolean = () => tru
     return visible;
 }
 
-export function parseParagraphs(paragraphs: Paragraph[]): [ParseBatch, Promise<void>[]] {
-    const batch = createParseBatch(paragraphs);
-    const applied = batch.entries.map(({ paragraph, promise }) =>
+export function parseParagraphs(paragraphs: Paragraph[]): [ParseBatch[], Promise<void>[]] {
+    const batches = paragraphs.map(createParseBatch);
+    const applied = batches.map(({ paragraph, promise }) =>
         promise
             .then(tokens => {
                 applyTokens(paragraph, tokens);
             })
             .catch(error => {
-                if (error !== CANCELED) {
+                if (!(error instanceof Canceled)) {
                     showError(error);
                 }
                 throw error;
             }),
     );
 
-    return [batch, applied];
+    return [batches, applied];
 }

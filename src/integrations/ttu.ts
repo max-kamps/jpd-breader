@@ -1,6 +1,6 @@
 // @reader content-script
 
-import { showError } from '../util.js';
+import { showError } from '../content/toast.js';
 import { addedObserver, parseVisibleObserver } from './common.js';
 
 function shouldParse(node: Node): boolean {

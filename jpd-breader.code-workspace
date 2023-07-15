@@ -13,21 +13,28 @@
 		"typescript.tsserver.experimental.enableProjectDiagnostics": true,
     	"typescript.experimental.tsserver.web.enableProjectWideIntellisense": true,
 		"cSpell.words": [
-			// Jpdb names
-        	"Jpdb", "breader", "jpdbreader",
 			// Contributor names
-			"nico", "sdbversini", "xyaman", "asayake",
+			"nico", "sdbversini", "xyaman", "asayake", "calonca", "hmry",
 			// Integration names
-			"texthooker", "texthookers", "epubs",
+			"texthooker", "texthookers", "epubs", "bunpro",
 			"ttsu", "renji", "Readwok", "Mokuro", "anacreondjt", "learnjapanese", "kamwithk",
+			"editsection", "textline", "textlog", // HTML classes used in integration
 			// Technical terms
-			"ratelimit", "keybind", "keybinds", "AltGr",
-			"comms", "forq",
-			"LHHHH", // Settei pitch accent
+			"typecheck", "backoff", "ratelimit", "metainfo",
+			"abortable", "unabortable", "unmark", "comms",
+			"keybind", "keybinds", "AltGr",
+			// Jpdb terms
+        	"Jpdb", "breader", "jpdbreader", "forq",
         	// Japanese terms
-			"furigana", "godan", "ichidan",
+			"keiyoushi", "rentaishi", "jisoumeishi",
+			"futsuumeishi", "fukushitekimeishi",
+			"ichidan", "nidan", "yodan", "godan",
+			"furigana",
+
 			// Misc vocabulary
-			"unmark",
+			"LHHHH", // Settei pitch accent
+			"aragraph",
+			"nother",
 		],
 	}
 }

@@ -1,3 +1,5 @@
+import { showError } from './content/toast.js';
+
 export const [browser, isChrome] = (() => {
     if (globalThis.browser !== undefined) {
         return [globalThis.browser, false];
@@ -45,9 +47,9 @@ export function wrap<Obj, Return>(obj: Obj, func: WrapCallback<Obj, Return>): Pr
 }
 
 /** Sleep for the specified number of milliseconds, then resolve */
-export function sleep(timeMillis: number): Promise<void> {
+export function sleep(timeMs: number): Promise<void> {
     return new Promise((resolve, _reject) => {
-        setTimeout(resolve, timeMillis);
+        setTimeout(resolve, timeMs);
     });
 }
 
@@ -105,20 +107,9 @@ export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
     return elem;
 }
 
-export function showError(error: { message: string }) {
-    console.error(error);
-    alert(`Error: ${error.message}`); // TODO replace with proper toast?
-}
-
 export type PromiseHandle<T> = {
     resolve(value: T): void;
     reject(reason: { message: string }): void;
 };
 
-export const CANCELED = Symbol('canceled');
-export type CancellablePromise<T> = Promise<T> & { cancel(): void };
-
-export type CancellablePromiseHandle<T> = {
-    resolve(value: T): void;
-    reject(reason: typeof CANCELED | { message: string }): void;
-};
+export class Canceled extends Error {}

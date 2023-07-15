@@ -1,7 +1,7 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as console from 'console';
-import chokidar from 'chokidar';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import * as console from 'node:console';
+import * as chokidar from 'chokidar';
 
 async function* walkDirectory(directory: string): AsyncGenerator<string, undefined, undefined> {
     for await (const entry of await fs.opendir(directory)) {

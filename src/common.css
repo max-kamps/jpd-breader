@@ -1,4 +1,5 @@
-body {
+body,
+:host {
     font-family: var(--font-family);
     background-color: var(--color-background);
     color: var(--color-text);

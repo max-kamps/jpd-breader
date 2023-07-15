@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import ts from 'typescript';
 import { rewriteImportsTransform, removeAnnoyingDefaultExportTransform } from '../transformers/content_script.js';
 
@@ -19,9 +19,9 @@ function reportDiagnostic(diagnostic: ts.Diagnostic) {
     if (diagnostic.file && diagnostic.start) {
         const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
         const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-        console.log(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
+        console.log(`[typescript] ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`);
     } else {
-        console.log(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+        console.log(`[typescript] ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`);
     }
 }
 
@@ -32,7 +32,7 @@ function reportDiagnostics(diagnostics: readonly ts.Diagnostic[]) {
 }
 
 function readConfig(configPath: string): [number, ts.ParsedCommandLine | null] {
-    const configJsonResult = ts.readConfigFile(configPath, ts.sys.readFile);
+    const configJsonResult = ts.readConfigFile(configPath, sys.readFile);
     const configJson = configJsonResult.config;
     if (!configJson) {
         if (configJsonResult.error) {
@@ -42,7 +42,7 @@ function readConfig(configPath: string): [number, ts.ParsedCommandLine | null] {
         return [1, null];
     }
 
-    const configResult = ts.parseJsonConfigFileContent(configJson, ts.sys, path.dirname(configPath));
+    const configResult = ts.parseJsonConfigFileContent(configJson, sys, path.dirname(configPath));
     if (configResult.errors.length > 0) {
         reportDiagnostics(configResult.errors);
     }
@@ -97,7 +97,9 @@ export async function compile(): Promise<boolean> {
 function buildProject(builder: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>) {
     const project = builder.getNextInvalidatedProject();
     if (project) {
-        console.log(`Invalidated project ${project.project}, kind: ${ts.InvalidatedProjectKind[project.kind]}`);
+        console.log(
+            `[typescript] Invalidated project ${project.project}, kind: ${ts.InvalidatedProjectKind[project.kind]}`,
+        );
         if (project.kind == ts.InvalidatedProjectKind.Build) {
             const emitResult = project.emit(undefined, undefined, undefined, undefined, transformers);
 

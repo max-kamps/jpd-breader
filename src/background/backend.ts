@@ -99,7 +99,7 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
 
     if (!(200 <= response.status && response.status <= 299)) {
         const data: JpdbError = await response.json();
-        throw Error(`While parsing 「${truncate(text.join(' '), 20)}」: ${data.error_message}`);
+        throw Error(`${data.error_message} while parsing 「${truncate(text.join(' '), 20)}」`);
     }
 
     const data: {
@@ -201,7 +201,7 @@ async function addToDeckAPI(vid: number, sid: number, deckId: number | 'blacklis
 
     if (!(200 <= response.status && response.status <= 299)) {
         const data: JpdbError = await response.json();
-        throw Error(`While adding word ${vid}/${sid} to deck "${deckId}": ${data.error_message}`);
+        throw Error(`${data.error_message} while adding word ${vid}/${sid} to deck "${deckId}"`);
     }
 
     return [null, API_RATELIMIT];
@@ -220,7 +220,7 @@ async function addToForqScrape(vid: number, sid: number): Response {
     });
 
     if (response.status >= 400) {
-        throw Error(`While adding word ${vid}/${sid} to FORQ: HTTP error ${response.statusText}`);
+        throw Error(`HTTP error ${response.statusText} while adding word ${vid}/${sid} to FORQ`);
     }
 
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
@@ -256,7 +256,7 @@ async function removeFromDeckAPI(vid: number, sid: number, deckId: number | 'bla
 
     if (!(200 <= response.status && response.status <= 299)) {
         const data: JpdbError = await response.json();
-        throw Error(`While removing word ${vid}/${sid} from deck "${deckId}": ${data.error_message}`);
+        throw Error(`${data.error_message} while removing word ${vid}/${sid} from deck "${deckId}"`);
     }
 
     return [null, API_RATELIMIT];
@@ -274,7 +274,7 @@ async function removeFromForqScrape(vid: number, sid: number): Response {
     });
 
     if (response.status >= 400) {
-        throw Error(`While removing word ${vid}/${sid} from FORQ: HTTP error ${response.statusText}`);
+        throw Error(`HTTP error ${response.statusText} while removing word ${vid}/${sid} from FORQ`);
     }
 
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
@@ -304,11 +304,9 @@ export async function setSentence(vid: number, sid: number, sentence?: string, t
     if (!(200 <= response.status && response.status <= 299)) {
         const data: JpdbError = await response.json();
         throw Error(
-            `While setting sentence for word ${vid}/${sid} to ${
+            `${data.error_message} while setting sentence for word ${vid}/${sid} to ${
                 sentence === undefined ? 'none' : `「${truncate(sentence, 10)}」`
-            } (translation: ${translation === undefined ? 'none' : `'${truncate(translation, 20)}'`}): ${
-                data.error_message
-            }`,
+            } (translation: ${translation === undefined ? 'none' : `'${truncate(translation, 20)}'`})`,
         );
     }
 
@@ -341,7 +339,7 @@ export async function review(vid: number, sid: number, rating: keyof typeof REVI
     });
 
     if (response.status >= 400) {
-        throw Error(`While getting next review number for word ${vid}/${sid}: HTTP error ${response.statusText}`);
+        throw Error(`HTTP error ${response.statusText} while getting next review number for word ${vid}/${sid}`);
     }
 
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
@@ -367,7 +365,7 @@ export async function review(vid: number, sid: number, rating: keyof typeof REVI
     });
 
     if (reviewResponse.status >= 400) {
-        throw Error(`While adding ${rating} review to word ${vid}/${sid}: HTTP error ${response.statusText}`);
+        throw Error(`HTTP error ${response.statusText} while adding ${rating} review to word ${vid}/${sid}`);
     }
 
     return [null, 2 * SCRAPE_RATELIMIT];
@@ -391,7 +389,7 @@ export async function getCardState(vid: number, sid: number): Response<CardState
 
     if (!(200 <= response.status && response.status <= 299)) {
         const data: JpdbError = await response.json();
-        throw Error(`While getting state for word ${vid}/${sid}: ${data.error_message}`);
+        throw Error(`${data.error_message} while getting state for word ${vid}/${sid}`);
     }
 
     type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };

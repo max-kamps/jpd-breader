@@ -1,4 +1,4 @@
-import { DeckId } from './types.js';
+import { DeckId } from '../types.js';
 
 export type Keybind = { key: string; code: string; modifiers: string[] } | null;
 // Common types shared across both content and background scripts

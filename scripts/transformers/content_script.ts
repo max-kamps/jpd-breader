@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import * as path from 'path';
+import * as path from 'node:path';
 
 const printer = ts.createPrinter({
     newLine: ts.NewLineKind.LineFeed,
