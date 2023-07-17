@@ -309,8 +309,8 @@ export class Popup {
 
     fadeIn() {
         // Necessary because in settings page, config is undefined
-        if (config) {
-            if (!config.disableFadeAnimation) this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
+        if (config && !config.disableFadeAnimation) {
+            this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
         }
         this.#outerStyle.opacity = '1';
         this.#outerStyle.visibility = 'visible';
@@ -318,8 +318,8 @@ export class Popup {
 
     fadeOut() {
         // Necessary because in settings page, config is undefined
-        if (config) {
-            if (!config.disableFadeAnimation) this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
+        if (config && !config.disableFadeAnimation) {
+            this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
         }
         this.#outerStyle.opacity = '0';
         this.#outerStyle.visibility = 'hidden';
