@@ -314,6 +314,7 @@ export class Popup {
 
     fadeIn() {
         // Necessary because in settings page, config is undefined
+        // TODO is this still true? ~hmry(2023-08-08)
         if (config && !config.disableFadeAnimation) {
             this.#outerStyle.transition = 'opacity 60ms ease-in, visibility 60ms';
         }
@@ -323,6 +324,7 @@ export class Popup {
 
     fadeOut() {
         // Necessary because in settings page, config is undefined
+        // TODO is this still true? ~hmry(2023-08-08)
         if (config && !config.disableFadeAnimation) {
             this.#outerStyle.transition = 'opacity 200ms ease-in, visibility 200ms';
         }

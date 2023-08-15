@@ -1,4 +1,4 @@
-import { loadConfig, migrateSchema, saveConfig } from '../background/config.js';
+import { Config, loadConfig, migrateSchema, saveConfig } from '../background/config.js';
 import { requestUpdateConfig } from '../content/background_comms.js';
 import { Popup } from '../content/popup.js';
 import { showError } from '../content/toast.js';
@@ -116,7 +116,7 @@ try {
             });
 
             try {
-                const data = JSON.parse(fileContents);
+                const data = JSON.parse(fileContents) as Config;
                 console.log(data);
                 migrateSchema(data);
                 Object.assign(config, data);

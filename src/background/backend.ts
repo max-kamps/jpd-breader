@@ -98,14 +98,14 @@ export async function parse(text: string[]): Response<[Token[][], Card[]]> {
     const response = await fetch('https://jpdb.io/api/v1/parse', options);
 
     if (!(200 <= response.status && response.status <= 299)) {
-        const data: JpdbError = await response.json();
+        const data = (await response.json()) as JpdbError;
         throw Error(`${data.error_message} while parsing 「${truncate(text.join(' '), 20)}」`);
     }
 
-    const data: {
+    const data = (await response.json()) as {
         tokens: MapFieldTuple<typeof TOKEN_FIELDS, TokenFields>[][];
         vocabulary: MapFieldTuple<typeof VOCAB_FIELDS, VocabFields>[];
-    } = await response.json();
+    };
 
     const cards: Card[] = data.vocabulary.map(vocab => {
         // NOTE: If you change these, make sure to change VOCAB_FIELDS too
@@ -200,7 +200,7 @@ async function addToDeckAPI(vid: number, sid: number, deckId: number | 'blacklis
     const response = await fetch('https://jpdb.io/api/v1/deck/add-vocabulary', options);
 
     if (!(200 <= response.status && response.status <= 299)) {
-        const data: JpdbError = await response.json();
+        const data = (await response.json()) as JpdbError;
         throw Error(`${data.error_message} while adding word ${vid}/${sid} to deck "${deckId}"`);
     }
 
@@ -255,7 +255,7 @@ async function removeFromDeckAPI(vid: number, sid: number, deckId: number | 'bla
     const response = await fetch('https://jpdb.io/api/v1/deck/remove-vocabulary', options);
 
     if (!(200 <= response.status && response.status <= 299)) {
-        const data: JpdbError = await response.json();
+        const data = (await response.json()) as JpdbError;
         throw Error(`${data.error_message} while removing word ${vid}/${sid} from deck "${deckId}"`);
     }
 
@@ -302,7 +302,7 @@ export async function setSentence(vid: number, sid: number, sentence?: string, t
     const response = await fetch('https://jpdb.io/api/v1/set-card-sentence', options);
 
     if (!(200 <= response.status && response.status <= 299)) {
-        const data: JpdbError = await response.json();
+        const data = (await response.json()) as JpdbError;
         throw Error(
             `${data.error_message} while setting sentence for word ${vid}/${sid} to ${
                 sentence === undefined ? 'none' : `「${truncate(sentence, 10)}」`
@@ -388,12 +388,12 @@ export async function getCardState(vid: number, sid: number): Response<CardState
     const response = await fetch('https://jpdb.io/api/v1/lookup-vocabulary', options);
 
     if (!(200 <= response.status && response.status <= 299)) {
-        const data: JpdbError = await response.json();
+        const data = (await response.json()) as JpdbError;
         throw Error(`${data.error_message} while getting state for word ${vid}/${sid}`);
     }
 
     type MapFieldTuple<Tuple extends readonly [...(keyof Fields)[]], Fields> = { [I in keyof Tuple]: Fields[Tuple[I]] };
-    const data: { vocabulary_info: [MapFieldTuple<['card_state'], VocabFields> | null] } = await response.json();
+    const data = (await response.json()) as { vocabulary_info: [MapFieldTuple<['card_state'], VocabFields> | null] };
 
     const vocabInfo = data.vocabulary_info[0];
     if (vocabInfo === null) throw Error(`Can't get state for word ${vid}/${sid}, word does not exist`);

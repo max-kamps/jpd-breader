@@ -30,7 +30,7 @@ async function getTranscriptFromURL(url: string): Promise<Transcript | null> {
 
     if (!matches?.length) throw new Error('Could not find captions.');
 
-    const { captionTracks }: { captionTracks: CaptionTrack[] } = JSON.parse(`${matches[0]}}`);
+    const { captionTracks } = JSON.parse(`${matches[0]}}`) as { captionTracks: CaptionTrack[] };
     const subSource = captionTracks.find(track => track.languageCode === 'ja');
     if (!subSource) return null;
 
