@@ -5,7 +5,7 @@
         "typeRoots": ["dev_types", "./node_modules/@types"],
         "outDir": "build",
         "target": "ES2022",
-        "module": "ES2022",
+        "module": "Node16",
         "moduleResolution": "Node16",
         "resolveJsonModule": true,
         "jsx": "react",
