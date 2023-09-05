@@ -82,7 +82,10 @@
         "content/popup.css",
         "content/word.js",
         "content/word.css",
+        "content/toast.js",
+        "content/toast.css",
         "util.js",
+        "jsx.js",
         "common.css",
         "themes.css"
     ],

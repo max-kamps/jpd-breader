@@ -1,5 +1,6 @@
 import { loadConfig } from '../background/config.js';
-import { browser, jsxCreateElement, nonNull } from '../util.js';
+import { browser, nonNull } from '../util.js';
+import { jsxCreateElement } from '../jsx.js';
 
 const config = loadConfig();
 

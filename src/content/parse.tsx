@@ -1,5 +1,6 @@
 import { Token } from '../types.js';
-import { jsxCreateElement, nonNull } from '../util.js';
+import { nonNull } from '../util.js';
+import { jsxCreateElement } from '../jsx.js';
 import { onWordHoverStart, onWordHoverStop } from './content.js';
 import { JpdbWord } from './word.js';
 

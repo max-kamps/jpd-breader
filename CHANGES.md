@@ -2,13 +2,13 @@
 
 It's been a while since the last update, hasn't it...
 
-- Replaced annoying browser popups with toast (hehe) notifications
-    - Toasts close automatically after some time, and can also be closed manually with the x button
-    - Feedback on the mobile experience wanted
+-   Replaced annoying browser popups with toast (hehe) notifications
+    -   Toasts close automatically after some time, and can also be closed manually with the x button
+    -   Feedback on the mobile experience wanted
 -   Added experimental support for parsing YouTube subtitles Thanks @xyaman)
 -   Added support for the ZXY101 Mokuro fork (thanks @rymiel)
 -   Bugfixes:
-    - Several
+    -   Several
 
 # Version 12.1
 

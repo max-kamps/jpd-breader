@@ -1,5 +1,5 @@
 import { defaultConfig, Keybind } from '../background/config.js';
-import { jsxCreateElement } from '../util.js';
+import { jsxCreateElement } from '../jsx.js';
 import { markUnsavedChanges } from './settings.js';
 
 export class SettingElement extends HTMLElement {

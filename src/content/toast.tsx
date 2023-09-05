@@ -1,4 +1,5 @@
-import { jsxCreateElement } from '../util.js';
+import { browser } from '../util.js';
+import { jsxCreateElement } from '../jsx.js';
 
 const toastContainer = <div></div>;
 const shadow = toastContainer.attachShadow({ mode: 'closed' });
@@ -12,7 +13,7 @@ document.body.append(toastContainer);
 export function showToast(
     kind: string,
     message: string,
-    options: { timeout?: number; actionIcon?: string; action?: () => void },
+    options: { timeout?: number; actionIcon?: string; action?: () => void } = {},
 ) {
     const toast = (
         <div class='toast'>

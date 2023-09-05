@@ -1,4 +1,5 @@
-import { browser, clamp, jsxCreateElement, nonNull } from '../util.js';
+import { browser, clamp, nonNull } from '../util.js';
+import { jsxCreateElement } from '../jsx.js';
 import { config, requestMine, requestReview, requestSetFlag } from './background_comms.js';
 import { Dialog } from './dialog.js';
 import { getSentences, JpdbWord, JpdbWordData } from './word.js';

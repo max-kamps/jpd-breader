@@ -5,7 +5,8 @@ JS code for forcing light: [...[...document.styleSheets].find(m => m.href.endsWi
 */
 
 :root,
-:host {
+:host,
+:host > * {
     --color-input-background: #e4e4e4;
     --color-input-border: #3c3d3d;
     --color-button-border: #0a9994;
@@ -20,7 +21,8 @@ JS code for forcing light: [...[...document.styleSheets].find(m => m.href.endsWi
 
 @media (prefers-color-scheme: dark) {
     :root,
-    :host {
+    :host,
+    :host > * {
         --color-input-background: #333;
         --color-input-border: #cedadc;
         --color-button-border: #1fbab5;
@@ -35,7 +37,8 @@ JS code for forcing light: [...[...document.styleSheets].find(m => m.href.endsWi
 }
 
 :root,
-:host {
+:host,
+:host > * {
     --border-radius: 5px;
     --font-family: 'Noto Sans CJK JP', 'Noto Sans CJK', 'Noto Sans', sans-serif;
 }
