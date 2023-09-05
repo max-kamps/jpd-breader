@@ -78,7 +78,7 @@ export function truncate(string: string, maxLength: number): string {
 export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
     name: Tag,
     props: { [id: string]: any } | null,
-    ...content: (string | HTMLElement | false)[]
+    ...content: (string | HTMLElement)[]
 ): HTMLElementTagNameMap[Tag] {
     const elem = document.createElement(name);
 
@@ -102,8 +102,7 @@ export function jsxCreateElement<Tag extends keyof HTMLElementTagNameMap>(
         }
     }
 
-    // Cast needed because .filter is not smart enough :(
-    elem.append(...(content.flat().filter(x => x !== false) as (string | HTMLElement)[]));
+    elem.append(...content.flat());
 
     return elem;
 }

@@ -24,7 +24,7 @@ export function showToast(
                         {options.actionIcon ?? 'o'}
                     </button>
                 ) : (
-                    false
+                    ''
                 )}
                 <button
                     class='close'
