@@ -9,39 +9,53 @@ shadow.append(
 );
 document.body.append(toastContainer);
 
-export function showToast(kind: string, message: string, buttonCallback?: () => void) {
+export function showToast(
+    kind: string,
+    message: string,
+    options: { timeout?: number; actionIcon?: string; action?: () => void },
+) {
     const toast = (
         <div class='toast'>
             <span class='kind'>{kind}:</span>
             <span class='message'>{message}</span>
             <span class='buttons'>
-                {buttonCallback ? (
-                    <button class='action' onclick={buttonCallback}>
-                        o
+                {options.action ? (
+                    <button class='action' onclick={options.action}>
+                        {options.actionIcon ?? 'o'}
                     </button>
-                ) : undefined}
+                ) : (
+                    false
+                )}
                 <button
                     class='close'
                     onclick={() => {
                         shadow.removeChild(toast);
                         clearTimeout(timeout);
                     }}>
-                    x
+                    ✕
                 </button>
             </span>
         </div>
     );
 
-    const timeout = setTimeout(() => {
-        shadow.removeChild(toast);
-    }, 3000);
+    const timeout =
+        options.timeout != Infinity
+            ? setTimeout(() => {
+                  shadow.removeChild(toast);
+              }, options.timeout ?? 3000)
+            : undefined;
 
     shadow.append(toast);
 }
 
 export function showError(error: Error | { message: string; stack: string | undefined }) {
     console.error(error);
-    showToast('Error', error.message, () => {
-        navigator.clipboard.writeText(`$`);
+    showToast('Error', error.message, {
+        timeout: 5000,
+        actionIcon: '⎘',
+        action() {
+            navigator.clipboard.writeText(`Error: ${error.message}\n${error.stack}`);
+            showToast('Info', 'Error copied to clipboard!', { timeout: 1000 });
+        },
     });
 }
