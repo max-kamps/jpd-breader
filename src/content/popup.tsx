@@ -258,7 +258,13 @@ export class Popup {
         this.#element = (
             <div
                 id='jpdb-popup'
+                onmousedown={event => {
+                    event.stopPropagation();
+                }}
                 onclick={event => {
+                    event.stopPropagation();
+                }}
+                onwheel={event => {
                     event.stopPropagation();
                 }}
                 style={`all:initial;z-index:2147483647;${
