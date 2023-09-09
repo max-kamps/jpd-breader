@@ -73,28 +73,45 @@ type PendingParagraph = PromiseHandle<Token[]> & {
     text: string;
     length: number;
 };
+
+type ParseBatch = {
+    strings: string[];
+    handles: PromiseHandle<Token[]>[];
+};
+
 const pendingParagraphs = new Map<number, PendingParagraph>();
 
-async function batchParses() {
-    // Greedily take as many paragraphs as can fit
+function createBatches() {
+    const batches: ParseBatch[] = [];
+    let currentBatch: ParseBatch = { strings: [], handles: [] };
     let length = 0;
-    const strings: string[] = [];
-    const handles: PromiseHandle<Token[]>[] = [];
 
     for (const [seq, paragraph] of pendingParagraphs) {
         length += paragraph.length;
-        if (length > maxParseLength) break;
-        strings.push(paragraph.text);
-        handles.push(paragraph);
+
+        if (length > maxParseLength) {
+            batches.push(currentBatch);
+            currentBatch = { strings: [], handles: [] };
+            length = 0;
+        }
+
+        currentBatch.strings.push(paragraph.text);
+        currentBatch.handles.push(paragraph);
         pendingParagraphs.delete(seq);
     }
 
-    if (strings.length === 0) return [null, 0] as [null, number];
+    if (currentBatch.strings.length > 0) {
+        batches.push(currentBatch);
+    }
 
+    return batches;
+}
+
+async function parseBatch(batch: ParseBatch) {
     try {
-        const [[tokens, cards], timeout] = await backend.parse(strings);
+        const [[tokens, cards], timeout] = await backend.parse(batch.strings);
 
-        for (const [i, handle] of handles.entries()) {
+        for (const [i, handle] of batch.handles.entries()) {
             handle.resolve(tokens[i]);
         }
 
@@ -102,7 +119,7 @@ async function batchParses() {
 
         return [null, timeout] as [null, number];
     } catch (error) {
-        for (const handle of handles) {
+        for (const handle of batch.handles) {
             handle.reject(error);
         }
 
@@ -123,8 +140,15 @@ export function enqueueParse(seq: number, text: string): Promise<Token[]> {
 }
 
 export function startParse() {
-    pendingAPICalls.push({ func: batchParses, resolve: () => {}, reject: () => {} });
-    apiCaller();
+    const batches = createBatches();
+
+    if (batches.length > 0) {
+        for (const batch of batches) {
+            pendingAPICalls.push({ func: () => parseBatch(batch), resolve: () => {}, reject: () => {} });
+        }
+
+        apiCaller();
+    }
 }
 
 // Content script communication
