@@ -241,9 +241,9 @@ export class Popup {
     static get(): Popup {
         if (!this.#popup) {
             this.#popup = new this();
-            document.body.append(this.#popup.#element);
         }
 
+        this.#popup.updateParent();
         return this.#popup;
     }
 
@@ -518,5 +518,88 @@ export class Popup {
 
     updateStyle(newCSS = config.customPopupCSS) {
         this.#customStyle.textContent = newCSS;
+    }
+
+    updateParent() {
+        const parentElement = this.determineParentElement();
+
+        if (this.#element.parentNode === null || !this.#element.parentNode.isSameNode(parentElement)) {
+            parentElement.append(this.#element);
+        }
+    }
+
+    private determineParentElement() {
+        const fullscreenVideoElement = this.fullscreenVideoElement();
+
+        if (fullscreenVideoElement) {
+            return this.findElementForFullscreenVideoDisplay(fullscreenVideoElement);
+        }
+
+        return document.body;
+    }
+
+    private fullscreenVideoElement() {
+        if (!document.fullscreenElement) {
+            return undefined;
+        }
+
+        const videoElements = document.getElementsByTagName('video');
+
+        if (videoElements.length === 0) {
+            return undefined;
+        }
+
+        for (const videoElement of videoElements) {
+            if (document.fullscreenElement.contains(videoElement)) {
+                return videoElement;
+            }
+        }
+
+        return undefined;
+    }
+
+    private findElementForFullscreenVideoDisplay(videoElement: Element): HTMLElement {
+        const testNode = document.createElement('div');
+        testNode.style.position = 'absolute';
+        testNode.style.zIndex = '2147483647';
+        testNode.innerHTML = '&nbsp;'; // The node needs to take up some space to perform test clicks
+        let currentNode = videoElement.parentElement;
+
+        if (!currentNode) {
+            return document.body;
+        }
+
+        let chosenNode: HTMLElement | undefined = undefined;
+
+        while (currentNode && !currentNode.isSameNode(document.body.parentElement)) {
+            const rect = currentNode.getBoundingClientRect();
+
+            if (
+                rect.height > 0 &&
+                (chosenNode === undefined ||
+                    rect.height >= (chosenNode as HTMLElement).getBoundingClientRect().height) &&
+                this.elementIsClickableInsideContainer(currentNode, testNode)
+            ) {
+                chosenNode = currentNode;
+                break;
+            }
+
+            currentNode = currentNode.parentElement;
+        }
+
+        if (chosenNode) {
+            return chosenNode;
+        }
+
+        return document.body;
+    }
+
+    private elementIsClickableInsideContainer(container: HTMLElement, element: HTMLElement): boolean {
+        container.appendChild(element);
+        const rect = element.getBoundingClientRect();
+        const clickedElement = document.elementFromPoint(rect.x, rect.y);
+        const clickable = element.isSameNode(clickedElement) || element.contains(clickedElement);
+        element.remove();
+        return clickable;
     }
 }
