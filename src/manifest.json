@@ -47,6 +47,12 @@
             "css": ["content/word.css"]
         },
         {
+            "matches": ["*://*/*"],
+            "js": ["integrations/asbplayer.js"],
+            "all_frames": true,
+            "css": ["content/word.css"]
+        },
+        {
             "matches": ["*://app.readwok.com/*"],
             "js": ["integrations/readwok.js"],
             "css": ["content/word.css"]
