@@ -7,19 +7,24 @@ import { addedObserver, paragraphsInNode, parseParagraphs } from './common.js';
 addStyles();
 
 try {
-    const added = addedObserver('.asbplayer-offscreen', elements => {
+    const added = addedObserver('.asbplayer-offscreen', async elements => {
         const batches: ParseBatch[] = [];
+        const promises: Promise<void>[] = [];
 
         for (const element of elements) {
             const paragraphs = paragraphsInNode(element);
 
             if (paragraphs.length > 0) {
-                const [elemBatches] = parseParagraphs(paragraphs);
+                const [elemBatches, applied] = parseParagraphs(paragraphs);
                 batches.push(...elemBatches);
+                promises.push(...applied);
             }
         }
 
-        requestParse(batches);
+        if (batches.length > 0) {
+            requestParse(batches);
+            await Promise.allSettled(promises);
+        }
     });
 
     added.observe(document.body, {
