@@ -47,7 +47,7 @@
             "css": ["content/word.css"]
         },
         {
-            "matches": ["*://*/*"],
+            "matches": ["<all_urls>"],
             "js": ["integrations/asbplayer.js"],
             "all_frames": true,
             "css": ["content/word.css"]
