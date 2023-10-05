@@ -19,7 +19,8 @@ try {
                     const fragments: Fragment[] = [];
                     let offset = 0;
                     for (const p of box.children) {
-                        if (p.tagName !== 'P') continue;
+                        if (p.tagName !== 'P' || !p.firstChild)
+                            continue;
                         const text = p.firstChild as Text;
                         text.data = text.data
                             .replaceAll('．．．', '…')
