@@ -89,6 +89,11 @@ Only color new words:
 .jpdb-word.not-in-deck { color: rgb(126, 173, 255); }
 ```
 
+Only color words which haven't been reviewed, mined, etc. during the current page load:
+```css
+.jpdb-word.affected { color: inherit !important; }
+```
+
 Show an underline rather than changing the text color:
 ```css
 .jpdb-word.new {

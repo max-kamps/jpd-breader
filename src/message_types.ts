@@ -107,5 +107,5 @@ export type UpdateConfigCommand = {
 
 export type UpdateWordStateCommand = {
     type: 'updateWordState';
-    words: [number, number, CardState][];
+    words: [number, number, boolean, CardState][];
 };

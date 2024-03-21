@@ -138,11 +138,11 @@ port.onMessage.addListener((message: BackgroundToContentMessage, port) => {
 
         case 'updateWordState':
             {
-                for (const [vid, sid, state] of message.words) {
+                for (const [vid, sid, affected, state] of message.words) {
                     const idx = reverseIndex.get(`${vid}/${sid}`);
                     if (idx === undefined) continue;
 
-                    const className = `jpdb-word ${state.join(' ')}`;
+                    const className = `jpdb-word ${state.join(' ')}${affected ? ' affected' : ''}`;
                     if (idx.className === className) continue;
 
                     for (const element of idx.elements) {

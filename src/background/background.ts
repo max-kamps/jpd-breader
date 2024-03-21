@@ -98,7 +98,7 @@ async function batchParses() {
             handle.resolve(tokens[i]);
         }
 
-        broadcast({ type: 'updateWordState', words: cards.map(card => [card.vid, card.sid, card.state]) });
+        broadcast({ type: 'updateWordState', words: cards.map(card => [card.vid, card.sid, false, card.state]) });
 
         return [null, timeout] as [null, number];
     } catch (error) {
@@ -152,8 +152,8 @@ function onPortDisconnect(port: browser.runtime.Port) {
     ports.delete(port);
 }
 
-async function broadcastNewWordState(vid: number, sid: number) {
-    broadcast({ type: 'updateWordState', words: [[vid, sid, await getCardState(vid, sid)]] });
+async function broadcastNewWordState(vid: number, sid: number, affected: boolean) {
+    broadcast({ type: 'updateWordState', words: [[vid, sid, affected, await getCardState(vid, sid)]] });
 }
 
 // Chrome can't send Error objects over background ports, so we have to serialize and deserialize them...
@@ -208,13 +208,13 @@ const messageHandlers: {
         }
 
         postResponse(port, request, null);
-        await broadcastNewWordState(request.vid, request.sid);
+        await broadcastNewWordState(request.vid, request.sid, true);
     },
 
     async review(request, port) {
         await review(request.vid, request.sid, request.rating);
         postResponse(port, request, null);
-        await broadcastNewWordState(request.vid, request.sid);
+        await broadcastNewWordState(request.vid, request.sid, true);
     },
 
     async mine(request, port) {
@@ -250,7 +250,7 @@ const messageHandlers: {
         }
 
         postResponse(port, request, null);
-        await broadcastNewWordState(request.vid, request.sid);
+        await broadcastNewWordState(request.vid, request.sid, true);
     },
 };
 
